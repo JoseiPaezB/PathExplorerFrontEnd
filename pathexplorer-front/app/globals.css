@@ -1,26 +1,252 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
+@layer base {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    /* Core design tokens */
+    --radius-sm: 0.5rem;
+    --radius-md: 0.75rem;
+    --radius-lg: 1rem;
+    --radius-xl: 1.5rem;
+    --radius-full: 9999px;
+
+    /* Refined color system */
+    --background: 0 0% 100%;
+    --foreground: 240 10% 3.9%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 3.9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 3.9%;
+
+    /* Primary color - refined purple */
+    --primary: 276 100% 50%;
+    --primary-light: 276 100% 60%;
+    --primary-dark: 276 100% 40%;
+    --primary-foreground: 0 0% 100%;
+
+    /* Secondary colors */
+    --secondary: 240 5.9% 10%;
+    --secondary-foreground: 0 0% 98%;
+
+    /* Muted colors */
+    --muted: 240 4.8% 97.5%;
+    --muted-foreground: 240 3.8% 46.1%;
+
+    /* Accent colors */
+    --accent: 240 4.8% 95.9%;
+    --accent-foreground: 240 5.9% 10%;
+
+    /* Destructive colors */
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+
+    /* Border and input colors */
+    --border: 240 5.9% 90%;
+    --input: 240 5.9% 90%;
+    --ring: 276 100% 50%;
+
+    /* Success colors */
+    --success: 142 76% 36%;
+    --success-foreground: 0 0% 98%;
+
+    /* Warning colors */
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 98%;
+
+    /* Info colors */
+    --info: 221 83% 53%;
+    --info-foreground: 0 0% 98%;
+
+    /* Radius */
+    --radius: 0.75rem;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    font-family: "SF Pro Display", -apple-system, BlinkMacSystemFont, "Inter",
+      system-ui, sans-serif;
+    letter-spacing: -0.01em;
+  }
+
+  /* Refined scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply rounded-full bg-black/10 transition-colors;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-black/20;
+  }
+
+  /* Advanced animations */
+  .fade-in {
+    animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .slide-up {
+    animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .scale-in {
+    animation: scaleIn 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .blur-in {
+    animation: blurIn 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes slideUp {
+    from {
+      transform: translateY(20px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes scaleIn {
+    from {
+      transform: scale(0.95);
+      opacity: 0;
+    }
+    to {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+
+  @keyframes blurIn {
+    from {
+      filter: blur(8px);
+      opacity: 0;
+    }
+    to {
+      filter: blur(0);
+      opacity: 1;
+    }
+  }
+
+  /* Subtle hover effects */
+  .hover-lift {
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+      box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .hover-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.1);
+  }
+}
+
+@layer components {
+  /* Glass morphism effects */
+  .glass {
+    @apply bg-white/80 backdrop-blur-xl backdrop-saturate-150 border border-white/20;
+  }
+
+  .glass-dark {
+    @apply bg-black/70 backdrop-blur-xl backdrop-saturate-150 border border-white/10;
+  }
+
+  /* Card styles */
+  .card-hover {
+    @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-1;
+  }
+
+  .card-interactive {
+    @apply relative overflow-hidden transition-all duration-300;
+  }
+
+  .card-interactive::after {
+    content: "";
+    @apply absolute inset-0 bg-gradient-to-br from-primary/5 to-primary/10 opacity-0 transition-opacity duration-300;
+  }
+
+  .card-interactive:hover::after {
+    @apply opacity-100;
+  }
+
+  /* Button styles */
+  .btn-primary {
+    @apply bg-primary text-white rounded-full px-4 py-2 font-medium transition-all duration-300 hover:bg-primary-light active:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-primary/30 focus:ring-offset-2;
+  }
+
+  .btn-secondary {
+    @apply bg-secondary text-white rounded-full px-4 py-2 font-medium transition-all duration-300 hover:bg-secondary/90 active:bg-secondary focus:outline-none focus:ring-2 focus:ring-secondary/30 focus:ring-offset-2;
+  }
+
+  .btn-outline {
+    @apply border border-input bg-transparent text-foreground rounded-full px-4 py-2 font-medium transition-all duration-300 hover:bg-accent hover:text-accent-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2;
+  }
+
+  /* Input styles */
+  .input-elegant {
+    @apply h-12 rounded-xl border-input bg-background px-4 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  /* Badge styles */
+  .badge-subtle {
+    @apply inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2;
+  }
+
+  /* Status indicators */
+  .status-dot {
+    @apply relative flex h-2 w-2 rounded-full;
+  }
+
+  .status-dot::after {
+    content: "";
+    @apply absolute inset-0 rounded-full animate-ping opacity-75;
+  }
+
+  .status-online {
+    @apply bg-success;
+  }
+
+  .status-online::after {
+    @apply bg-success;
+  }
+
+  .status-away {
+    @apply bg-warning;
+  }
+
+  .status-offline {
+    @apply bg-muted-foreground;
+  }
 }
