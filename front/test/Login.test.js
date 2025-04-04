@@ -15,20 +15,20 @@ jest.mock('@/contexts/auth-context', () => ({
   }),
 }));
 
-// 🧠 Mock de router
+// Mock de router
 jest.mock('next/navigation', () => ({
   useRouter: () => ({
     push: jest.fn(),
   }),
 }));
 
-// 🧠 Mock del sistema de notificaciones
+// Mock del sistema de notificaciones
 const mockToast = jest.fn();
 jest.mock('@/components/ui/use-toast', () => ({
   useToast: () => ({ toast: mockToast }),
 }));
 
-// 🧪 PRUEBA 1: Login exitoso
+// PRUEBA 1: Login exitoso
 test('login exitoso con credenciales válidas', async () => {
   mockLogin.mockResolvedValueOnce({}); // Simula login exitoso
 
@@ -55,7 +55,7 @@ test('login exitoso con credenciales válidas', async () => {
   });
 });
 
-// 🧪 PRUEBA 2: Login fallido
+// PRUEBA 2: Login fallido
 test('muestra error con credenciales inválidas', async () => {
   mockLogin.mockImplementationOnce(() => {
     throw new Error('Credenciales inválidas');
@@ -84,7 +84,7 @@ test('muestra error con credenciales inválidas', async () => {
   });
 });
 
-// 🧪 PRUEBA 3: Carga inicial de campos
+// PRUEBA 3: Carga inicial de campos
 test('renderiza campos de correo y contraseña', () => {
   render(<Login />);
 
