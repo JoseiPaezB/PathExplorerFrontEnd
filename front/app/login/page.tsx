@@ -85,6 +85,13 @@ export default function LoginPage() {
       }, 1200);
     } catch (error) {
       setError("Por favor, verifica tus credenciales e intenta nuevamente");
+
+      toast({
+        variant: "destructive",
+        title: "Error de inicio de sesión",
+        description: "Por favor, verifica tus credenciales e intenta nuevamente",
+      });
+      
       setIsLoading(false);
       setIsRedirecting(false);
     }
