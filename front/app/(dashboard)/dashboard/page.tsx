@@ -41,21 +41,21 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/auth-context";
+import { withRouteProtection } from "@/components/withRouteProtection";
 
-export default function DashboardPage() {
+function DashboardPage() {
   const [asignacionValue] = useState(10);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("activos");
   const shouldReduceMotion = useReducedMotion();
   const { user } = useAuth();
-  const [openDropdownIndex, setOpenDropdownIndex] = useState(0); // El primer dropdown se abrirá por defecto
+  const [openDropdownIndex, setOpenDropdownIndex] = useState(0);
 
   const handleDropdownToggle = (index: number) => {
-    // Si el dropdown ya está abierto, lo cierra; si no, lo abre
     if (openDropdownIndex === index) {
-      setOpenDropdownIndex(-1); // Cierra el dropdown
+      setOpenDropdownIndex(-1);
     } else {
-      setOpenDropdownIndex(index); // Abre el dropdown correspondiente
+      setOpenDropdownIndex(index);
     }
   };
 
@@ -147,7 +147,7 @@ export default function DashboardPage() {
 
       <DropdownCard
         title="Gestión y Desempeño"
-        isOpen={openDropdownIndex === 0} // El primer dropdown siempre está abierto por defecto
+        isOpen={openDropdownIndex === 0}
         onToggle={() => handleDropdownToggle(0)}
       >
         <motion.div variants={item} className="grid gap-6 md:grid-cols-3">
@@ -174,7 +174,7 @@ export default function DashboardPage() {
                       r="40"
                     />
                     <motion.circle
-                      className="stroke-[#C266FF]   stroke-[8] fill-none"
+                      className="stroke-[#C266FF] stroke-[8] fill-none"
                       cx="50"
                       cy="50"
                       r="40"
@@ -906,3 +906,5 @@ export default function DashboardPage() {
     </motion.div>
   );
 }
+
+export default withRouteProtection(DashboardPage);

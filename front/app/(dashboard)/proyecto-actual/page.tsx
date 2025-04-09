@@ -7,8 +7,23 @@ import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { useAuth } from "@/contexts/auth-context"
+import { useEffect } from "react"
+import { useRouter } from "next/navigation"
 
 export default function ProyectoActualPage() {
+  const { user, isAuthenticated } = useAuth();
+        const router = useRouter();
+    
+        
+            
+            useEffect(() => {
+               // Check if user has manager role
+               if (isAuthenticated && user && user.role !== 'empleado') {
+                 console.log("Unauthorized access to proyectos page");
+                 router.push('/unauthorized');
+              }
+             }, [user, isAuthenticated, router]);
   return (
     <div className="space-y-6">
       <div>

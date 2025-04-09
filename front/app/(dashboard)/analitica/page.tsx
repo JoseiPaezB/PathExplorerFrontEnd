@@ -19,9 +19,24 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useAuth } from "@/contexts/auth-context"
+import { useEffect } from "react"
+import { useRouter } from "next/navigation"
 
 export default function AnaliticaPage() {
-  const [activeTab, setActiveTab] = useState("rendimiento")
+  const { user, isAuthenticated } = useAuth();
+    const router = useRouter();
+    const [activeTab, setActiveTab] = useState("rendimiento")
+
+    
+        
+        useEffect(() => {
+           // Check if user has manager role
+           if (isAuthenticated && user && user.role !== 'manager' && user.role !== 'empleado') {
+             console.log("Unauthorized access to proyectos page");
+             router.push('/unauthorized');
+          }
+         }, [user, isAuthenticated, router]);
 
   return (
     <div className="space-y-6">

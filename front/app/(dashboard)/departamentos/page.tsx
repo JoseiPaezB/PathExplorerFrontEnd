@@ -7,8 +7,24 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { useAuth } from "@/contexts/auth-context"
+import { useEffect } from "react"
+import { useRouter } from "next/navigation"
+
 
 export default function DepartamentosPage() {
+  const { user, isAuthenticated } = useAuth();
+      const router = useRouter();
+  
+      
+          
+          useEffect(() => {
+             // Check if user has manager role
+             if (isAuthenticated && user && user.role !== 'administrador') {
+               console.log("Unauthorized access to proyectos page");
+               router.push('/unauthorized');
+            }
+           }, [user, isAuthenticated, router]);
   return (
     <div className="space-y-6">
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">

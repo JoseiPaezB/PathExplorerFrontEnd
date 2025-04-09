@@ -19,10 +19,25 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { useAuth } from '@/contexts/auth-context';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
+
 
 export default function ProyectosPage() {
+  const { user, isAuthenticated } = useAuth();
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState("kanban")
   const [showNewProjectDialog, setShowNewProjectDialog] = useState(false)
+      
+      useEffect(() => {
+         // Check if user has manager role
+         if (isAuthenticated && user && user.role !== 'manager') {
+           console.log("Unauthorized access to proyectos page");
+           router.push('/unauthorized');
+        }
+       }, [user, isAuthenticated, router]);
+       
 
   return (
     <div className="space-y-6">

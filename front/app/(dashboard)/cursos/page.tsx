@@ -29,9 +29,26 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { useAuth } from "@/contexts/auth-context"
+import { useEffect } from "react"
+import { useRouter } from "next/navigation"
+
 
 export default function CursosPage() {
+  
   const [activeTab, setActiveTab] = useState("en-curso")
+  const { user, isAuthenticated } = useAuth();
+      const router = useRouter();
+  
+      
+          
+          useEffect(() => {
+             // Check if user has manager role
+             if (isAuthenticated && user && user.role !== 'administrador' && user.role !== 'empleado') {
+               console.log("Unauthorized access to proyectos page");
+               router.push('/unauthorized');
+            }
+           }, [user, isAuthenticated, router]);
 
   return (
     <div className="space-y-6">
