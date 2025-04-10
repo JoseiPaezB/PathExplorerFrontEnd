@@ -127,7 +127,9 @@ export function Sidebar({ className, userRole, collapsed, setCollapsed }: Sideba
           )}>
             <Avatar className="h-10 w-10 ring-2 ring-white shadow-sm flex-shrink-0">
               <AvatarImage src="/avatar.jpg" />
-              <AvatarFallback>U</AvatarFallback>
+              <Link href="/perfil">
+                <AvatarFallback>U</AvatarFallback>
+              </Link>
             </Avatar>
             <AnimatePresence>
               {!collapsed && (
@@ -138,7 +140,9 @@ export function Sidebar({ className, userRole, collapsed, setCollapsed }: Sideba
                   exit="collapsed"
                   className="ml-3 overflow-hidden"
                 >
-                  <p className="text-sm font-medium text-gray-900 truncate">{`${user?.nombre} ${user?.apellido}`}</p>
+                  <Link href="/perfil">
+                    <p className="text-sm font-medium text-gray-900 truncate">{`${user?.nombre} ${user?.apellido}`}</p>
+                  </Link>
                   <p className="text-xs text-gray-500 truncate capitalize">{userRole}</p>
                 </motion.div>
               )}

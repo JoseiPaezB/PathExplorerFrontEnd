@@ -15,6 +15,7 @@ import {
   Phone,
   User,
 } from "lucide-react";
+import Link from "next/link"
 
 import {
   Card,
@@ -31,6 +32,9 @@ import { Progress } from "@/components/ui/progress";
 import type { User as AuthUser } from "@/types/auth";
 import { useAuth } from "@/contexts/auth-context";
 import axios from "axios";
+import { useRouter } from 'next/router';
+
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api";
 
 type ProfessionalHistoryEntry = {
@@ -207,9 +211,16 @@ export default function PerfilPage() {
               </div>
             </div>
             <div className="ml-auto flex flex-col gap-2 md:flex-row">
-              <Button variant="outline" size="sm" className="gap-1">
-                <Edit className="h-4 w-4" />
-                Editar perfil
+            <Button 
+                variant="outline" 
+                size="sm" 
+                className="gap-1" 
+                asChild
+              >
+                <Link href={"/configuracion"}>
+                  <Edit className="h-4 w-4" />
+                  Editar perfil
+                </Link>
               </Button>
               <Button
                 size="sm"
