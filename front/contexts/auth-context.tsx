@@ -9,31 +9,23 @@ import {
   useEffect,
   useCallback,
 } from "react";
-import type { AuthState, User, LoginResponse } from "@/types/auth";
+import type { AuthState, User, LoginResponse, JwtPayload } from "@/types/auth";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
+import type {
+  CoursesUserResponse,
+  UpdateProfileData,
+  CertificationsUserResponse,
+} from "@/types/users";
 
 interface AuthContextType extends AuthState {
   login: (email: string, password: string) => Promise<User | void>;
   logout: () => void;
   updateUserProfile: (profileData: UpdateProfileData) => Promise<User | void>;
+  courses: () => Promise<CoursesUserResponse | void>;
+  certifications: () => Promise<CertificationsUserResponse | void>;
   isLoggingOut: boolean;
-}
-
-interface UpdateProfileData {
-  nombre: string;
-  apellido: string;
-  correo: string;
-  cargo: string;
-}
-
-interface JwtPayload {
-  id_persona: number;
-  email: string;
-  role: string;
-  exp: number;
-  iat: number;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -169,6 +161,85 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [router]
   );
 
+  const courses = useCallback(async (): Promise<CoursesUserResponse | void> => {
+    try {
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        throw new Error("No authentication token found");
+      }
+
+      if (isTokenExpired(token)) {
+        clearAuthData();
+        router.push("/login");
+        throw new Error("Session expired. Please login again.");
+      }
+
+      const response = await axios.get<CoursesUserResponse>(
+        `${API_URL}/auth/courses`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.data) {
+        return response.data;
+      } else {
+        throw new Error("Error fetching courses");
+      }
+    } catch (error) {
+      console.error("Courses fetch error:", error);
+      if (axios.isAxiosError(error)) {
+        throw new Error(
+          error.response?.data?.message || "Failed to fetch courses"
+        );
+      }
+      throw error;
+    }
+  }, []);
+
+  const certifications =
+    useCallback(async (): Promise<CertificationsUserResponse | void> => {
+      try {
+        const token = localStorage.getItem("token");
+
+        if (!token) {
+          throw new Error("No authentication token found");
+        }
+
+        if (isTokenExpired(token)) {
+          clearAuthData();
+          router.push("/login");
+          throw new Error("Session expired. Please login again.");
+        }
+
+        const response = await axios.get<CertificationsUserResponse>(
+          `${API_URL}/auth/certifications`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (response.data) {
+          return response.data;
+        } else {
+          throw new Error("Error fetching certifications");
+        }
+      } catch (error) {
+        console.error("Certifications fetch error:", error);
+        if (axios.isAxiosError(error)) {
+          throw new Error(
+            error.response?.data?.message || "Failed to fetch certifications"
+          );
+        }
+        throw error;
+      }
+    }, []);
+
   const updateUserProfile = useCallback(
     async (profileData: UpdateProfileData): Promise<User | void> => {
       try {
@@ -257,6 +328,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         login,
         logout,
         updateUserProfile,
+        courses,
+        certifications,
         isLoggingOut,
       }}
     >

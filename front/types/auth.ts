@@ -44,3 +44,11 @@ export interface LoginResponse {
   token: string;
   user: User;
 }
+
+export interface JwtPayload {
+  id_persona: number;
+  email: string;
+  role: string;
+  exp: number;
+  iat: number;
+}

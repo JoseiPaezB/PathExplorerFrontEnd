@@ -16,7 +16,6 @@ import {
 
 import { useState, useEffect } from "react";
 import { UserInfoBanca } from "@/types/users";
-import { set } from "date-fns";
 
 export default function UsuariosPage() {
   const [usuarios, setUsuarios] = useState<UserInfoBanca[]>([]);

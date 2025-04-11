@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import { useState } from "react"
+import { useState } from "react";
 import {
   Calendar,
   ChevronDown,
@@ -12,23 +12,35 @@ import {
   TrendingDown,
   TrendingUp,
   Users,
-} from "lucide-react"
+} from "lucide-react";
 
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Progress } from "@/components/ui/progress"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useEffect } from "react";
 
 export default function AnaliticaPage() {
-  const [activeTab, setActiveTab] = useState("rendimiento")
+  const [activeTab, setActiveTab] = useState("rendimiento");
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Analítica y Reportes</h1>
-          <p className="text-muted-foreground">Visualiza métricas y tendencias de rendimiento</p>
+          <h1 className="text-2xl font-bold tracking-tight">
+            Analítica y Reportes
+          </h1>
+          <p className="text-muted-foreground">
+            Visualiza métricas y tendencias de rendimiento
+          </p>
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" className="h-8 gap-1">
@@ -44,7 +56,10 @@ export default function AnaliticaPage() {
             <Download className="h-3.5 w-3.5" />
             <span>Exportar</span>
           </Button>
-          <Button size="sm" className="h-8 gap-1 bg-primary hover:bg-primary/90">
+          <Button
+            size="sm"
+            className="h-8 gap-1 bg-primary hover:bg-primary/90"
+          >
             <Share2 className="h-3.5 w-3.5" />
             <span>Compartir</span>
           </Button>
@@ -77,7 +92,9 @@ export default function AnaliticaPage() {
         ].map((stat, index) => (
           <Card key={index}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                {stat.title}
+              </CardTitle>
               {stat.trend === "up" ? (
                 <TrendingUp className="h-4 w-4 text-green-500" />
               ) : stat.trend === "down" ? (
@@ -94,8 +111,8 @@ export default function AnaliticaPage() {
                     stat.trend === "up"
                       ? "text-green-500"
                       : stat.trend === "down"
-                        ? "text-red-500"
-                        : "text-muted-foreground"
+                      ? "text-red-500"
+                      : "text-muted-foreground"
                   }
                 >
                   {stat.change}
@@ -107,7 +124,11 @@ export default function AnaliticaPage() {
         ))}
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+      <Tabs
+        value={activeTab}
+        onValueChange={setActiveTab}
+        className="space-y-4"
+      >
         <TabsList>
           <TabsTrigger value="rendimiento">Rendimiento</TabsTrigger>
           <TabsTrigger value="proyectos">Proyectos</TabsTrigger>
@@ -119,14 +140,18 @@ export default function AnaliticaPage() {
             <Card className="col-span-3">
               <CardHeader>
                 <CardTitle>Distribución de Tiempo</CardTitle>
-                <CardDescription>Porcentaje por tipo de actividad</CardDescription>
+                <CardDescription>
+                  Porcentaje por tipo de actividad
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="h-[350px]">
                   <div className="flex h-full items-center justify-center">
                     <div className="text-center">
                       <PieChart className="mx-auto h-8 w-8 text-muted-foreground" />
-                      <h3 className="mt-4 text-lg font-medium">Gráfico Circular</h3>
+                      <h3 className="mt-4 text-lg font-medium">
+                        Gráfico Circular
+                      </h3>
                       <p className="mt-2 text-sm text-muted-foreground">
                         El gráfico de distribución se visualizará aquí
                       </p>
@@ -146,7 +171,10 @@ export default function AnaliticaPage() {
               <CardContent>
                 <div className="space-y-4">
                   {[
-                    { name: "Desarrollo de nuevas funcionalidades", progress: 75 },
+                    {
+                      name: "Desarrollo de nuevas funcionalidades",
+                      progress: 75,
+                    },
                     { name: "Mejora de rendimiento", progress: 60 },
                     { name: "Documentación técnica", progress: 90 },
                     { name: "Code reviews", progress: 85 },
@@ -166,7 +194,9 @@ export default function AnaliticaPage() {
             <Card>
               <CardHeader>
                 <CardTitle>Evaluaciones de Desempeño</CardTitle>
-                <CardDescription>Últimas evaluaciones recibidas</CardDescription>
+                <CardDescription>
+                  Últimas evaluaciones recibidas
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
@@ -190,13 +220,22 @@ export default function AnaliticaPage() {
                       date: "20/01/2025",
                     },
                   ].map((evaluation, index) => (
-                    <div key={index} className="space-y-2 rounded-lg bg-muted p-3">
+                    <div
+                      key={index}
+                      className="space-y-2 rounded-lg bg-muted p-3"
+                    >
                       <div className="flex items-center justify-between">
-                        <span className="font-medium">{evaluation.project}</span>
+                        <span className="font-medium">
+                          {evaluation.project}
+                        </span>
                         <Badge variant="outline">{evaluation.rating}/5.0</Badge>
                       </div>
-                      <p className="text-sm text-muted-foreground">{evaluation.feedback}</p>
-                      <p className="text-xs text-muted-foreground">{evaluation.date}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {evaluation.feedback}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {evaluation.date}
+                      </p>
                     </div>
                   ))}
                 </div>
@@ -236,7 +275,10 @@ export default function AnaliticaPage() {
                       trend: "neutral",
                     },
                   ].map((metric, index) => (
-                    <div key={index} className="flex items-center justify-between">
+                    <div
+                      key={index}
+                      className="flex items-center justify-between"
+                    >
                       <div className="space-y-1">
                         <p className="text-sm font-medium">{metric.metric}</p>
                         <p className="text-sm text-muted-foreground">
@@ -245,8 +287,8 @@ export default function AnaliticaPage() {
                               metric.trend === "up"
                                 ? "text-green-500"
                                 : metric.trend === "down"
-                                  ? "text-red-500"
-                                  : "text-muted-foreground"
+                                ? "text-red-500"
+                                : "text-muted-foreground"
                             }
                           >
                             {metric.change}
@@ -267,7 +309,9 @@ export default function AnaliticaPage() {
           <Card>
             <CardHeader>
               <CardTitle>Resumen de Proyectos</CardTitle>
-              <CardDescription>Estado y métricas de los proyectos activos</CardDescription>
+              <CardDescription>
+                Estado y métricas de los proyectos activos
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-8">
@@ -352,8 +396,12 @@ export default function AnaliticaPage() {
                   ].map((skill, index) => (
                     <div key={index} className="space-y-1.5">
                       <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium">{skill.name}</span>
-                        <span className="text-sm text-muted-foreground">{skill.level}%</span>
+                        <span className="text-sm font-medium">
+                          {skill.name}
+                        </span>
+                        <span className="text-sm text-muted-foreground">
+                          {skill.level}%
+                        </span>
                       </div>
                       <Progress value={skill.level} className="h-2" />
                     </div>
@@ -370,7 +418,9 @@ export default function AnaliticaPage() {
             <Card>
               <CardHeader>
                 <CardTitle>Certificaciones y Cursos</CardTitle>
-                <CardDescription>Estado de certificaciones y cursos en progreso</CardDescription>
+                <CardDescription>
+                  Estado de certificaciones y cursos en progreso
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
@@ -397,7 +447,10 @@ export default function AnaliticaPage() {
                       progress: 65,
                     },
                   ].map((cert, index) => (
-                    <div key={index} className="space-y-2 rounded-lg border p-4">
+                    <div
+                      key={index}
+                      className="space-y-2 rounded-lg border p-4"
+                    >
                       <div className="flex items-center justify-between">
                         <div className="space-y-1">
                           <p className="font-medium">{cert.name}</p>
@@ -406,7 +459,9 @@ export default function AnaliticaPage() {
                         <Badge
                           variant="outline"
                           className={
-                            cert.status === "Activa" ? "bg-green-50 text-green-700" : "bg-yellow-50 text-yellow-700"
+                            cert.status === "Activa"
+                              ? "bg-green-50 text-green-700"
+                              : "bg-yellow-50 text-yellow-700"
                           }
                         >
                           {cert.status}
@@ -433,6 +488,5 @@ export default function AnaliticaPage() {
         </TabsContent>
       </Tabs>
     </div>
-  )
+  );
 }
-
