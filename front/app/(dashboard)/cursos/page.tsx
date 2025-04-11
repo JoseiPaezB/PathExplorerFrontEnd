@@ -22,6 +22,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import Link from "next/link";
 import { useAuth } from "@/contexts/auth-context";
 import { useEffect } from "react";
 import { CoursesUserResponse, CertificationsUserResponse } from "@/types/users";
@@ -126,13 +127,15 @@ export default function CursosPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Button
-            size="sm"
-            className="h-8 gap-1 bg-primary hover:bg-primary/90"
-          >
-            <Plus className="h-3.5 w-3.5" />
-            <span>Nuevo Curso</span>
-          </Button>
+          <Link href="/cursos/agregar-curso">
+            <Button
+              size="sm"
+              className="h-8 gap-1 bg-primary hover:bg-primary/90"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              <span>Nuevo Curso</span>
+            </Button>
+          </Link>
         </div>
       </div>
 
