@@ -31,7 +31,7 @@ import { Progress } from "@/components/ui/progress";
 import type { User as AuthUser } from "@/types/auth";
 import { useAuth } from "@/contexts/auth-context";
 import axios from "axios";
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
 
 type ProfessionalHistoryEntry = {
   nombre: string;
@@ -41,7 +41,6 @@ type ProfessionalHistoryEntry = {
   achievements: string;
 };
 
-// Since we're now receiving an array from the backend
 type ProfessionalHistory = ProfessionalHistoryEntry[];
 
 type Certification = {
@@ -64,10 +63,8 @@ export default function PerfilPage() {
   useEffect(() => {
     const fetchProfessionalHistory = async () => {
       try {
-        // Get the token
         const token = localStorage.getItem("token");
 
-        // Make the request to the new endpoint
         const response = await axios.get(
           `${API_URL}/auth/professional-history`,
           {
@@ -108,10 +105,8 @@ export default function PerfilPage() {
       try {
         setIsLoading(true);
 
-        // Get the token
         const token = localStorage.getItem("token");
 
-        // Make the request using the correct URL
         const response = await axios.get(`${API_URL}/auth/certifications`, {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -119,7 +114,6 @@ export default function PerfilPage() {
         });
 
         if (response.data.success) {
-          // Define an interface for the raw certification data from the backend
           interface RawCertification {
             ID_Certificacion: number;
             Nombre: string;
@@ -128,7 +122,6 @@ export default function PerfilPage() {
             Nivel?: number | string;
           }
 
-          // Use the interface in the mapping function
           const formattedCertifications = response.data.certifications.map(
             (cert: RawCertification) => ({
               id_certificacion: cert.ID_Certificacion,

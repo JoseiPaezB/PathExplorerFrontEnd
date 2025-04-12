@@ -59,7 +59,6 @@ export default function DashboardPage() {
     }
   };
 
-  // Simulate loading state
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsLoading(false);
@@ -91,7 +90,6 @@ export default function DashboardPage() {
     },
   };
 
-  // Shimmer loading effect for cards
   const ShimmerCard = () => (
     <div className="rounded-xl border border-border/50 bg-card/50 shadow-sm overflow-hidden">
       <div className="p-6 space-y-4">

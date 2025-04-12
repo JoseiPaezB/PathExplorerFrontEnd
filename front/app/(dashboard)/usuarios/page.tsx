@@ -25,7 +25,7 @@ export default function UsuariosPage() {
   useEffect(() => {
     const fetchUsuarios = async () => {
       const response = await fetch(
-        "http://localhost:3000/api/banca/empleados",
+        "http://localhost:4000/api/banca/empleados",
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
