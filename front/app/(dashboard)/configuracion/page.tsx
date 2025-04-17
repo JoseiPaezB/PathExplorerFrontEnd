@@ -1,18 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import {
-  Bell,
-  Globe,
-  Key,
-  Lock,
-  Mail,
-  Moon,
-  Palette,
-  Shield,
-  Sun,
-  User,
-} from "lucide-react";
+import { useState, useEffect } from "react";
+import { Key } from "lucide-react";
 
 import {
   Card,
@@ -24,22 +13,21 @@ import {
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { useAuth } from "@/contexts/auth-context";
+import { updatePassword } from "./actions";
 
 interface FormState {
   nombre: string;
   apellido: string;
   correo: string;
   cargo: string;
+}
+
+interface FormPasswordState {
+  currentPassword: string;
+  newPassword: string;
+  confirmPassword: string;
 }
 
 export default function ConfiguracionPage() {
@@ -54,10 +42,27 @@ export default function ConfiguracionPage() {
     correo: user?.email || "",
     cargo: user?.profile?.puesto_actual || "",
   });
+  const [formPasswordState, setFormPasswordState] = useState<FormPasswordState>(
+    {
+      currentPassword: "",
+      newPassword: "",
+      confirmPassword: "",
+    }
+  );
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
     setFormState((prevState) => ({
+      ...prevState,
+      [id]: value,
+    }));
+  };
+
+  const handleInputChangePassword = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const { id, value } = e.target;
+    setFormPasswordState((prevState) => ({
       ...prevState,
       [id]: value,
     }));
@@ -69,7 +74,7 @@ export default function ConfiguracionPage() {
     setFormError(null);
 
     try {
-      const updatedUser = await updateUserProfile({
+      await updateUserProfile({
         nombre: formState.nombre,
         apellido: formState.apellido,
         correo: formState.correo,
@@ -84,6 +89,60 @@ export default function ConfiguracionPage() {
     } catch (error) {
       setFormError(
         error instanceof Error ? error.message : "Error al actualizar los datos"
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handlePasswordChange = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (
+      !formPasswordState.currentPassword ||
+      formPasswordState.currentPassword.trim() === ""
+    ) {
+      setFormError("La contraseña actual es obligatoria");
+      return;
+    }
+
+    if (
+      !formPasswordState.newPassword ||
+      formPasswordState.newPassword.trim() === ""
+    ) {
+      setFormError("La nueva contraseña es obligatoria");
+      return;
+    }
+    if (
+      !formPasswordState.confirmPassword ||
+      formPasswordState.confirmPassword.trim() === ""
+    ) {
+      setFormError("La confirmación de la nueva contraseña es obligatoria");
+      return;
+    }
+
+    if (formPasswordState.newPassword !== formPasswordState.confirmPassword) {
+      setFormError("Las contraseñas no coinciden");
+      return;
+    }
+    try {
+      setIsSubmitting(true);
+      setFormError(null);
+      const token = localStorage.getItem("token") || "";
+      await updatePassword(
+        formPasswordState.currentPassword,
+        formPasswordState.newPassword,
+        token
+      );
+      setFormSuccess(true);
+      setTimeout(() => {
+        setFormSuccess(false);
+      }, 3000);
+    } catch (error) {
+      setFormError(
+        error instanceof Error
+          ? error.message
+          : "Error al actualizar la contraseña"
       );
     } finally {
       setIsSubmitting(false);
@@ -196,24 +255,48 @@ export default function ConfiguracionPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="current-password">Contraseña actual</Label>
-                <Input id="current-password" type="password" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="new-password">Nueva contraseña</Label>
-                <Input id="new-password" type="password" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="confirm-password">
-                  Confirmar nueva contraseña
-                </Label>
-                <Input id="confirm-password" type="password" />
-              </div>
-              <Button className="bg-primary hover:bg-primary/90">
-                <Key className="mr-2 h-4 w-4" />
-                Actualizar contraseña
-              </Button>
+              <form onSubmit={handlePasswordChange}>
+                <div className="space-y-2">
+                  <Label htmlFor="currentPassword">Contraseña actual</Label>
+                  <Input
+                    id="currentPassword"
+                    type="password"
+                    value={formPasswordState.currentPassword}
+                    onChange={handleInputChangePassword}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="newPassword">Nueva contraseña</Label>
+                  <Input
+                    id="newPassword"
+                    type="password"
+                    value={formPasswordState.newPassword}
+                    onChange={handleInputChangePassword}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="confirmPassword">
+                    Confirmar nueva contraseña
+                  </Label>
+                  <Input
+                    id="confirmPassword"
+                    type="password"
+                    value={formPasswordState.confirmPassword}
+                    onChange={handleInputChangePassword}
+                  />
+                </div>
+                <div className="mt-4">
+                  <Button
+                    className="bg-primary hover:bg-primary/90"
+                    disabled={isSubmitting}
+                    type="submit"
+                  >
+                    <Key className="mr-2 h-4 w-4" />
+                    {isSubmitting ? "Guardando..." : "Cambiar contraseña"}
+                  </Button>
+                </div>
+                {getStatusMessage()}
+              </form>
             </CardContent>
           </Card>
         </TabsContent>
