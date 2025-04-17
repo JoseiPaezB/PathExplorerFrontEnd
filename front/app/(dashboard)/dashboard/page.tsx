@@ -48,14 +48,13 @@ export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState("activos");
   const shouldReduceMotion = useReducedMotion();
   const { user } = useAuth();
-  const [openDropdownIndex, setOpenDropdownIndex] = useState(0); // El primer dropdown se abrirá por defecto
+  const [openDropdownIndex, setOpenDropdownIndex] = useState(0);
 
   const handleDropdownToggle = (index: number) => {
-    // Si el dropdown ya está abierto, lo cierra; si no, lo abre
     if (openDropdownIndex === index) {
-      setOpenDropdownIndex(-1); // Cierra el dropdown
+      setOpenDropdownIndex(-1);
     } else {
-      setOpenDropdownIndex(index); // Abre el dropdown correspondiente
+      setOpenDropdownIndex(index);
     }
   };
 

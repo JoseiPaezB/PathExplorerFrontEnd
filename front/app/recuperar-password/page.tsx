@@ -1,47 +1,59 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState } from "react"
-import Link from "next/link"
-import { ArrowLeft, Mail } from "lucide-react"
+import { useState } from "react";
+import Link from "next/link";
+import { ArrowLeft, Mail } from "lucide-react";
 
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { useToast } from "@/components/ui/use-toast"
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { useToast } from "@/components/ui/use-toast";
 
 export default function RecuperarPasswordPage() {
-  const [email, setEmail] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
-  const [isSubmitted, setIsSubmitted] = useState(false)
-  const { toast } = useToast()
+  const [email, setEmail] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
+    e.preventDefault();
+    setIsLoading(true);
 
-    // Simulación de envío de correo
     setTimeout(() => {
-      setIsLoading(false)
-      setIsSubmitted(true)
+      setIsLoading(false);
+      setIsSubmitted(true);
       toast({
         title: "Correo enviado",
-        description: "Revisa tu bandeja de entrada para recuperar tu contraseña.",
-      })
-    }, 1500)
-  }
+        description:
+          "Revisa tu bandeja de entrada para recuperar tu contraseña.",
+      });
+    }, 1500);
+  };
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-muted p-4">
       <Card className="w-full max-w-md shadow-lg">
         <CardHeader className="space-y-1">
-          <Link href="/login" className="flex items-center text-sm text-primary hover:underline mb-4">
+          <Link
+            href="/login"
+            className="flex items-center text-sm text-primary hover:underline mb-4"
+          >
             <ArrowLeft className="mr-1 h-4 w-4" />
             Volver al inicio de sesión
           </Link>
-          <CardTitle className="text-2xl font-bold text-center">Recuperar Contraseña</CardTitle>
+          <CardTitle className="text-2xl font-bold text-center">
+            Recuperar Contraseña
+          </CardTitle>
           <CardDescription className="text-center">
             {!isSubmitted
               ? "Ingresa tu correo electrónico para recuperar tu contraseña"
@@ -66,7 +78,11 @@ export default function RecuperarPasswordPage() {
                   />
                 </div>
               </div>
-              <Button type="submit" className="w-full bg-primary hover:bg-primary/90" disabled={isLoading}>
+              <Button
+                type="submit"
+                className="w-full bg-primary hover:bg-primary/90"
+                disabled={isLoading}
+              >
                 {isLoading ? (
                   <>
                     <svg
@@ -100,11 +116,15 @@ export default function RecuperarPasswordPage() {
             <div className="space-y-4">
               <div className="rounded-lg bg-muted p-4 text-center">
                 <p className="text-sm text-muted-foreground">
-                  Hemos enviado un correo a <span className="font-medium text-foreground">{email}</span> con
-                  instrucciones para recuperar tu contraseña.
+                  Hemos enviado un correo a{" "}
+                  <span className="font-medium text-foreground">{email}</span>{" "}
+                  con instrucciones para recuperar tu contraseña.
                 </p>
               </div>
-              <Button className="w-full bg-primary hover:bg-primary/90" onClick={() => setIsSubmitted(false)}>
+              <Button
+                className="w-full bg-primary hover:bg-primary/90"
+                onClick={() => setIsSubmitted(false)}
+              >
                 Intentar con otro correo
               </Button>
             </div>
@@ -118,6 +138,5 @@ export default function RecuperarPasswordPage() {
         </CardFooter>
       </Card>
     </div>
-  )
+  );
 }
-
