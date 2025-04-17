@@ -23,6 +23,12 @@ export interface UpdateProfileData {
   cargo: string;
 }
 
+export interface UserInfoBancaResponse {
+  success: boolean;
+  message: string;
+  employees: UserInfoBanca;
+}
+
 export interface CoursesUser {
   id_curso: number;
   nombre: string;
@@ -57,4 +63,37 @@ export interface CertificationsUser {
 export interface CertificationsUserResponse {
   success: boolean;
   certifications: CertificationsUser[];
+}
+
+type ProfessionalHistoryEntry = {
+  nombre: string;
+  apellido: string;
+  historial: string;
+  role: string;
+  achievements: string;
+};
+
+export type ProfessionalHistory = ProfessionalHistoryEntry[];
+
+export type CertificationItem = {
+  id_certificacion: number;
+  nombre: string;
+  institucion: string;
+  validez: number;
+  nivel?: number;
+};
+
+export type CertificationsArray = CertificationItem[];
+
+export interface RawCertification {
+  ID_Certificacion: number;
+  Nombre: string;
+  Institucion: string;
+  Validez: number | string;
+  Nivel?: number | string;
+}
+
+export interface CertificationsResponse {
+  success: boolean;
+  certifications: RawCertification[];
 }

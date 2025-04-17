@@ -1,23 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-
-export type Course = {
-  id_curso: number;
-  nombre: string;
-  institucion: string;
-  descripcion: string;
-  duracion: number;
-  modalidad: string;
-};
-
-export type CourseFormData = {
-  id_curso: number;
-  fecha_inicio: string;
-  fecha_finalizacion: string;
-  calificacion: number | null;
-  certificado: string;
-};
+import { Course, CourseFormData } from "@/types/courses";
 export async function getCourses(token?: string): Promise<Course[]> {
   try {
     const headers: HeadersInit = {

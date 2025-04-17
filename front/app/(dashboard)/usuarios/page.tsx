@@ -15,7 +15,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 import { useState, useEffect } from "react";
-import { UserInfoBanca } from "@/types/users";
+import { UserInfoBanca, UserInfoBancaResponse } from "@/types/users";
+import { getEmpleadosBanca } from "./actions";
 
 export default function UsuariosPage() {
   const [usuarios, setUsuarios] = useState<UserInfoBanca[]>([]);
@@ -24,19 +25,23 @@ export default function UsuariosPage() {
 
   useEffect(() => {
     const fetchUsuarios = async () => {
-      const response = await fetch(
-        "http://localhost:4000/api/banca/empleados",
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-      const data = await response.json();
-      setUsuarios(data.employees);
-      setFilteredUsuarios(data.employees);
+      try {
+        const data = (await getEmpleadosBanca(
+          localStorage.getItem("token") || ""
+        )) as UserInfoBancaResponse;
+        const employeesList = Array.isArray(data.employees)
+          ? data.employees
+          : [];
+
+        setUsuarios(employeesList);
+        setFilteredUsuarios(employeesList);
+      } catch (error) {
+        console.error("Error fetching users:", error);
+        setUsuarios([]);
+        setFilteredUsuarios([]);
+      }
     };
+
     fetchUsuarios();
   }, []);
 

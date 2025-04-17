@@ -30,7 +30,7 @@ interface AuthContextType extends AuthState {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
+const API_URL = "http://localhost:4000/api";
 
 const setCookie = (name: string, value: string, days: number = 7) => {
   const date = new Date();

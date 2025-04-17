@@ -24,12 +24,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-import {
-  addCourse,
-  getCourses,
-  type Course,
-  type CourseFormData,
-} from "./actions";
+import { addCourse, getCourses } from "./actions";
+import { Course, CourseFormData } from "@/types/courses";
 
 export default function AddCourseForm() {
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
@@ -287,10 +283,9 @@ export default function AddCourseForm() {
               <div className="grid gap-6 md:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="descripcion">Descripción</Label>
-                  <Input
+                  <Textarea
                     id="descripcion"
                     name="descripcion"
-                    type="text"
                     value={selectedCourse.descripcion}
                     className="h-10"
                     disabled
