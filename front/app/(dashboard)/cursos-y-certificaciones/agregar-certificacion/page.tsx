@@ -12,10 +12,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -23,34 +19,37 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Certification, CertificationFormData } from "@/types/certifications";
+import { getCertifications, addCertification } from "./actions";
 
-import { addCourse, getCourses } from "./actions";
-import { Course, CourseFormData } from "@/types/courses";
-
-export default function AddCourseForm() {
+export default function AddCertificationForm() {
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [courses, setCourses] = useState<Course[]>([]);
-  const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
+  const [certifications, setCertifications] = useState<Certification[]>([]);
+  const [selectedCertification, setSelectedCertification] =
+    useState<Certification | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [formData, setFormData] = useState<CourseFormData>({
-    id_curso: 0,
-    fecha_inicio: "",
-    fecha_finalizacion: "",
-    calificacion: null,
-    certificado: "",
+  const [formData, setFormData] = useState<CertificationFormData>({
+    id_certificacion: 0,
+    fecha_obtencion: "",
+    fecha_vencimiento: "",
+    estado_validacion: "",
+    fecha_creacion: "",
   });
 
   useEffect(() => {
-    const fetchCourses = async () => {
+    const fetchCertifications = async () => {
       try {
         setIsLoading(true);
         const token = localStorage.getItem("token") || undefined;
-        const data = await getCourses(token);
-        setCourses(data);
+        const data = await getCertifications(token);
+        setCertifications(data);
       } catch (err) {
-        console.error("Error fetching courses:", err);
+        console.error("Error fetching certifications:", err);
         setError(
           err instanceof Error ? err.message : "An unknown error occurred"
         );
@@ -59,7 +58,7 @@ export default function AddCourseForm() {
       }
     };
 
-    fetchCourses();
+    fetchCertifications();
   }, []);
 
   const handleInputChange = (
@@ -68,55 +67,55 @@ export default function AddCourseForm() {
       | React.ChangeEvent<HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
-    if (name === "calificacion") {
-      const numericValue = parseFloat(value);
-      setFormData((prev) => ({
-        ...prev,
-        [name]: isNaN(numericValue) ? null : numericValue,
-      }));
-    } else {
-      setFormData((prev) => ({
-        ...prev,
-        [name]: value,
-      }));
-    }
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
   const handleSelectChange = (name: string, value: string) => {
-    if (name === "id_curso") {
+    if (name === "id_certificacion") {
       const numericValue = parseInt(value, 10);
-      setFormData((prev) => ({
-        ...prev,
-        [name]: numericValue,
-      }));
+      setFormData((prev) => {
+        return {
+          ...prev,
+          [name]: numericValue,
+        };
+      });
 
-      const course = courses.find((course) => course.id_curso === numericValue);
-      setSelectedCourse(course || null);
+      const certification = certifications.find(
+        (certification) => certification.id_certificacion === numericValue
+      );
+      setSelectedCertification(certification || null);
     } else {
-      setFormData((prev) => ({
-        ...prev,
-        [name]: value,
-      }));
+      setFormData((prev) => {
+        return {
+          ...prev,
+          [name]: value,
+        };
+      });
     }
   };
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("Form data:", formData);
     if (
-      !formData.id_curso ||
-      !formData.fecha_inicio ||
-      !formData.fecha_finalizacion ||
-      !formData.certificado
+      !formData.id_certificacion ||
+      !formData.fecha_obtencion ||
+      !formData.fecha_vencimiento ||
+      !formData.estado_validacion ||
+      !formData.fecha_creacion
     ) {
       setError("Por favor completa todos los campos requeridos.");
       return;
     }
 
-    const startDate = new Date(formData.fecha_inicio);
-    const endDate = new Date(formData.fecha_finalizacion);
+    const completionDate = new Date(formData.fecha_obtencion);
+    const dueDate = new Date(formData.fecha_vencimiento);
 
-    if (endDate < startDate) {
+    if (dueDate < completionDate) {
       setError(
-        "La fecha de finalización debe ser posterior a la fecha de inicio"
+        "La fecha de vencimiento debe ser posterior a la fecha de obtención"
       );
       return;
     }
@@ -124,7 +123,7 @@ export default function AddCourseForm() {
 
     try {
       const token = localStorage.getItem("token") || undefined;
-      await addCourse(formData, token);
+      await addCertification(formData, token);
 
       setShowSuccessMessage(true);
 
@@ -133,13 +132,13 @@ export default function AddCourseForm() {
       }, 3000);
 
       setFormData({
-        id_curso: 0,
-        fecha_inicio: "",
-        fecha_finalizacion: "",
-        calificacion: null,
-        certificado: "",
+        id_certificacion: 0,
+        fecha_obtencion: "",
+        fecha_vencimiento: "",
+        estado_validacion: "",
+        fecha_creacion: "",
       });
-      setSelectedCourse(null);
+      setSelectedCertification(null);
       setError(null);
     } catch (error) {
       setError(
@@ -157,44 +156,95 @@ export default function AddCourseForm() {
         <CardHeader>
           <CardTitle className="text-xl flex items-center gap-2">
             <BookOpen className="h-5 w-5 text-primary" />
-            Información del Curso
+            Información de la Certificación
           </CardTitle>
           <CardDescription>
-            Ingresa los detalles del curso que deseas agregar
+            Ingresa los detalles de la certificación que deseas agregar.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="grid gap-6 md:grid-cols-2">
             <div className="space-y-2">
               <label htmlFor="id_curso" className="text-sm font-medium">
-                Seleccionar Curso Existente
+                Seleccionar Certificación Existente
               </label>
               <select
-                name="id_curso"
-                id="id_curso"
-                value={formData.id_curso}
-                onChange={(e) => handleSelectChange("id_curso", e.target.value)}
+                name="id_certificacion"
+                id="id_certificacion"
+                value={formData.id_certificacion}
+                onChange={(e) =>
+                  handleSelectChange("id_certificacion", e.target.value)
+                }
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 disabled={isLoading}
               >
                 <option value="" disabled>
-                  {isLoading ? "Cargando cursos..." : "Selecciona un curso"}
+                  {isLoading
+                    ? "Cargando cursos..."
+                    : "Selecciona una certificación"}
                 </option>
                 {!isLoading &&
-                  courses.map((course) => (
-                    <option key={course.id_curso} value={course.id_curso}>
-                      {course.nombre}
+                  certifications.map((cert) => (
+                    <option
+                      key={cert.id_certificacion}
+                      value={cert.id_certificacion}
+                    >
+                      {cert.nombre}
                     </option>
                   ))}
               </select>
             </div>
+          </div>
+
+          <div className="grid gap-6 md:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="fechaInicio">Fecha de Creación</Label>
+              <div className="relative">
+                <Calendar className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="fecha_creacion"
+                  name="fecha_creacion"
+                  type="date"
+                  value={formData.fecha_creacion}
+                  onChange={handleInputChange}
+                  className="h-10 pl-10"
+                />
+              </div>
+            </div>
 
             <div className="space-y-2">
-              <Label htmlFor="certificado">Tiene certificado?</Label>
+              <Label htmlFor="fecha_obtencion">Fecha de Obtencion</Label>
+              <div className="relative">
+                <Calendar className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="fecha_obtencion"
+                  name="fecha_obtencion"
+                  type="date"
+                  value={formData.fecha_obtencion}
+                  onChange={handleInputChange}
+                  className="h-10 pl-10"
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="fecha_vencimiento">Fecha de Vencimiento</Label>
+              <div className="relative">
+                <Input
+                  id="fecha_vencimiento"
+                  name="fecha_vencimiento"
+                  type="date"
+                  value={formData.fecha_vencimiento}
+                  onChange={handleInputChange}
+                  className="h-10 pl-10"
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="estado_validacion">Es valido?</Label>
               <Select
-                value={formData.certificado}
+                value={formData.estado_validacion}
                 onValueChange={(value) =>
-                  handleSelectChange("certificado", value)
+                  handleSelectChange("estado_validacion", value)
                 }
               >
                 <SelectTrigger className="h-10">
@@ -207,63 +257,16 @@ export default function AddCourseForm() {
               </Select>
             </div>
           </div>
-
-          <div className="grid gap-6 md:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="fechaInicio">Fecha de Inicio</Label>
-              <div className="relative">
-                <Calendar className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="fecha_inicio"
-                  name="fecha_inicio"
-                  type="date"
-                  value={formData.fecha_inicio}
-                  onChange={handleInputChange}
-                  className="h-10 pl-10"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="fecha_finalizacion">Fecha de Finalización</Label>
-              <div className="relative">
-                <Calendar className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="fecha_finalizacion"
-                  name="fecha_finalizacion"
-                  type="date"
-                  value={formData.fecha_finalizacion}
-                  onChange={handleInputChange}
-                  className="h-10 pl-10"
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="calificacion">Calificacion</Label>
-              <div className="relative">
-                <Input
-                  id="calificacion"
-                  name="calificacion"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={formData.calificacion ?? ""}
-                  onChange={handleInputChange}
-                  className="h-10 pl-10"
-                />
-              </div>
-            </div>
-          </div>
-          {selectedCourse && (
+          {selectedCertification && (
             <>
               <div className="grid gap-6 md:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="nombre">Nombre del Curso</Label>
+                  <Label htmlFor="nombre">Nombre de la Certificacion</Label>
                   <Input
                     id="nombre"
                     name="nombre"
                     type="text"
-                    value={selectedCourse.nombre}
+                    value={selectedCertification.nombre}
                     className="h-10"
                     disabled
                   />
@@ -274,7 +277,7 @@ export default function AddCourseForm() {
                     id="institucion"
                     name="institucion"
                     type="text"
-                    value={selectedCourse.institucion}
+                    value={selectedCertification.institucion}
                     className="h-10"
                     disabled
                   />
@@ -282,37 +285,27 @@ export default function AddCourseForm() {
               </div>
               <div className="grid gap-6 md:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="descripcion">Descripción</Label>
-                  <Textarea
-                    id="descripcion"
-                    name="descripcion"
-                    value={selectedCourse.descripcion}
+                  <Label htmlFor="nivel">Nivel</Label>
+                  <Input
+                    id="nivel"
+                    name="nivel"
+                    type="text"
+                    value={selectedCertification.nivel}
                     className="h-10"
                     disabled
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="modalidad">Modalidad</Label>
+                  <Label htmlFor="validez">Validez</Label>
                   <Input
-                    id="modalidad"
-                    name="modalidad"
+                    id="validez"
+                    name="validez"
                     type="text"
-                    value={selectedCourse.modalidad}
+                    value={selectedCertification.validez}
                     className="h-10"
                     disabled
                   />
                 </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="duracion">Duración</Label>
-                <Input
-                  id="duracion"
-                  name="duracion"
-                  type="text"
-                  value={selectedCourse.duracion}
-                  className="h-10"
-                  disabled
-                />
               </div>
             </>
           )}
@@ -350,7 +343,7 @@ export default function AddCourseForm() {
           </div>
         )}
         <CardFooter className="flex justify-between border-t pt-6">
-          <Link href="/cursos">
+          <Link href="/cursos-y-certificaciones">
             <Button variant="outline" type="button">
               Cancelar
             </Button>
@@ -379,7 +372,7 @@ export default function AddCourseForm() {
                   <path
                     className="opacity-75"
                     fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    d="M4 1 2a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                   ></path>
                 </svg>
                 Guardando...

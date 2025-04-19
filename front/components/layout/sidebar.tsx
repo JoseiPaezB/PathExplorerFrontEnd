@@ -54,7 +54,11 @@ export function Sidebar({
   const roleItems = {
     empleado: [
       { title: "Mi Proyecto", href: "/proyecto-actual", icon: Briefcase },
-      { title: "Mis Cursos", href: "/cursos", icon: BookOpen },
+      {
+        title: "Mis Cursos",
+        href: "/cursos-y-certificaciones",
+        icon: BookOpen,
+      },
       { title: "Mi Desempeño", href: "/analitica", icon: BarChart3 },
     ],
     manager: [

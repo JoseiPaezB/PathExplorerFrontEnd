@@ -64,7 +64,7 @@ export async function addCourse(
       );
     }
 
-    revalidatePath("/cursos");
+    revalidatePath("/cursos-y-certificaciones");
 
     return await response.json();
   } catch (error) {
