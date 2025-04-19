@@ -323,7 +323,7 @@ export default function AddCertificationForm() {
                 clipRule="evenodd"
               />
             </svg>
-            <span>Curso agregado exitosamente</span>
+            <span>Certificación agregada exitosamente</span>
           </div>
         )}
         {error && (
