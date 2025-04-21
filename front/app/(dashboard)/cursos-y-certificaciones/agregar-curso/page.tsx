@@ -240,7 +240,7 @@ export default function AddCourseForm() {
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="calificacion">Calificacion</Label>
+              <Label htmlFor="calificacion">Calificación</Label>
               <div className="relative">
                 <Input
                   id="calificacion"

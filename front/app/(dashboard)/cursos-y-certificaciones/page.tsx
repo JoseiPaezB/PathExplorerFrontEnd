@@ -26,6 +26,8 @@ import Link from "next/link";
 import { useAuth } from "@/contexts/auth-context";
 import { useEffect } from "react";
 import { CoursesUserResponse, CertificationsUserResponse } from "@/types/users";
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
 
 export default function CursosPage() {
   const [activeTab, setActiveTab] = useState("en-curso");
@@ -205,7 +207,7 @@ export default function CursosPage() {
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div className="flex items-center gap-2 text-muted-foreground">
                         <Timer className="h-4 w-4" />
-                        <span>Duración: {course.duracion}</span>
+                        <span>Duración: {course.duracion} horas</span>
                       </div>
                     </div>
                   </CardContent>
@@ -239,14 +241,18 @@ export default function CursosPage() {
                         <span className="text-xs text-muted-foreground">
                           Duración
                         </span>
-                        <p className="font-medium">{course.duracion}</p>
+                        <p className="font-medium">{course.duracion} horas</p>
                       </div>
                       <div className="space-y-1">
                         <span className="text-xs text-muted-foreground">
                           Fecha completado
                         </span>
                         <p className="font-medium">
-                          {course.fecha_finalizacion}
+                        {new Date(course.fecha_finalizacion).toLocaleDateString(undefined, {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric'
+                        })}
                         </p>
                       </div>
                       <div className="space-y-1">
@@ -297,7 +303,13 @@ export default function CursosPage() {
                         Válida hasta:
                       </span>
                       <span className="font-medium">
-                        {cert.fecha_vencimiento}
+                        {cert.fecha_vencimiento
+                          ? new Date(cert.fecha_vencimiento).toLocaleDateString('es-MX', {
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric',
+                            })
+                          : 'Sin fecha'}
                       </span>
                     </div>
                     <div className="flex items-center justify-between">
