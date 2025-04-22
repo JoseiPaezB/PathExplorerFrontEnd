@@ -8,6 +8,7 @@ import {
   Plus,
   Search,
   Timer,
+  School,
 } from "lucide-react";
 
 import {
@@ -18,6 +19,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -30,7 +32,6 @@ import { CoursesUserResponse, CertificationsUserResponse } from "@/types/users";
 export default function CursosPage() {
   const [activeTab, setActiveTab] = useState("en-curso");
   const [userCourses, setUserCourses] = useState<CoursesUserResponse>();
-  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [userCertifications, setUserCertifications] =
     useState<CertificationsUserResponse>();
@@ -40,7 +41,6 @@ export default function CursosPage() {
   useEffect(() => {
     const fetchCourses = async () => {
       try {
-        setIsLoading(true);
         const coursesData = await courses();
 
         if (coursesData) {
@@ -50,8 +50,6 @@ export default function CursosPage() {
       } catch (err) {
         console.error("Error fetching courses:", err);
         setError("Failed to load courses");
-      } finally {
-        setIsLoading(false);
       }
     };
 
@@ -61,7 +59,6 @@ export default function CursosPage() {
   useEffect(() => {
     const fetchCertifications = async () => {
       try {
-        setIsLoading(true);
         const certificationsData = await certifications();
 
         if (certificationsData) {
@@ -71,8 +68,6 @@ export default function CursosPage() {
       } catch (err) {
         console.error("Error fetching certifications:", err);
         setError("Failed to load certifications");
-      } finally {
-        setIsLoading(false);
       }
     };
 
@@ -187,14 +182,6 @@ export default function CursosPage() {
                 <Card key={index}>
                   <CardHeader>
                     <div className="flex items-start justify-between">
-                      {isLoading && (
-                        <div className="text-center">Loading courses...</div>
-                      )}
-                      {error && (
-                        <div className="text-red-500 text-center">
-                          Error: {error}
-                        </div>
-                      )}
                       <div className="space-y-1">
                         <CardTitle>{course.nombre}</CardTitle>
                         <CardDescription>{course.descripcion}</CardDescription>
@@ -202,10 +189,31 @@ export default function CursosPage() {
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-sm">
+                        <Badge variant="outline">{course.categoria}</Badge>
+                        <span className="font-medium">
+                          {course.progreso}% completado
+                        </span>
+                      </div>
+                      <Progress
+                        value={parseFloat(course.progreso)}
+                        className="h-2"
+                      />
+                    </div>
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div className="flex items-center gap-2 text-muted-foreground">
+                        <School className="h-4 w-4" />
+                        <span>Institucion: {course.institucion}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-muted-foreground">
                         <Timer className="h-4 w-4" />
-                        <span>Duración: {course.duracion}</span>
+                        <span>Duración: {course.duracion} horas</span>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div className="flex items-center gap-2 text-muted-foreground">
+                        <span>Modalidad: {course.modalidad}</span>
                       </div>
                     </div>
                   </CardContent>
@@ -228,13 +236,16 @@ export default function CursosPage() {
                         <CardTitle>{course.nombre}</CardTitle>
                         <CardDescription>{course.descripcion}</CardDescription>
                       </div>
-                      <Badge variant="outline" className="bg-muted">
-                        Completado
-                      </Badge>
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div className="space-y-1">
+                        <span className="text-xs text-muted-foreground">
+                          Categoría
+                        </span>
+                        <p className="font-medium">{course.categoria}</p>
+                      </div>
                       <div className="space-y-1">
                         <span className="text-xs text-muted-foreground">
                           Duración
@@ -246,7 +257,13 @@ export default function CursosPage() {
                           Fecha completado
                         </span>
                         <p className="font-medium">
-                          {course.fecha_finalizacion}
+                          {new Date(
+                            course.fecha_finalizacion
+                          ).toLocaleDateString("es-ES", {
+                            day: "2-digit",
+                            month: "long",
+                            year: "numeric",
+                          })}
                         </p>
                       </div>
                       <div className="space-y-1">
@@ -286,7 +303,7 @@ export default function CursosPage() {
                           : "bg-yellow-50 text-yellow-700"
                       }
                     >
-                      {cert.estado_validacion}
+                      {cert.estado_validacion ? "Activa" : "Inactiva"}
                     </Badge>
                   </div>
                 </CardHeader>
@@ -294,20 +311,39 @@ export default function CursosPage() {
                   <div className="grid gap-2 text-sm">
                     <div className="flex items-center justify-between">
                       <span className="text-muted-foreground">
-                        Válida hasta:
+                        Fecha de obtención:
                       </span>
                       <span className="font-medium">
-                        {cert.fecha_vencimiento}
+                        {new Date(cert.fecha_obtencion).toLocaleDateString(
+                          "es-ES",
+                          {
+                            day: "2-digit",
+                            month: "long",
+                            year: "numeric",
+                          }
+                        )}
                       </span>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-muted-foreground">
-                        ID Credencial:
+                        Válida hasta:
                       </span>
                       <span className="font-medium">
-                        {cert.ID_Certificacion}
+                        {new Date(
+                          cert.fecha_vencimiento || ""
+                        ).toLocaleDateString("es-ES", {
+                          day: "2-digit",
+                          month: "long",
+                          year: "numeric",
+                        })}
                       </span>
                     </div>
+                  </div>
+                  <div className="space-y-2 flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">
+                      Nivel:
+                    </span>
+                    <span className="font-medium">{cert.Nivel}</span>
                   </div>
                 </CardContent>
                 <CardFooter className="grid grid-cols-2 gap-2 border-t pt-4">

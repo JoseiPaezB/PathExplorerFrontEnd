@@ -36,11 +36,13 @@ export interface CoursesUser {
   descripcion: string;
   duracion: number;
   modalidad: string;
+  categoria: string;
   fecha_inicio: string;
   fecha_finalizacion: string;
   calificacion: number | null;
   certificado: boolean;
   fecha_creacion: string;
+  progreso: string;
 }
 
 export interface CoursesUserResponse {
