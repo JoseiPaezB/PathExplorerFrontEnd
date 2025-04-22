@@ -135,6 +135,16 @@ export default function AddCourseForm() {
         );
         return;
       }
+
+      if (!formData.progreso || formData.progreso !== "100") {
+        setError("El progreso debe ser 100 si ya se ha terminado el curso.");
+        return;
+      }
+
+      if (!formData.calificacion) {
+        setError("La calificacion es obligatoria.");
+        return;
+      }
     }
 
     setIsSubmitting(true);

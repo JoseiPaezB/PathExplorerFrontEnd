@@ -9,6 +9,7 @@ import {
   Search,
   Timer,
   School,
+  Edit,
 } from "lucide-react";
 
 import {
@@ -217,6 +218,23 @@ export default function CursosPage() {
                       </div>
                     </div>
                   </CardContent>
+                  <CardFooter className="border-t pt-4">
+                    <Link
+                      href={`/cursos-y-certificaciones/editar/${course.id_curso}`}
+                      className="w-full"
+                      onClick={() =>
+                        sessionStorage.setItem(
+                          "courseToEdit",
+                          JSON.stringify(course)
+                        )
+                      }
+                    >
+                      <Button variant="outline" className="w-full gap-2">
+                        <Edit className="h-4 w-4" />
+                        Editar curso
+                      </Button>
+                    </Link>
+                  </CardFooter>
                 </Card>
               ))}
           </div>
