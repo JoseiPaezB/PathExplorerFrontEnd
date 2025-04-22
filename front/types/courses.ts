@@ -5,6 +5,7 @@ export type Course = {
   descripcion: string;
   duracion: number;
   modalidad: string;
+  categoria: string;
 };
 
 export type CourseFormData = {
@@ -13,5 +14,5 @@ export type CourseFormData = {
   fecha_finalizacion: string | null;
   calificacion: number | null;
   certificado: string;
-  progeso: string | null;
+  progreso: string;
 };

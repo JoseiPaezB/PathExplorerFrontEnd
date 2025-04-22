@@ -37,9 +37,10 @@ export default function AddCourseForm() {
   const [formData, setFormData] = useState<CourseFormData>({
     id_curso: 0,
     fecha_inicio: "",
-    fecha_finalizacion: "",
+    fecha_finalizacion: null,
     calificacion: null,
     certificado: "",
+    progreso: "",
   });
 
   useEffect(() => {
@@ -102,25 +103,40 @@ export default function AddCourseForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (
-      !formData.id_curso ||
-      !formData.fecha_inicio ||
-      !formData.fecha_finalizacion ||
-      !formData.certificado
-    ) {
+
+    if (!formData.id_curso || !formData.fecha_inicio || !formData.certificado) {
       setError("Por favor completa todos los campos requeridos.");
       return;
     }
 
-    const startDate = new Date(formData.fecha_inicio);
-    const endDate = new Date(formData.fecha_finalizacion);
+    const progress = formData.progreso ? parseFloat(formData.progreso) : 0;
 
-    if (endDate < startDate) {
-      setError(
-        "La fecha de finalización debe ser posterior a la fecha de inicio"
-      );
-      return;
+    if (progress === 100) {
+      if (!formData.fecha_finalizacion) {
+        setError(
+          "Para un curso completado, la fecha de finalización es obligatoria."
+        );
+        return;
+      }
+
+      if (formData.calificacion === null) {
+        setError("Para un curso completado, la calificación es obligatoria.");
+        return;
+      }
     }
+
+    if (formData.fecha_finalizacion) {
+      const startDate = new Date(formData.fecha_inicio);
+      const endDate = new Date(formData.fecha_finalizacion);
+
+      if (endDate < startDate) {
+        setError(
+          "La fecha de finalización debe ser posterior a la fecha de inicio"
+        );
+        return;
+      }
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -139,6 +155,7 @@ export default function AddCourseForm() {
         fecha_finalizacion: "",
         calificacion: null,
         certificado: "",
+        progreso: "",
       });
       setSelectedCourse(null);
       setError(null);
@@ -233,7 +250,7 @@ export default function AddCourseForm() {
                   id="fecha_finalizacion"
                   name="fecha_finalizacion"
                   type="date"
-                  value={formData.fecha_finalizacion}
+                  value={formData.fecha_finalizacion ?? ""}
                   onChange={handleInputChange}
                   className="h-10 pl-10"
                 />
@@ -249,6 +266,22 @@ export default function AddCourseForm() {
                   min="0"
                   step="0.01"
                   value={formData.calificacion ?? ""}
+                  onChange={handleInputChange}
+                  className="h-10 pl-10"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="progreso">Progreso</Label>
+              <div className="relative">
+                <Input
+                  id="progreso"
+                  name="progreso"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={formData.progreso}
                   onChange={handleInputChange}
                   className="h-10 pl-10"
                 />
@@ -299,6 +332,17 @@ export default function AddCourseForm() {
                     name="modalidad"
                     type="text"
                     value={selectedCourse.modalidad}
+                    className="h-10"
+                    disabled
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="categoria">Categoria</Label>
+                  <Input
+                    id="categoria"
+                    name="categoria"
+                    type="text"
+                    value={selectedCourse.categoria}
                     className="h-10"
                     disabled
                   />
