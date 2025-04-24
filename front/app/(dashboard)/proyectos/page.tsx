@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Progress } from "@/components/ui/progress"
+import React, { useMemo } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   DropdownMenu,
@@ -60,6 +61,9 @@ export default function ProyectosPage() {
   const [projects, setProjects] = useState<TransformedProject[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedEstado, setSelectedEstado] = useState('Todos');
+
 
   useEffect(() => {
     const fetchProjects = async () => {
@@ -164,6 +168,14 @@ export default function ProyectosPage() {
     fetchProjects();
   }, []);
 
+  const filteredProjects = useMemo(() => {
+    return projects.filter((project) => {
+      const matchSearch = project.project.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchEstado = selectedEstado === 'Todos' || project.status === selectedEstado;
+      return matchSearch && matchEstado;
+    });
+  }, [projects, searchTerm, selectedEstado]);
+  
   // Helper function to format dates
   const formatDate = (dateString: string) => {
     if (!dateString) return "N/A";
@@ -182,10 +194,6 @@ export default function ProyectosPage() {
           <p className="text-muted-foreground">Administra tus proyectos y asignaciones de roles</p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" className="h-8 gap-1">
-            <Filter className="h-3.5 w-3.5" />
-            <span>Filtrar</span>
-          </Button>
           <Button
             size="sm"
             className="h-8 gap-1 bg-primary hover:bg-primary/90"
@@ -204,45 +212,27 @@ export default function ProyectosPage() {
             type="search"
             placeholder="Buscar proyectos..."
             className="w-full rounded-md border border-input bg-white pl-8 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+
           />
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" size="sm" className="gap-1">
-              <span>Estado</span>
-              <ChevronDown className="h-4 w-4" />
+            <Filter className="h-3.5 w-3.5" />
+            <span>Filtrar</span>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Filtrar por estado</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>Todos</DropdownMenuItem>
-            <DropdownMenuItem>Activos</DropdownMenuItem>
-            <DropdownMenuItem>Pendientes</DropdownMenuItem>
-            <DropdownMenuItem>Completados</DropdownMenuItem>
-          </DropdownMenuContent>
+            <DropdownMenuItem onSelect={() => setSelectedEstado('Todos')}>Todos</DropdownMenuItem>
+            <DropdownMenuItem onSelect={() => setSelectedEstado('ACTIVO')}>Activos</DropdownMenuItem>
+            <DropdownMenuItem onSelect={() => setSelectedEstado('PLANEACION')}>Planeacion</DropdownMenuItem>
+            <DropdownMenuItem onSelect={() => setSelectedEstado('FINALIZADO')}>Finalizado</DropdownMenuItem>
+            </DropdownMenuContent>
         </DropdownMenu>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm" className="gap-1">
-              <span>Departamento</span>
-              <ChevronDown className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Filtrar por departamento</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>Todos</DropdownMenuItem>
-            <DropdownMenuItem>Tecnología</DropdownMenuItem>
-            <DropdownMenuItem>Marketing</DropdownMenuItem>
-            <DropdownMenuItem>Ventas</DropdownMenuItem>
-            <DropdownMenuItem>Recursos Humanos</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-        <Button variant="outline" size="sm" className="gap-1">
-          <Download className="h-4 w-4" />
-          <span>Exportar</span>
-        </Button>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
@@ -456,10 +446,10 @@ export default function ProyectosPage() {
               </Card>
             </div>
 
-            {/* Columna: Roles Completados */}
+            {/* Columna: Roles Finalizado */}
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="font-semibold">Roles Completados</h3>
+                <h3 className="font-semibold">Roles Finalizado</h3>
                 <Badge variant="outline" className="bg-muted">
                   3
                 </Badge>
@@ -520,7 +510,7 @@ export default function ProyectosPage() {
             </div>
             
             {projects.length > 0 ? (
-              projects.map((item, index) => (
+              filteredProjects.map((item, index) => (
                 <div key={index} className="grid grid-cols-8 gap-4 border-t p-4 text-sm items-center">
                   <div className="col-span-2">
                     <p className="font-medium">{item.project}</p>
