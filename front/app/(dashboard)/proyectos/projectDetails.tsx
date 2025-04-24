@@ -41,8 +41,10 @@ const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({ isOpen, onClo
   const getBadgeColor = (status: string) => {
     switch (status) {
       case "Pendiente":
+      case "PLANEACION":
         return "bg-yellow-50 text-yellow-700";
       case "En progreso":
+      case "ACTIVO":
         return "bg-green-50 text-green-700";
       case "Completado":
         return "bg-blue-50 text-blue-700";
@@ -50,6 +52,7 @@ const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({ isOpen, onClo
         return "bg-gray-50 text-gray-700";
     }
   };
+  
 
   const getInitials = (name:string) => {
     if (!name) return "?";
