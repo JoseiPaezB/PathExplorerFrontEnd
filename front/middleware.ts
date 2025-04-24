@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 
-const ENABLE_MIDDLEWARE = false // Cambiar a true  protección de rutas
+const ENABLE_MIDDLEWARE = true // Set to true to enable route protection
 
 export function middleware(request: NextRequest) {
   console.log("Middleware ejecutándose para la ruta:", request.nextUrl.pathname)
@@ -13,6 +13,11 @@ export function middleware(request: NextRequest) {
 
   const user = request.cookies.get("user")?.value
   const path = request.nextUrl.pathname
+
+  // Allow access to the restricted-access page even if not authenticated
+  if (path === "/restricted-access") {
+    return NextResponse.next()
+  }
 
   // Rutas públicas que no requieren autenticación
   if (path === "/login" || path === "/recuperar-password") {
@@ -34,22 +39,41 @@ export function middleware(request: NextRequest) {
     const userData = user ? JSON.parse(user) : null
     const role = userData?.role
 
-    // Rutas solo para administradores
-    if (path.startsWith("/admin") && role !== "administrador") {
-      return NextResponse.redirect(new URL("/dashboard", request.url))
+    // Rutas comunes para todos los roles
+    const commonRoutes = ["/dashboard", "/perfil", "/configuracion"]
+    if (commonRoutes.includes(path)) {
+      return NextResponse.next()
     }
 
-    // Rutas solo para gerentes
-    if (path.startsWith("/manager") && role !== "manager") {
-      return NextResponse.redirect(new URL("/dashboard", request.url))
+    // Rutas específicas por rol
+    if (role === "administrador") {
+      const adminRoutes = ["/usuarios", "/autorizaciones", "/departamentos"]
+      if (adminRoutes.includes(path)) {
+        return NextResponse.next()
+      }
+    } 
+    else if (role === "manager") {
+      const managerRoutes = ["/proyectos", "/equipo", "/analitica"]
+      if (managerRoutes.includes(path)) {
+        return NextResponse.next()
+      }
     }
+    else if (role === "empleado") {
+      const empleadoRoutes = ["/proyecto-actual", "/cursos", "/analitica"]
+      if (empleadoRoutes.includes(path)) {
+        return NextResponse.next()
+      }
+    }
+
+    // Si llega aquí, el usuario no tiene permiso para acceder a la ruta
+    console.log(`Usuario con rol ${role} no tiene permiso para acceder a ${path}`)
+    // Redirigir a la página de acceso restringido
+    return NextResponse.redirect(new URL("/restricted-access", request.url))
   } catch (error) {
     console.error("Error al analizar datos de usuario:", error)
     // En caso de error, redirigir a login para obtener datos válidos
     return NextResponse.redirect(new URL("/login", request.url))
   }
-
-  return NextResponse.next()
 }
 
 export const config = {
