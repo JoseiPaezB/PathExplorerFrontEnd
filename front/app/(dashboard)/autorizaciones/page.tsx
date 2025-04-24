@@ -1,19 +1,27 @@
 "use client";
 import { useState, useEffect } from "react";
-import { Check, Clock, Filter, Plus, Search, X } from "lucide-react";
+import { Check, Clock, Search, X } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { getSolicitudesDeAutorizacion } from "@/app/(dashboard)/autorizaciones/actions";
+import {
+  getSolicitudesDeAutorizacion,
+  updateAssignmentRequestForm,
+} from "@/app/(dashboard)/autorizaciones/actions";
 import { RequestResponse } from "@/types/requests";
-import { set } from "date-fns";
+import AutorizationDetailModal from "./autorizationDetail";
 
 export default function AutorizacionesPage() {
   const [solicitudes, setSolicitudes] = useState<RequestResponse | null>();
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+  const [selectedSolicitudId, setSelectedSolicitudId] = useState<number | null>(
+    null
+  );
+  const [actionType, setActionType] = useState<string>("");
   useEffect(() => {
     const fetchSolicitudes = async () => {
       try {
@@ -30,6 +38,39 @@ export default function AutorizacionesPage() {
     };
     fetchSolicitudes();
   }, []);
+
+  const handleOpenDetailsModal = (id: number, action: string) => {
+    setSelectedSolicitudId(id);
+    setActionType(action);
+    setIsDetailsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsDetailsModalOpen(false);
+    setSelectedSolicitudId(null);
+  };
+
+  const handleSubmit = async (
+    id_solicitud: number,
+    estado: string,
+    comentarios_resolucion: string
+  ) => {
+    const token = localStorage.getItem("token");
+    try {
+      await updateAssignmentRequestForm(
+        id_solicitud,
+        estado,
+        comentarios_resolucion,
+        token
+      );
+      setIsDetailsModalOpen(false);
+
+      const response = await getSolicitudesDeAutorizacion(token);
+      setSolicitudes(response);
+    } catch (error) {
+      console.error("Error updating assignment request:", error);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -105,6 +146,12 @@ export default function AutorizacionesPage() {
                         variant="outline"
                         size="icon"
                         className="h-8 w-8 text-green-500 hover:text-green-600"
+                        onClick={() =>
+                          handleOpenDetailsModal(
+                            request.id_solicitud,
+                            "APROBADA"
+                          )
+                        }
                       >
                         <Check className="h-4 w-4" />
                       </Button>
@@ -112,6 +159,12 @@ export default function AutorizacionesPage() {
                         variant="outline"
                         size="icon"
                         className="h-8 w-8 text-red-500 hover:text-red-600"
+                        onClick={() =>
+                          handleOpenDetailsModal(
+                            request.id_solicitud,
+                            "RECHAZADA"
+                          )
+                        }
                       >
                         <X className="h-4 w-4" />
                       </Button>
@@ -186,6 +239,20 @@ export default function AutorizacionesPage() {
           </div>
         </CardContent>
       </Card>
+      {selectedSolicitudId && (
+        <AutorizationDetailModal
+          estado={actionType}
+          id_solicitud={selectedSolicitudId}
+          isOpen={isDetailsModalOpen}
+          onClose={handleCloseModal}
+          onSubmit={handleSubmit}
+          mensaje={
+            actionType === "APROBADA"
+              ? "¿Estás seguro que deseas aprobar esta solicitud?"
+              : "¿Estás seguro que deseas rechazar esta solicitud?"
+          }
+        />
+      )}
     </div>
   );
 }

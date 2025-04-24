@@ -36,3 +36,47 @@ export async function getSolicitudesDeAutorizacion(
     throw error;
   }
 }
+
+export async function updateAssignmentRequestForm(
+  id_solicitud: number,
+  estado: string,
+  comentarios_resolucion: string,
+  token: string | null
+): Promise<void> {
+  try {
+    const headers: HeadersInit = {
+      "Content-Type": "application/json",
+    };
+
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
+
+    const response = await fetch(
+      `${apiUrl}/requests/update-assignment-request`,
+      {
+        method: "PATCH",
+        headers,
+        body: JSON.stringify({
+          id_solicitud,
+          estado,
+          comentarios_resolucion,
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => null);
+      throw new Error(
+        `Error al actualizar la solicitud: ${
+          errorData?.message || response.statusText
+        }`
+      );
+    }
+
+    revalidatePath("/autorizaciones");
+  } catch (error) {
+    console.error("Error actualizando la solicitud:", error);
+    throw error;
+  }
+}
