@@ -3,7 +3,6 @@ import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  BarChart3,
   BookOpen,
   Briefcase,
   Home,
@@ -11,7 +10,7 @@ import {
   User,
   Users,
   FileCheck,
-  Building,
+  Bell,
   Settings,
 } from "lucide-react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
@@ -73,6 +72,7 @@ export function Sidebar({
   const navItems = [
     ...baseItems,
     ...(roleItems[userRole as keyof typeof roleItems] || []),
+    { title: "Notificaciones", href: "/notificaciones", icon: Bell },
     { title: "Configuración", href: "/configuracion", icon: Settings },
   ];
 

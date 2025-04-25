@@ -1,25 +1,12 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-
+import Link from "next/link";
 import { useState, useEffect } from "react";
-import {
-  Bell,
-  Search,
-  X,
-  Calendar,
-  Moon,
-  Sun,
-  Menu,
-  User,
-  Settings,
-  LogOut,
-} from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { Bell, Calendar, Menu, User, Settings, LogOut } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -32,6 +19,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import type { User as AuthUser } from "@/types/auth";
 import { useAuth } from "@/contexts/auth-context";
+import { NotificationResponse } from "@/types/notificaciones";
 
 interface HeaderProps {
   user: AuthUser | null;
@@ -41,7 +29,25 @@ interface HeaderProps {
 export function Header({ user, collapsed }: HeaderProps) {
   const [scrolled, setScrolled] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
-  const { logout } = useAuth();
+  const [userNotifications, setUserNotifications] =
+    useState<NotificationResponse | null>(null);
+  const { notifications, logout } = useAuth();
+  const unreadCount =
+    userNotifications?.notifications?.filter(
+      (notification) => !notification.leida
+    ).length || 0;
+
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        const response = await notifications();
+        setUserNotifications(response);
+      } catch (error) {
+        console.error("Error fetching notifications:", error);
+      }
+    };
+    fetchNotifications();
+  }, [notifications]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -98,63 +104,54 @@ export function Header({ user, collapsed }: HeaderProps) {
               className="relative h-10 w-10 rounded-full hover:bg-muted transition-colors"
             >
               <Bell className="h-5 w-5" />
-              <Badge className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary p-0 text-xs text-white">
-                3
-              </Badge>
+              {unreadCount > 0 ? (
+                <Badge className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary p-0 text-xs text-white">
+                  {unreadCount}
+                </Badge>
+              ) : (
+                <Badge className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary p-0 text-xs text-white opacity-0"></Badge>
+              )}
               <span className="sr-only">Notificaciones</span>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-80">
-            <DropdownMenuLabel className="flex items-center justify-between">
+            <DropdownMenuLabel className="flex items-center">
               <span>Notificaciones</span>
-              <Button variant="ghost" size="sm" className="h-8 text-xs">
-                Marcar todas como leídas
-              </Button>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            {[
-              {
-                title: "Nueva tarea asignada",
-                description:
-                  "Se te ha asignado la tarea 'Implementar dashboard'",
-                time: "Hace 5 minutos",
-                unread: true,
-              },
-              {
-                title: "Reunión programada",
-                description: "Reunión de equipo a las 15:00",
-                time: "Hace 1 hora",
-                unread: true,
-              },
-              {
-                title: "Comentario en tarea",
-                description: "Juan ha comentado en tu tarea 'Diseño de UI'",
-                time: "Hace 3 horas",
-                unread: true,
-              },
-            ].map((notification, index) => (
-              <DropdownMenuItem
-                key={index}
-                className="flex flex-col items-start p-3 focus:bg-muted"
-              >
-                <div className="flex w-full justify-between">
-                  <span className="font-medium">{notification.title}</span>
-                  {notification.unread && (
-                    <Badge className="h-2 w-2 rounded-full bg-primary p-0" />
-                  )}
-                </div>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  {notification.description}
-                </p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  {notification.time}
+            {unreadCount > 0 ? (
+              userNotifications?.notifications
+                .filter((notification) => !notification.leida)
+                .map((notification, index) => (
+                  <DropdownMenuItem
+                    key={index}
+                    className="flex flex-col items-start p-3 focus:bg-muted"
+                  >
+                    <div className="flex w-full justify-between">
+                      <span className="font-medium">{notification.titulo}</span>
+                    </div>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      {notification.mensaje}
+                    </p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {notification.fecha_creacion}
+                    </p>
+                  </DropdownMenuItem>
+                ))
+            ) : (
+              <DropdownMenuItem disabled>
+                <p className="py-2 text-center w-full">
+                  No tienes notificaciones sin leer
                 </p>
               </DropdownMenuItem>
-            ))}
+            )}
+
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="justify-center text-center font-medium text-primary">
-              Ver todas las notificaciones
-            </DropdownMenuItem>
+            <Link href="/notificaciones">
+              <DropdownMenuItem className="justify-center text-center font-medium text-primary">
+                Ver todas las notificaciones
+              </DropdownMenuItem>
+            </Link>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

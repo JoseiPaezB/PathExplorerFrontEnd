@@ -20,6 +20,7 @@ import type {
   ProfessionalHistory,
   UserTrajectoryResponse,
 } from "@/types/users";
+import type { NotificationResponse } from "@/types/notificaciones";
 
 interface AuthContextType extends AuthState {
   login: (email: string, password: string) => Promise<User | void>;
@@ -30,6 +31,7 @@ interface AuthContextType extends AuthState {
   professionalHistory: () => Promise<ProfessionalHistory | null>;
   skills: () => Promise<SkillsResponse | null>;
   goalsAndTrajectory: () => Promise<UserTrajectoryResponse | null>;
+  notifications: () => Promise<NotificationResponse | null>;
   isLoggingOut: boolean;
 }
 
@@ -354,6 +356,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     }, []);
 
+  const notifications =
+    useCallback(async (): Promise<NotificationResponse | null> => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) {
+          throw new Error("No authentication token found");
+        }
+        if (isTokenExpired(token)) {
+          clearAuthData();
+          router.push("/login");
+          throw new Error("Session expired. Please login again.");
+        }
+        const response = await axios.get<NotificationResponse>(
+          `${API_URL}/notifications/user-notifications`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        if (response.data) {
+          return response.data;
+        } else {
+          throw new Error("Error fetching user notifications");
+        }
+      } catch (error) {
+        console.error("User notifications fetch error:", error);
+        if (axios.isAxiosError(error)) {
+          throw new Error(
+            error.response?.data?.message ||
+              "Failed to fetch user notifications"
+          );
+        }
+        throw error;
+      }
+    }, []);
+
   const updateUserProfile = useCallback(
     async (profileData: UpdateProfileData): Promise<User | void> => {
       try {
@@ -447,6 +486,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         skills,
         professionalHistory,
         goalsAndTrajectory,
+        notifications,
         isLoggingOut,
       }}
     >
