@@ -87,7 +87,7 @@ export default function UsuariosPage() {
   };
 
   const navigateToUserState = (user: UserInfoBanca) => {
-    router.push(`/usuarios/${user.id_empleado}/editar-estado`);
+    router.push(`/usuarios/${user.id_empleado}/ver-estado`);
   };
 
   return (

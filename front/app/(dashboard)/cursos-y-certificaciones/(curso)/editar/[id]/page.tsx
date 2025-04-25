@@ -48,7 +48,6 @@ export default function EditCourseForm({ params }: EditCourseFormProps) {
     certificado: "",
     progreso: "",
   });
-  console.log(formData);
 
   useEffect(() => {
     if (!courseId) return;

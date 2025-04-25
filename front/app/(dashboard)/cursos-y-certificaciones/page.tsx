@@ -268,7 +268,7 @@ export default function CursosPage() {
                         <span className="text-xs text-muted-foreground">
                           Duración
                         </span>
-                        <p className="font-medium">{course.duracion}</p>
+                        <p className="font-medium">{course.duracion} horas</p>
                       </div>
                       <div className="space-y-1">
                         <span className="text-xs text-muted-foreground">

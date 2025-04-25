@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import {
-  Calendar,
   ChevronDown,
   Clock,
   Download,
@@ -11,8 +10,10 @@ import {
   Search,
   User,
   X,
+  PlusCircle,
+  X,
 } from "lucide-react";
-
+import { Calendar } from "@/components/ui/calendar";
 import {
   Card,
   CardContent,
@@ -26,6 +27,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
+import React, { useMemo } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   DropdownMenu,
@@ -41,6 +43,34 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import axios from "axios";
+import { useEffect } from "react";
+import { getManagerProjects, formatDate } from "./projectService"; // Adjust the import path as necessary
+import ProjectDetailsModal from "./projectDetails";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { format } from "date-fns";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
+import { CalendarIcon } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
   DialogContent,
@@ -60,13 +90,812 @@ const roleToIdMap: Record<string, number> = {
   "DevOps Engineer": 22,
   "Desarrollador Full Stack": 7,
   "UI/UX Designer": 9,
-  "QA Engineer": 10
+  "QA Engineer": 10,
 };
 // == THIS IS A HYBRID TEST (REAL DATA + PLACEHOLDER DATA) == //
 
 export default function ProyectosPage() {
   const [activeTab, setActiveTab] = useState("kanban");
   const [showNewProjectDialog, setShowNewProjectDialog] = useState(false);
+  const [selectedProject, setSelectedProject] =
+    useState<TransformedProject | null>(null);
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+  // Keep these as they are for your displayed data
+  interface Role {
+    id_rol: number;
+    titulo: string;
+    descripcion: string;
+    assignments: Assignment[];
+    habilidades?: {
+      id_habilidad: number;
+      nombre: string; // Skill name for display
+      nivel_minimo_requerido: number;
+      importancia: number;
+    }[];
+  }
+
+  interface Assignment {
+    nombre: string;
+    apellido: string;
+  }
+
+  interface TransformedProject {
+    managerName: string;
+    project: string;
+    role: string;
+    status: string;
+    assignedTo: string | null;
+    startDate: string;
+    endDate: string;
+    progress: number;
+    id: number;
+    allRoles: Role[];
+    description: string;
+  }
+
+  // Update these to match your API's expected format
+  interface Skill {
+    id_habilidad: number;
+    nombre: string;
+    categoria: string;
+    descripcion?: string;
+  }
+
+  interface RoleSkill {
+    id_habilidad: number;
+    nivel_minimo_requerido: number;
+    importancia: number;
+  }
+
+  // Update your ProjectRole interface to include skills
+  interface ProjectRole {
+    titulo: string;
+    descripcion: string;
+    importancia: number;
+    nivel_experiencia_requerido: number;
+    habilidades: RoleSkill[];
+  }
+
+  interface ProjectFormData {
+    nombre: string;
+    descripcion: string;
+    fecha_inicio: string; // This will be an ISO date string
+    fecha_fin_estimada: string; // This will be an ISO date string
+    prioridad: number; // Change to number
+    roles: ProjectRole[];
+  }
+
+  const [projects, setProjects] = useState<TransformedProject[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedEstado, setSelectedEstado] = useState("Todos");
+
+  useEffect(() => {
+    const fetchProjects = async () => {
+      interface Project {
+        id_manager: number;
+        id_proyecto: number;
+        nombre: string;
+        descripcion: string;
+        fecha_inicio: string;
+        fecha_fin_estimada: string;
+        estado: string;
+        roles: Role[];
+      }
+
+      interface Role {
+        id_rol: number;
+        titulo: string;
+        descripcion: string;
+        assignments: Assignment[];
+        habilidades?: {
+          id_habilidad: number;
+          nombre: string; // Skill name for display
+          nivel_minimo_requerido: number;
+          importancia: number;
+        }[];
+      }
+
+      interface Assignment {
+        nombre: string;
+        apellido: string;
+      }
+
+      try {
+        setLoading(true);
+        // Get the JWT token from localStorage or your auth context
+        const token = localStorage.getItem("token");
+
+        // Make API call to fetch manager projects
+        const response = await axios.get(
+          "http://localhost:4000/api/projects/manager-projects-with-roles",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        const userInfoRaw = localStorage.getItem("user");
+        console.log("All localStorage keys:", Object.keys(localStorage));
+        const userInfo = JSON.parse(localStorage.getItem("user") || "{}");
+        console.log("Raw userInfo from localStorage:", userInfoRaw);
+        console.log("Parsed userInfo:", userInfo);
+        const managerName =
+          userInfo.nombre && userInfo.apellido
+            ? `${userInfo.nombre} ${userInfo.apellido}`
+            : "Gerente Actual";
+
+        if (response.data.success && response.data.hasProjects) {
+          // Transform the backend data to match the frontend format
+          const transformedProjects = response.data.managerProjects.map(
+            (project: Project) => {
+              // Calculate progress based on project status or other metrics
+              console.log(
+                `Project ${project.nombre} roles with skills:`,
+                project.roles.map((r) => ({
+                  titulo: r.titulo,
+                  habilidades: r.habilidades,
+                }))
+              );
+              let progress = 0;
+              if (project.estado === "Completado") {
+                progress = 100;
+              } else if (project.estado === "En progreso") {
+                // You could calculate this based on dates or other metrics
+                const startDate = new Date(project.fecha_inicio);
+                const endDate = new Date(project.fecha_fin_estimada);
+                const today = new Date();
+
+                const totalDuration = endDate.getTime() - startDate.getTime();
+                const elapsed = today.getTime() - startDate.getTime();
+
+                progress = Math.min(
+                  Math.round((elapsed / totalDuration) * 100),
+                  99
+                );
+              }
+
+              // Get the first assignment for each role (if any)
+              const assignedPersons = project.roles.flatMap((role) =>
+                role.assignments.map((assignment) => ({
+                  roleTitulo: role.titulo,
+                  roleId: role.id_rol,
+                  ...assignment,
+                }))
+              );
+
+              return {
+                managerName: managerName,
+                project: project.nombre,
+                role:
+                  project.roles.length > 0
+                    ? project.roles[0].titulo
+                    : "Multiple Roles",
+                status: project.estado || "Pendiente",
+                assignedTo:
+                  assignedPersons.length > 0
+                    ? `${assignedPersons[0].nombre} ${assignedPersons[0].apellido}`
+                    : null,
+                startDate: formatDate(project.fecha_inicio),
+                endDate: formatDate(project.fecha_fin_estimada),
+                progress: progress,
+                id: project.id_proyecto,
+                allRoles: project.roles,
+                description: project.descripcion,
+              };
+            }
+          );
+
+          setProjects(transformedProjects);
+        } else {
+          setProjects([]);
+        }
+      } catch (err) {
+        console.error("Error fetching projects:", err);
+        setError(
+          "No se pudieron cargar los proyectos. Por favor, intente de nuevo más tarde."
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProjects();
+  }, []);
+  const NewProjectForm: React.FC<{ onSuccess: () => void }> = ({
+    onSuccess,
+  }) => {
+    const [skills, setSkills] = useState<Skill[]>([]);
+    const [loadingSkills, setLoadingSkills] = useState(false);
+    const [formData, setFormData] = useState<ProjectFormData>({
+      nombre: "",
+      descripcion: "",
+      fecha_inicio: "",
+      fecha_fin_estimada: "",
+      prioridad: 3,
+      roles: [],
+    });
+
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
+
+    const [startDate, setStartDate] = useState<Date | undefined>(undefined);
+    const [endDate, setEndDate] = useState<Date | undefined>(undefined);
+
+    const handleChange = (
+      e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    ) => {
+      const { name, value } = e.target;
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    };
+
+    const handleSelectChange = (
+      name: keyof typeof formData,
+      value: string | number
+    ) => {
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    };
+
+    const handleStartDateChange = (date: Date | undefined) => {
+      setStartDate(date);
+      if (date) {
+        // Use format YYYY-MM-DD without time
+        setFormData((prev) => ({
+          ...prev,
+          fecha_inicio: format(date, "yyyy-MM-dd"),
+        }));
+      }
+    };
+
+    const handleEndDateChange = (date: Date | undefined) => {
+      setEndDate(date);
+      if (date) {
+        // Use format YYYY-MM-DD without time
+        setFormData((prev) => ({
+          ...prev,
+          fecha_fin_estimada: format(date, "yyyy-MM-dd"),
+        }));
+      }
+    };
+    const addRole = () => {
+      setFormData((prev) => ({
+        ...prev,
+        roles: [
+          ...prev.roles,
+          {
+            titulo: "",
+            descripcion: "",
+            importancia: 3,
+            nivel_experiencia_requerido: 3,
+            habilidades: [], // Initialize with an empty array or default skills
+          },
+        ],
+      }));
+    };
+
+    // Update a role's property
+    // Change your updateRole function to accept both string and number types
+    const updateRole = (
+      index: number,
+      field: keyof ProjectRole,
+      value: string | number
+    ) => {
+      const updatedRoles = [...formData.roles];
+      updatedRoles[index] = {
+        ...updatedRoles[index],
+        [field]: value,
+      };
+      setFormData((prev) => ({ ...prev, roles: updatedRoles }));
+    };
+
+    // Remove a role
+    const removeRole = (index: number) => {
+      const updatedRoles = [...formData.roles];
+      updatedRoles.splice(index, 1);
+      setFormData((prev) => ({ ...prev, roles: updatedRoles }));
+    };
+    useEffect(() => {
+      const fetchSkills = async () => {
+        try {
+          setLoadingSkills(true);
+          const token = localStorage.getItem("token");
+
+          const response = await axios.get(
+            "http://localhost:4000/api/projects/all-skills",
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+
+          if (response.data.success) {
+            setSkills(response.data.skills);
+          }
+        } catch (err) {
+          console.error("Error fetching skills:", err);
+        } finally {
+          setLoadingSkills(false);
+        }
+      };
+
+      fetchSkills();
+    }, []);
+
+    const addSkillToRole = (roleIndex: number) => {
+      const updatedRoles = [...formData.roles];
+      if (skills.length > 0) {
+        updatedRoles[roleIndex].habilidades.push({
+          id_habilidad: skills[0].id_habilidad, // Default to first skill
+          nivel_minimo_requerido: 3, // Default values
+          importancia: 3,
+        });
+        setFormData((prev) => ({ ...prev, roles: updatedRoles }));
+      }
+    };
+
+    const updateSkill = (
+      roleIndex: number,
+      skillIndex: number,
+      field: keyof RoleSkill,
+      value: number
+    ) => {
+      const updatedRoles = [...formData.roles];
+      updatedRoles[roleIndex].habilidades[skillIndex] = {
+        ...updatedRoles[roleIndex].habilidades[skillIndex],
+        [field]: value,
+      };
+      setFormData((prev) => ({ ...prev, roles: updatedRoles }));
+    };
+
+    // Add function to remove a skill from a role
+    const removeSkillFromRole = (roleIndex: number, skillIndex: number) => {
+      const updatedRoles = [...formData.roles];
+      updatedRoles[roleIndex].habilidades.splice(skillIndex, 1);
+      setFormData((prev) => ({ ...prev, roles: updatedRoles }));
+    };
+
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+      e.preventDefault();
+      setLoading(true);
+
+      try {
+        // Get the JWT token
+        const token = localStorage.getItem("token");
+
+        // Add the current user as manager
+        const userInfo = JSON.parse(localStorage.getItem("user") || "{}");
+        const projectData = {
+          nombre: formData.nombre,
+          descripcion: formData.descripcion,
+          fecha_inicio: formData.fecha_inicio,
+          fecha_fin_estimada: formData.fecha_fin_estimada,
+          prioridad: formData.prioridad, // Already numeric
+          id_manager: userInfo.id_persona,
+          roles: formData.roles.map((role) => ({
+            titulo: role.titulo,
+            descripcion: role.descripcion,
+            importancia: role.importancia, // Already numeric
+            nivel_experiencia_requerido: role.nivel_experiencia_requerido, // Already numeric
+            habilidades: role.habilidades.map((skill) => ({
+              id_habilidad: skill.id_habilidad,
+              nivel_minimo_requerido: skill.nivel_minimo_requerido, // Already numeric
+              importancia: skill.importancia, // Already numeric
+            })),
+          })),
+        };
+
+        console.log(
+          "Sending data to API:",
+          JSON.stringify(projectData, null, 2)
+        );
+
+        // Make API call to create project
+        const response = await axios.post(
+          "http://localhost:4000/api/projects/create-project",
+          projectData,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (response.data.success) {
+          // Call the onSuccess callback to close dialog and refresh list
+          onSuccess();
+        } else {
+          setError(response.data.message || "Error al crear el proyecto");
+        }
+      } catch (err) {
+        console.error("Error creating project:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    return (
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {error && (
+          <div className="p-3 text-sm bg-red-50 text-red-600 rounded-md">
+            {error}
+          </div>
+        )}
+
+        <div className="space-y-2">
+          <Label htmlFor="nombre">Nombre del proyecto</Label>
+          <Input
+            id="nombre"
+            name="nombre"
+            value={formData.nombre}
+            onChange={handleChange}
+            placeholder="Ingrese el nombre del proyecto"
+            required
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="descripcion">Descripción</Label>
+          <Textarea
+            id="descripcion"
+            name="descripcion"
+            value={formData.descripcion}
+            onChange={handleChange}
+            placeholder="Describa el proyecto brevemente"
+            rows={4}
+            required
+          />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label>Fecha de inicio</Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "w-full justify-start text-left font-normal",
+                    !startDate && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {startDate ? format(startDate, "PPP") : "Seleccionar fecha"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0">
+                {/* The fix is here - make sure Calendar is correctly imported */}
+                <Calendar
+                  mode="single"
+                  selected={startDate}
+                  onSelect={handleStartDateChange}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Fecha de finalización estimada</Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "w-full justify-start text-left font-normal",
+                    !endDate && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {endDate ? format(endDate, "PPP") : "Seleccionar fecha"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0">
+                <Calendar
+                  mode="single"
+                  selected={endDate}
+                  onSelect={(date: Date | undefined) =>
+                    handleEndDateChange(date)
+                  }
+                  initialFocus
+                  disabled={(date: Date) =>
+                    startDate ? date < startDate : false
+                  }
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="prioridad">Prioridad</Label>
+            <Select
+              value={formData.prioridad.toString()} // Convert to string for the UI
+              onValueChange={(value) =>
+                handleSelectChange("prioridad", parseInt(value))
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Seleccionar prioridad" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="1">Baja</SelectItem>
+                <SelectItem value="2">Media</SelectItem>
+                <SelectItem value="3">Alta</SelectItem>
+                <SelectItem value="4">Urgente</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <div className="pt-4 border-t mt-6">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-medium">Roles del Proyecto</h3>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={addRole}
+              className="flex items-center gap-1"
+            >
+              <PlusCircle className="h-4 w-4" />
+              Añadir Rol
+            </Button>
+          </div>
+
+          {formData.roles.length === 0 ? (
+            <div className="text-center p-4 bg-gray-50 rounded-md">
+              <p className="text-sm text-gray-500">
+                No hay roles definidos. Añade al menos un rol para este
+                proyecto.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {formData.roles.map((role, index) => (
+                <Card key={index} className="relative">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => removeRole(index)}
+                    className="absolute right-2 top-2 text-red-500 hover:text-red-700 hover:bg-red-50 h-7 w-7 p-0"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base">
+                      Rol #{index + 1}
+                    </CardTitle>
+                  </CardHeader>
+
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor={`role-title-${index}`}>
+                          Título del Rol
+                        </Label>
+                        <Input
+                          id={`role-title-${index}`}
+                          value={role.titulo}
+                          onChange={(e) =>
+                            updateRole(index, "titulo", e.target.value)
+                          }
+                          placeholder="Ej: Desarrollador Frontend"
+                          required
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor={`role-level-${index}`}>
+                          Nivel de Experiencia
+                        </Label>
+                        <Select
+                          value={role.nivel_experiencia_requerido.toString()}
+                          onValueChange={(value) =>
+                            updateRole(
+                              index,
+                              "nivel_experiencia_requerido",
+                              parseInt(value)
+                            )
+                          }
+                        >
+                          <SelectTrigger id={`role-level-${index}`}>
+                            <SelectValue placeholder="Seleccionar nivel" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="1">Junior</SelectItem>
+                            <SelectItem value="2">Semi-Senior</SelectItem>
+                            <SelectItem value="3">Senior</SelectItem>
+                            <SelectItem value="4">Experto</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor={`role-desc-${index}`}>
+                        Descripción del Rol
+                      </Label>
+                      <Textarea
+                        id={`role-desc-${index}`}
+                        value={role.descripcion}
+                        onChange={(e) =>
+                          updateRole(index, "descripcion", e.target.value)
+                        }
+                        placeholder="Describe las responsabilidades de este rol"
+                        rows={2}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2 mt-4">
+                      <div className="flex justify-between items-center">
+                        <Label>Habilidades requeridas</Label>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => addSkillToRole(index)}
+                          className="flex items-center gap-1"
+                          disabled={loadingSkills || skills.length === 0}
+                        >
+                          <PlusCircle className="h-4 w-4" />
+                          Añadir Habilidad
+                        </Button>
+                      </div>
+
+                      {role.habilidades.length === 0 ? (
+                        <div className="text-center p-2 bg-gray-50 rounded-md">
+                          <p className="text-xs text-gray-500">
+                            No hay habilidades definidas.
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="space-y-2">
+                          {role.habilidades.map((skill, skillIndex) => (
+                            <div
+                              key={skillIndex}
+                              className="grid grid-cols-12 gap-2 items-center p-2 rounded-md bg-gray-50"
+                            >
+                              <div className="col-span-4">
+                                <Select
+                                  value={skill.id_habilidad.toString()}
+                                  onValueChange={(value) =>
+                                    updateSkill(
+                                      index,
+                                      skillIndex,
+                                      "id_habilidad",
+                                      parseInt(value)
+                                    )
+                                  }
+                                >
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Seleccionar habilidad" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {skills.map((s) => (
+                                      <SelectItem
+                                        key={s.id_habilidad}
+                                        value={s.id_habilidad.toString()}
+                                      >
+                                        {s.nombre}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+
+                              <div className="col-span-3">
+                                <Label className="text-xs">Nivel mínimo</Label>
+                                <Select
+                                  value={skill.nivel_minimo_requerido.toString()}
+                                  onValueChange={(value) =>
+                                    updateSkill(
+                                      index,
+                                      skillIndex,
+                                      "nivel_minimo_requerido",
+                                      parseInt(value)
+                                    )
+                                  }
+                                >
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Nivel" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="1">1</SelectItem>
+                                    <SelectItem value="2">2</SelectItem>
+                                    <SelectItem value="3">3</SelectItem>
+                                    <SelectItem value="4">4</SelectItem>
+                                    <SelectItem value="5">5</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+
+                              <div className="col-span-3">
+                                <Label className="text-xs">Importancia</Label>
+                                <Select
+                                  value={skill.importancia.toString()}
+                                  onValueChange={(value) =>
+                                    updateSkill(
+                                      index,
+                                      skillIndex,
+                                      "importancia",
+                                      parseInt(value)
+                                    )
+                                  }
+                                >
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Importancia" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="1">Baja</SelectItem>
+                                    <SelectItem value="3">Media</SelectItem>
+                                    <SelectItem value="5">Alta</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+
+                              <div className="col-span-2 flex justify-end">
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() =>
+                                    removeSkillFromRole(index, skillIndex)
+                                  }
+                                  className="h-8 w-8 p-0 text-red-500 hover:text-red-700"
+                                >
+                                  <X className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="flex justify-end space-x-2 pt-4">
+          <Button type="submit" disabled={loading}>
+            {loading ? "Creando..." : "Crear Proyecto"}
+          </Button>
+        </div>
+      </form>
+    );
+  };
+  const filteredProjects = useMemo(() => {
+    return projects.filter((project) => {
+      const matchSearch = project.project
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase());
+      const matchEstado =
+        selectedEstado === "Todos" || project.status === selectedEstado;
+      return matchSearch && matchEstado;
+    });
+  }, [projects, searchTerm, selectedEstado]);
+
+  // Helper function to format dates
+  const formatDate = (dateString: string) => {
+    if (!dateString) return "N/A";
+    const date = new Date(dateString);
+    return date.toLocaleDateString("es-ES", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    });
+  };
+
+  if (loading)
+    return <div className="p-4 text-center">Cargando proyectos...</div>;
+  if (error) return <div className="p-4 text-center text-red-500">{error}</div>;
   const [showAssignDialog, setShowAssignDialog] = useState(false);
   const [currentProject, setCurrentProject] = useState("");
   const [currentRole, setCurrentRole] = useState("");
@@ -75,25 +904,32 @@ export default function ProyectosPage() {
   const [searchTerm, setSearchTerm] = useState("");
 
   // == THIS IS A HYBRID TEST (REAL DATA + PLACEHOLDER DATA) == //
-  const handleAssignClick = async (project: string, role: string, roleId?: number) => {
+  const handleAssignClick = async (
+    project: string,
+    role: string,
+    roleId?: number
+  ) => {
     setCurrentProject(project);
     setCurrentRole(role);
     setLoading(true);
     setShowAssignDialog(true);
-    
+
     try {
       const token = localStorage.getItem("token");
       // Usar el roleId pasado como parámetro o buscar en el mapa como fallback
       const actualRoleId = roleId || roleToIdMap[role] || 0;
-      
+
       if (actualRoleId === 0) {
         console.error(`No se encontró ID para el rol: ${role}`);
         return;
       }
-      
+
       console.log(`Obteniendo candidatos para el rol ID: ${actualRoleId}`);
-      
-      const response = await getBestCandidatesForRole(actualRoleId, token || "");
+
+      const response = await getBestCandidatesForRole(
+        actualRoleId,
+        token || ""
+      );
       if (response.success && response.candidates) {
         setEmpleadosBanca(response.candidates);
       } else {
@@ -101,10 +937,10 @@ export default function ProyectosPage() {
         // Si falla, intentamos fallback a todos los empleados en banca
         const backupResponse = await getEmpleadosBanca(token || "");
         if (backupResponse.success && backupResponse.employees) {
-          const employeesArray = Array.isArray(backupResponse.employees) 
-            ? backupResponse.employees 
+          const employeesArray = Array.isArray(backupResponse.employees)
+            ? backupResponse.employees
             : [backupResponse.employees];
-          
+
           setEmpleadosBanca(employeesArray);
         }
       }
@@ -126,36 +962,43 @@ export default function ProyectosPage() {
   const assignEmployee = (empleado: UserInfoBanca) => {
     // Aquí se implementaría la lógica para asignar el empleado al rol
     // Por ahora solo se cierra el diálogo
-    console.log(`Asignando a ${empleado.nombre} ${empleado.apellido} al rol ${currentRole} en el proyecto ${currentProject}`);
+    console.log(
+      `Asignando a ${empleado.nombre} ${empleado.apellido} al rol ${currentRole} en el proyecto ${currentProject}`
+    );
     setSelectedEmployee(empleado);
     setShowConfirmDialog(true);
   };
 
-  const filteredEmpleados = empleadosBanca.filter(
-    (empleado) => {
-      const nombreCompleto = empleado.nombre_completo || '';
-      const puesto = empleado.puesto_actual || '';
-      
-      return nombreCompleto.toLowerCase().includes(searchTerm.toLowerCase()) ||
-             puesto.toLowerCase().includes(searchTerm.toLowerCase());
-    }
-  );
+  const filteredEmpleados = empleadosBanca.filter((empleado) => {
+    const nombreCompleto = empleado.nombre_completo || "";
+    const puesto = empleado.puesto_actual || "";
 
-const [showConfirmDialog, setShowConfirmDialog] = useState(false);
-const [selectedEmployee, setSelectedEmployee] = useState<UserInfoBanca | null>(null);
+    return (
+      nombreCompleto.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      puesto.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  });
 
-// Añade esta función para confirmar la asignación
-const confirmAssignment = () => {
-  // Aquí se implementará la lógica real para asignar el empleado al rol
-  console.log(`Asignando a ${selectedEmployee?.nombre || ''} ${selectedEmployee?.apellido || ''} al rol ${currentRole} en el proyecto ${currentProject}`);
-  closeConfirmDialog();
-  closeAssignDialog();
-};
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [selectedEmployee, setSelectedEmployee] =
+    useState<UserInfoBanca | null>(null);
 
-const closeConfirmDialog = () => {
-  setShowConfirmDialog(false);
-  setSelectedEmployee(null);
-};
+  // Añade esta función para confirmar la asignación
+  const confirmAssignment = () => {
+    // Aquí se implementará la lógica real para asignar el empleado al rol
+    console.log(
+      `Asignando a ${selectedEmployee?.nombre || ""} ${
+        selectedEmployee?.apellido || ""
+      } al rol ${currentRole} en el proyecto ${currentProject}`
+    );
+    closeConfirmDialog();
+    closeAssignDialog();
+  };
+
+  const closeConfirmDialog = () => {
+    setShowConfirmDialog(false);
+    setSelectedEmployee(null);
+  };
 
   return (
     <div className="space-y-6">
@@ -169,10 +1012,6 @@ const closeConfirmDialog = () => {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" className="h-8 gap-1">
-            <Filter className="h-3.5 w-3.5" />
-            <span>Filtrar</span>
-          </Button>
           <Button
             size="sm"
             className="h-8 gap-1 bg-primary hover:bg-primary/90"
@@ -191,45 +1030,34 @@ const closeConfirmDialog = () => {
             type="search"
             placeholder="Buscar proyectos..."
             className="w-full rounded-md border border-input bg-white pl-8 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" size="sm" className="gap-1">
-              <span>Estado</span>
-              <ChevronDown className="h-4 w-4" />
+              <Filter className="h-3.5 w-3.5" />
+              <span>Filtrar</span>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Filtrar por estado</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>Todos</DropdownMenuItem>
-            <DropdownMenuItem>Activos</DropdownMenuItem>
-            <DropdownMenuItem>Pendientes</DropdownMenuItem>
-            <DropdownMenuItem>Completados</DropdownMenuItem>
+            <DropdownMenuItem onSelect={() => setSelectedEstado("Todos")}>
+              Todos
+            </DropdownMenuItem>
+            <DropdownMenuItem onSelect={() => setSelectedEstado("ACTIVO")}>
+              Activos
+            </DropdownMenuItem>
+            <DropdownMenuItem onSelect={() => setSelectedEstado("PLANEACION")}>
+              Planeacion
+            </DropdownMenuItem>
+            <DropdownMenuItem onSelect={() => setSelectedEstado("FINALIZADO")}>
+              Finalizado
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm" className="gap-1">
-              <span>Departamento</span>
-              <ChevronDown className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Filtrar por departamento</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>Todos</DropdownMenuItem>
-            <DropdownMenuItem>Tecnología</DropdownMenuItem>
-            <DropdownMenuItem>Marketing</DropdownMenuItem>
-            <DropdownMenuItem>Ventas</DropdownMenuItem>
-            <DropdownMenuItem>Recursos Humanos</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-        <Button variant="outline" size="sm" className="gap-1">
-          <Download className="h-4 w-4" />
-          <span>Exportar</span>
-        </Button>
       </div>
 
       <Tabs
@@ -239,7 +1067,7 @@ const closeConfirmDialog = () => {
       >
         <TabsList>
           <TabsTrigger value="kanban">Vista Kanban</TabsTrigger>
-          <TabsTrigger value="lista">Vista Lista</TabsTrigger>
+          <TabsTrigger value="lista">Vista Proyectos</TabsTrigger>
           <TabsTrigger value="calendario">Calendario</TabsTrigger>
         </TabsList>
 
@@ -306,7 +1134,13 @@ const closeConfirmDialog = () => {
                   <Button
                     size="sm"
                     className="h-8 bg-primary hover:bg-primary/90"
-                    onClick={() => handleAssignClick("Sistema CRM", "Desarrollador Frontend", 52)}
+                    onClick={() =>
+                      handleAssignClick(
+                        "Sistema CRM",
+                        "Desarrollador Frontend",
+                        52
+                      )
+                    }
                   >
                     Asignar
                   </Button>
@@ -366,7 +1200,13 @@ const closeConfirmDialog = () => {
                   <Button
                     size="sm"
                     className="h-8 bg-primary hover:bg-primary/90"
-                    onClick={() => handleAssignClick("Migración a la Nube", "DevOps Engineer", 22)}
+                    onClick={() =>
+                      handleAssignClick(
+                        "Migración a la Nube",
+                        "DevOps Engineer",
+                        22
+                      )
+                    }
                   >
                     Asignar
                   </Button>
@@ -428,7 +1268,7 @@ const closeConfirmDialog = () => {
                     <Clock className="h-3.5 w-3.5" />
                     <span>Fecha fin: 30/06/2025</span>
                   </div>
-                  <Button variant="outline" size="sm" className="h-8">
+                  <Button variant="ghost" size="sm" className="h-8">
                     Ver detalles
                   </Button>
                 </CardFooter>
@@ -487,10 +1327,10 @@ const closeConfirmDialog = () => {
               </Card>
             </div>
 
-            {/* Columna: Roles Completados */}
+            {/* Columna: Roles Finalizado */}
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="font-semibold">Roles Completados</h3>
+                <h3 className="font-semibold">Roles Finalizado</h3>
                 <Badge variant="outline" className="bg-muted">
                   3
                 </Badge>
@@ -549,14 +1389,67 @@ const closeConfirmDialog = () => {
         <TabsContent value="lista" className="space-y-4">
           <div className="rounded-lg border">
             <div className="grid grid-cols-8 gap-4 p-4 font-medium">
-              <div className="col-span-2">Proyecto / Rol</div>
+              <div className="col-span-2">Proyecto</div>
               <div>Estado</div>
-              <div>Asignado a</div>
               <div>Fecha inicio</div>
               <div>Fecha fin</div>
-              <div>Progreso</div>
+              <div>Timeline</div>
               <div>Acciones</div>
             </div>
+
+            {projects.length > 0 ? (
+              filteredProjects.map((item, index) => (
+                <div
+                  key={index}
+                  className="grid grid-cols-8 gap-4 border-t p-4 text-sm items-center"
+                >
+                  <div className="col-span-2">
+                    <p className="font-medium">{item.project}</p>
+                  </div>
+                  <div>
+                    <Badge
+                      variant="outline"
+                      className={
+                        item.status === "Pendiente"
+                          ? "bg-yellow-50 text-yellow-700"
+                          : item.status === "En progreso"
+                          ? "bg-green-50 text-green-700"
+                          : "bg-gray-50 text-gray-700"
+                      }
+                    >
+                      {item.status}
+                    </Badge>
+                  </div>
+
+                  <div>{item.startDate}</div>
+                  <div>{item.endDate}</div>
+                  <div className="space-y-1">
+                    <div className="flex justify-between text-xs">
+                      <span className="text-muted-foreground">Timeline</span>
+                      <span>{item.progress}%</span>
+                    </div>
+                    <Progress value={item.progress} className="h-2" />
+                  </div>
+                  <div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8"
+                      onClick={() => {
+                        setSelectedProject(item);
+                        setIsDetailsModalOpen(true);
+                      }}
+                    >
+                      Ver detalles
+                    </Button>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="p-4 text-center text-muted-foreground">
+                No hay proyectos para mostrar.
+              </div>
+            )}
             {[
               // == THIS IS A HYBRID TEST (REAL DATA + PLACEHOLDER DATA) == //
               {
@@ -675,21 +1568,63 @@ const closeConfirmDialog = () => {
           </div>
         </TabsContent>
       </Tabs>
+      <ProjectDetailsModal
+        isOpen={isDetailsModalOpen}
+        onClose={() => setIsDetailsModalOpen(false)}
+        project={selectedProject}
+        manager={{
+          name: selectedProject?.managerName || "Gerente del Proyecto",
+        }}
+      />
+      <Dialog
+        open={showNewProjectDialog}
+        onOpenChange={setShowNewProjectDialog}
+      >
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Crear Nuevo Proyecto</DialogTitle>
+          </DialogHeader>
+
+          {/* New Project Form goes here */}
+          <div className="grid gap-4 py-4">
+            {/* Form fields */}
+            <NewProjectForm
+              onSuccess={() => {
+                setShowNewProjectDialog(false);
+                // Refresh your projects list
+              }}
+            />
+          </div>
+
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setShowNewProjectDialog(false)}
+            >
+              Cancelar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Diálogo de asignación de empleados */}
       <Dialog open={showAssignDialog} onOpenChange={closeAssignDialog}>
         <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>Asignar empleado a rol</DialogTitle>
-          <DialogDescription>
-            Selecciona un empleado para el rol {currentRole} en el proyecto {currentProject}
-          </DialogDescription>
-        </DialogHeader>
-          
+          <DialogHeader>
+            <DialogTitle>Asignar empleado a rol</DialogTitle>
+            <DialogDescription>
+              Selecciona un empleado para el rol {currentRole} en el proyecto{" "}
+              {currentProject}
+            </DialogDescription>
+          </DialogHeader>
+
           {loading ? (
             <div className="flex justify-center py-8">
               <div className="text-center">
-                <p className="mt-2 text-sm text-muted-foreground">Cargando empleados disponibles...</p>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Cargando empleados disponibles...
+                </p>
               </div>
             </div>
           ) : (
@@ -706,80 +1641,92 @@ const closeConfirmDialog = () => {
               </div>
 
               <div className="max-h-[300px] overflow-y-auto">
-              {filteredEmpleados.length > 0 ? (
-                filteredEmpleados
-                  .sort((a, b) => {
-                    // Extraer solo el número del porcentaje para ordenar
-                    const matchA = a.porcentaje_match ? parseFloat(String(a.porcentaje_match).replace('%', '')) : 0;
-                    const matchB = b.porcentaje_match ? parseFloat(String(b.porcentaje_match).replace('%', '')) : 0;
-                    return matchB - matchA; // Ordenar por mayor porcentaje
-                  })
-                  .map((empleado) => {
-                    const nombreEmpleado = empleado.nombre_completo || "Sin nombre";
-                    // Generar iniciales para avatar
-                    const iniciales = nombreEmpleado
-                      .split(' ')
-                      .map(parte => parte[0])
-                      .join('')
-                      .substring(0, 2)
-                      .toUpperCase();
-                      
-                    return (
-                      <div
-                        key={empleado.id_empleado}
-                        className="mb-2 rounded-md border p-3 hover:bg-muted cursor-pointer"
-                        onClick={() => assignEmployee(empleado)}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <Avatar className="h-10 w-10">
-                              <AvatarFallback>
-                                {iniciales}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div>
-                              <h4 className="font-medium">
-                                {nombreEmpleado}
-                              </h4>
-                              <p className="text-sm text-muted-foreground">
-                                {empleado.puesto_actual || 'Sin puesto'}
+                {filteredEmpleados.length > 0 ? (
+                  filteredEmpleados
+                    .sort((a, b) => {
+                      // Extraer solo el número del porcentaje para ordenar
+                      const matchA = a.porcentaje_match
+                        ? parseFloat(
+                            String(a.porcentaje_match).replace("%", "")
+                          )
+                        : 0;
+                      const matchB = b.porcentaje_match
+                        ? parseFloat(
+                            String(b.porcentaje_match).replace("%", "")
+                          )
+                        : 0;
+                      return matchB - matchA; // Ordenar por mayor porcentaje
+                    })
+                    .map((empleado) => {
+                      const nombreEmpleado =
+                        empleado.nombre_completo || "Sin nombre";
+                      // Generar iniciales para avatar
+                      const iniciales = nombreEmpleado
+                        .split(" ")
+                        .map((parte) => parte[0])
+                        .join("")
+                        .substring(0, 2)
+                        .toUpperCase();
+
+                      return (
+                        <div
+                          key={empleado.id_empleado}
+                          className="mb-2 rounded-md border p-3 hover:bg-muted cursor-pointer"
+                          onClick={() => assignEmployee(empleado)}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <Avatar className="h-10 w-10">
+                                <AvatarFallback>{iniciales}</AvatarFallback>
+                              </Avatar>
+                              <div>
+                                <h4 className="font-medium">
+                                  {nombreEmpleado}
+                                </h4>
+                                <p className="text-sm text-muted-foreground">
+                                  {empleado.puesto_actual || "Sin puesto"}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <Badge
+                                variant="outline"
+                                className={
+                                  empleado.porcentaje_match &&
+                                  empleado.porcentaje_match >= 80
+                                    ? "bg-green-50 text-green-700"
+                                    : empleado.porcentaje_match &&
+                                      empleado.porcentaje_match >= 70
+                                    ? "bg-blue-50 text-blue-700"
+                                    : "bg-yellow-50 text-yellow-700"
+                                }
+                              >
+                                {empleado.porcentaje_match || "0%"}
+                              </Badge>
+                              <p className="mt-1 text-xs text-muted-foreground">
+                                Disponibilidad:{" "}
+                                {empleado.porcentaje_disponibilidad || "0%"}
                               </p>
                             </div>
                           </div>
-                          <div className="text-right">
-                            <Badge
-                              variant="outline"
-                              className={
-                                empleado.porcentaje_match && empleado.porcentaje_match >= 80
-                                  ? "bg-green-50 text-green-700"
-                                  : empleado.porcentaje_match && empleado.porcentaje_match >= 70
-                                  ? "bg-blue-50 text-blue-700"
-                                  : "bg-yellow-50 text-yellow-700"
-                              }
-                            >
-                              {empleado.porcentaje_match || '0%'}
-                            </Badge>
-                            <p className="mt-1 text-xs text-muted-foreground">
-                              Disponibilidad: {empleado.porcentaje_disponibilidad || '0%'}
-                            </p>
-                          </div>
                         </div>
-                      </div>
-                    );
-                  })
-              ) : (
-                <div className="flex flex-col items-center justify-center py-8">
-                  <User className="h-10 w-10 text-muted-foreground" />
-                  <h3 className="mt-4 text-lg font-medium">No hay empleados disponibles</h3>
-                  <p className="mt-2 text-sm text-muted-foreground">
-                    No se encontraron empleados que coincidan con la búsqueda.
-                  </p>
-                </div>
-              )}
+                      );
+                    })
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-8">
+                    <User className="h-10 w-10 text-muted-foreground" />
+                    <h3 className="mt-4 text-lg font-medium">
+                      No hay empleados disponibles
+                    </h3>
+                    <p className="mt-2 text-sm text-muted-foreground">
+                      No se encontraron empleados que coincidan con la búsqueda.
+                    </p>
+                  </div>
+                )}
               </div>
             </>
           )}
-          
+
           <DialogFooter className="sm:justify-end">
             <Button variant="outline" onClick={closeAssignDialog}>
               Cancelar
@@ -793,21 +1740,21 @@ const closeConfirmDialog = () => {
           <DialogHeader>
             <DialogTitle>Confirmar asignación</DialogTitle>
             <DialogDescription>
-              ¿Estás seguro de que deseas asignar a {selectedEmployee ? 
-                (selectedEmployee.nombre && selectedEmployee.apellido ? 
-                  `${selectedEmployee.nombre} ${selectedEmployee.apellido}` : 
-                  selectedEmployee.nombre_completo || "Sin nombre") : ""} 
+              ¿Estás seguro de que deseas asignar a{" "}
+              {selectedEmployee
+                ? selectedEmployee.nombre && selectedEmployee.apellido
+                  ? `${selectedEmployee.nombre} ${selectedEmployee.apellido}`
+                  : selectedEmployee.nombre_completo || "Sin nombre"
+                : ""}
               al rol {currentRole} en el proyecto {currentProject}?
             </DialogDescription>
           </DialogHeader>
-          
+
           <DialogFooter className="sm:justify-end">
             <Button variant="outline" onClick={closeConfirmDialog}>
               Cancelar
             </Button>
-            <Button onClick={confirmAssignment}>
-              Confirmar
-            </Button>
+            <Button onClick={confirmAssignment}>Confirmar</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
