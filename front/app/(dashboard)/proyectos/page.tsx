@@ -127,7 +127,8 @@ export default function ProyectosPage() {
     // Aquí se implementaría la lógica para asignar el empleado al rol
     // Por ahora solo se cierra el diálogo
     console.log(`Asignando a ${empleado.nombre} ${empleado.apellido} al rol ${currentRole} en el proyecto ${currentProject}`);
-    closeAssignDialog();
+    setSelectedEmployee(empleado);
+    setShowConfirmDialog(true);
   };
 
   const filteredEmpleados = empleadosBanca.filter(
@@ -139,6 +140,22 @@ export default function ProyectosPage() {
              puesto.toLowerCase().includes(searchTerm.toLowerCase());
     }
   );
+
+const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+const [selectedEmployee, setSelectedEmployee] = useState<UserInfoBanca | null>(null);
+
+// Añade esta función para confirmar la asignación
+const confirmAssignment = () => {
+  // Aquí se implementará la lógica real para asignar el empleado al rol
+  console.log(`Asignando a ${selectedEmployee?.nombre || ''} ${selectedEmployee?.apellido || ''} al rol ${currentRole} en el proyecto ${currentProject}`);
+  closeConfirmDialog();
+  closeAssignDialog();
+};
+
+const closeConfirmDialog = () => {
+  setShowConfirmDialog(false);
+  setSelectedEmployee(null);
+};
 
   return (
     <div className="space-y-6">
@@ -766,6 +783,30 @@ export default function ProyectosPage() {
           <DialogFooter className="sm:justify-end">
             <Button variant="outline" onClick={closeAssignDialog}>
               Cancelar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showConfirmDialog} onOpenChange={closeConfirmDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Confirmar asignación</DialogTitle>
+            <DialogDescription>
+              ¿Estás seguro de que deseas asignar a {selectedEmployee ? 
+                (selectedEmployee.nombre && selectedEmployee.apellido ? 
+                  `${selectedEmployee.nombre} ${selectedEmployee.apellido}` : 
+                  selectedEmployee.nombre_completo || "Sin nombre") : ""} 
+              al rol {currentRole} en el proyecto {currentProject}?
+            </DialogDescription>
+          </DialogHeader>
+          
+          <DialogFooter className="sm:justify-end">
+            <Button variant="outline" onClick={closeConfirmDialog}>
+              Cancelar
+            </Button>
+            <Button onClick={confirmAssignment}>
+              Confirmar
             </Button>
           </DialogFooter>
         </DialogContent>
