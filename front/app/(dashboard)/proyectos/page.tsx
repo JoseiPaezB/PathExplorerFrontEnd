@@ -1,8 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import { Calendar, ChevronDown, Clock, Download, Filter, Plus, Search, User } from "lucide-react"
-
+import { ChevronDown, Clock, Download, Filter, Plus, Search, User, X, PlusCircle } from "lucide-react"
+import {Calendar} from "@/components/ui/calendar"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -24,7 +24,14 @@ import axios from 'axios';
 import { useEffect } from "react"
 import { getManagerProjects, formatDate } from './projectService'; // Adjust the import path as necessary
 import ProjectDetailsModal from './projectDetails';
-
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { format } from "date-fns";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
+import { CalendarIcon } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
 
 
 export default function ProyectosPage() {
@@ -32,31 +39,70 @@ export default function ProyectosPage() {
   const [showNewProjectDialog, setShowNewProjectDialog] = useState(false)
   const [selectedProject, setSelectedProject] = useState<TransformedProject | null>(null);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
-  interface Role {
-    id_rol: number;
-    titulo: string;
-    descripcion: string;
-    assignments: Assignment[];
-  }
+  // Keep these as they are for your displayed data
+interface Role {
+  id_rol: number;
+  titulo: string;
+  descripcion: string;
+  assignments: Assignment[];
+  habilidades?: {
+    id_habilidad: number;
+    nombre: string; // Skill name for display
+    nivel_minimo_requerido: number;
+    importancia: number;
+  }[];
+}
 
-  interface Assignment {
-    nombre: string;
-    apellido: string;
-  }
+interface Assignment {
+  nombre: string;
+  apellido: string;
+}
 
-  interface TransformedProject {
-    managerName: string;
-    project: string;
-    role: string;
-    status: string;
-    assignedTo: string | null;
-    startDate: string;
-    endDate: string;
-    progress: number;
-    id: number;
-    allRoles: Role[];
-    description: string;
-  }
+interface TransformedProject {
+  managerName: string;
+  project: string;
+  role: string;
+  status: string;
+  assignedTo: string | null;
+  startDate: string;
+  endDate: string;
+  progress: number;
+  id: number;
+  allRoles: Role[];
+  description: string;
+}
+
+// Update these to match your API's expected format
+interface Skill {
+  id_habilidad: number;
+  nombre: string;
+  categoria: string;
+  descripcion?: string;
+}
+
+interface RoleSkill {
+  id_habilidad: number;
+  nivel_minimo_requerido: number;
+  importancia: number;
+}
+
+// Update your ProjectRole interface to include skills
+interface ProjectRole {
+  titulo: string;
+  descripcion: string;
+  importancia: number;
+  nivel_experiencia_requerido: number;
+  habilidades: RoleSkill[];
+}
+
+interface ProjectFormData {
+  nombre: string;
+  descripcion: string;
+  fecha_inicio: string; // This will be an ISO date string
+  fecha_fin_estimada: string; // This will be an ISO date string
+  prioridad: number; // Change to number
+  roles: ProjectRole[];
+}
 
   const [projects, setProjects] = useState<TransformedProject[]>([]);
   const [loading, setLoading] = useState(true);
@@ -83,6 +129,12 @@ export default function ProyectosPage() {
         titulo: string;
         descripcion: string;
         assignments: Assignment[];
+        habilidades?: {
+          id_habilidad: number;
+          nombre: string; // Skill name for display
+          nivel_minimo_requerido: number;
+          importancia: number;
+        }[];
       }
       
       interface Assignment {
@@ -114,6 +166,10 @@ export default function ProyectosPage() {
           // Transform the backend data to match the frontend format
           const transformedProjects = response.data.managerProjects.map((project: Project) => {
             // Calculate progress based on project status or other metrics
+            console.log(`Project ${project.nombre} roles with skills:`, project.roles.map(r => ({
+              titulo: r.titulo,
+              habilidades: r.habilidades
+            })));
             let progress = 0;
             if (project.estado === 'Completado') {
               progress = 100;
@@ -137,6 +193,8 @@ export default function ProyectosPage() {
                 ...assignment
               }))
             );
+
+            
 
             return {
               managerName: managerName,
@@ -167,7 +225,499 @@ export default function ProyectosPage() {
 
     fetchProjects();
   }, []);
+  const NewProjectForm: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) => {
+    const [skills, setSkills] = useState<Skill[]>([]);
+    const [loadingSkills, setLoadingSkills] = useState(false);
+    const [formData, setFormData] = useState<ProjectFormData>({
+      nombre: '',
+      descripcion: '',
+      fecha_inicio: '',
+      fecha_fin_estimada: '',
+      prioridad: 3, 
+      roles: []
+    });
+    
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
+    
+    const [startDate, setStartDate] = useState<Date | undefined>(undefined);
+    const [endDate, setEndDate] = useState<Date | undefined>(undefined);
 
+  
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+      const { name, value } = e.target;
+      setFormData(prev => ({ ...prev, [name]: value }));
+    };
+  
+    const handleSelectChange = (name: keyof typeof formData, value: string | number) => {
+      setFormData(prev => ({ ...prev, [name]: value }));
+    };
+  
+    const handleStartDateChange = (date: Date | undefined) => {
+      setStartDate(date);
+      if (date) {
+        // Use format YYYY-MM-DD without time
+        setFormData(prev => ({ ...prev, fecha_inicio: format(date, 'yyyy-MM-dd') }));
+      }
+    };
+  
+    const handleEndDateChange = (date: Date | undefined) => {
+      setEndDate(date);
+      if (date) {
+        // Use format YYYY-MM-DD without time
+        setFormData(prev => ({ ...prev, fecha_fin_estimada: format(date, 'yyyy-MM-dd') }));
+      }
+    };
+    const addRole = () => {
+      setFormData(prev => ({
+        ...prev,
+        roles: [
+          ...prev.roles,
+          {
+            titulo: '',
+            descripcion: '',
+            importancia: 3, 
+            nivel_experiencia_requerido: 3, 
+            habilidades: [] // Initialize with an empty array or default skills
+          }
+        ]
+      }));
+    };
+  
+    // Update a role's property
+          // Change your updateRole function to accept both string and number types
+      const updateRole = (index: number, field: keyof ProjectRole, value: string | number) => {
+        const updatedRoles = [...formData.roles];
+        updatedRoles[index] = {
+          ...updatedRoles[index],
+          [field]: value
+        };
+        setFormData(prev => ({ ...prev, roles: updatedRoles }));
+      };
+  
+    // Remove a role
+    const removeRole = (index: number) => {
+      const updatedRoles = [...formData.roles];
+      updatedRoles.splice(index, 1);
+      setFormData(prev => ({ ...prev, roles: updatedRoles }));
+    };
+    useEffect(() => {
+      const fetchSkills = async () => {
+        try {
+          setLoadingSkills(true);
+          const token = localStorage.getItem('token');
+          
+          const response = await axios.get('http://localhost:4000/api/projects/all-skills', {
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
+          });
+          
+          if (response.data.success) {
+            setSkills(response.data.skills);
+          }
+        } catch (err) {
+          console.error("Error fetching skills:", err);
+        } finally {
+          setLoadingSkills(false);
+        }
+      };
+      
+      fetchSkills();
+    }, []);
+
+    const addSkillToRole = (roleIndex: number) => {
+      const updatedRoles = [...formData.roles];
+      if (skills.length > 0) {
+        updatedRoles[roleIndex].habilidades.push({
+          id_habilidad: skills[0].id_habilidad, // Default to first skill
+          nivel_minimo_requerido: 3, // Default values
+          importancia: 3
+        });
+        setFormData(prev => ({ ...prev, roles: updatedRoles }));
+      }
+    };
+
+    const updateSkill = (
+      roleIndex: number, 
+      skillIndex: number, 
+      field: keyof RoleSkill, 
+      value: number
+    ) => {
+      const updatedRoles = [...formData.roles];
+      updatedRoles[roleIndex].habilidades[skillIndex] = {
+        ...updatedRoles[roleIndex].habilidades[skillIndex],
+        [field]: value
+      };
+      setFormData(prev => ({ ...prev, roles: updatedRoles }));
+    };
+    
+    // Add function to remove a skill from a role
+    const removeSkillFromRole = (roleIndex: number, skillIndex: number) => {
+      const updatedRoles = [...formData.roles];
+      updatedRoles[roleIndex].habilidades.splice(skillIndex, 1);
+      setFormData(prev => ({ ...prev, roles: updatedRoles }));
+    };
+
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+      e.preventDefault();
+      setLoading(true);
+      
+      try {
+        // Get the JWT token
+        const token = localStorage.getItem('token');
+        
+        // Add the current user as manager
+        const userInfo = JSON.parse(localStorage.getItem('user') || '{}');
+        const projectData = {
+          nombre: formData.nombre,
+          descripcion: formData.descripcion,
+          fecha_inicio: formData.fecha_inicio, 
+          fecha_fin_estimada: formData.fecha_fin_estimada,
+          prioridad: formData.prioridad, // Already numeric
+          id_manager: userInfo.id_persona,
+          roles: formData.roles.map(role => ({
+            titulo: role.titulo,
+            descripcion: role.descripcion,
+            importancia: role.importancia, // Already numeric
+            nivel_experiencia_requerido: role.nivel_experiencia_requerido, // Already numeric
+            habilidades: role.habilidades.map(skill => ({
+              id_habilidad: skill.id_habilidad,
+              nivel_minimo_requerido: skill.nivel_minimo_requerido, // Already numeric
+              importancia: skill.importancia // Already numeric
+            }))
+          }))
+        };
+
+        console.log("Sending data to API:", JSON.stringify(projectData, null, 2));
+
+        
+        // Make API call to create project
+        const response = await axios.post(
+          'http://localhost:4000/api/projects/create-project', 
+          projectData,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
+          }
+        );
+        
+        if (response.data.success) {
+          // Call the onSuccess callback to close dialog and refresh list
+          onSuccess();
+        } else {
+          setError(response.data.message || 'Error al crear el proyecto');
+        }
+      } catch (err) {
+        console.error("Error creating project:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    return (
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {error && (
+          <div className="p-3 text-sm bg-red-50 text-red-600 rounded-md">
+            {error}
+          </div>
+        )}
+        
+        <div className="space-y-2">
+          <Label htmlFor="nombre">Nombre del proyecto</Label>
+          <Input
+            id="nombre"
+            name="nombre"
+            value={formData.nombre}
+            onChange={handleChange}
+            placeholder="Ingrese el nombre del proyecto"
+            required
+          />
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="descripcion">Descripción</Label>
+          <Textarea
+            id="descripcion"
+            name="descripcion"
+            value={formData.descripcion}
+            onChange={handleChange}
+            placeholder="Describa el proyecto brevemente"
+            rows={4}
+            required
+          />
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-2">
+        <Label>Fecha de inicio</Label>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              className={cn(
+                "w-full justify-start text-left font-normal",
+                !startDate && "text-muted-foreground"
+              )}
+            >
+              <CalendarIcon className="mr-2 h-4 w-4" />
+              {startDate ? format(startDate, "PPP") : "Seleccionar fecha"}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0">
+            {/* The fix is here - make sure Calendar is correctly imported */}
+            <Calendar
+              mode="single"
+              selected={startDate}
+              onSelect={handleStartDateChange}
+              initialFocus
+            />
+          </PopoverContent>
+        </Popover>
+      </div>
+          
+          <div className="space-y-2">
+            <Label>Fecha de finalización estimada</Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "w-full justify-start text-left font-normal",
+                    !endDate && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {endDate ? format(endDate, "PPP") : "Seleccionar fecha"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0">
+                <Calendar
+                  mode="single"
+                  selected={endDate}
+                  onSelect={(date: Date | undefined) => handleEndDateChange(date)}
+                  initialFocus
+                  disabled={(date: Date) => (startDate ? date < startDate : false)}
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          
+          <div className="space-y-2">
+            <Label htmlFor="prioridad">Prioridad</Label>
+            <Select 
+                value={formData.prioridad.toString()} // Convert to string for the UI
+                onValueChange={(value) => handleSelectChange('prioridad', parseInt(value))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Seleccionar prioridad" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1">Baja</SelectItem>
+                  <SelectItem value="2">Media</SelectItem>
+                  <SelectItem value="3">Alta</SelectItem>
+                  <SelectItem value="4">Urgente</SelectItem>
+                </SelectContent>
+              </Select>
+          </div>
+        </div>
+
+        <div className="pt-4 border-t mt-6">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-medium">Roles del Proyecto</h3>
+          <Button 
+            type="button" 
+            variant="outline" 
+            size="sm" 
+            onClick={addRole} 
+            className="flex items-center gap-1"
+          >
+            <PlusCircle className="h-4 w-4" />
+            Añadir Rol
+          </Button>
+        </div>
+        
+        {formData.roles.length === 0 ? (
+          <div className="text-center p-4 bg-gray-50 rounded-md">
+            <p className="text-sm text-gray-500">No hay roles definidos. Añade al menos un rol para este proyecto.</p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {formData.roles.map((role, index) => (
+              <Card key={index} className="relative">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => removeRole(index)}
+                  className="absolute right-2 top-2 text-red-500 hover:text-red-700 hover:bg-red-50 h-7 w-7 p-0"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+                
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base">Rol #{index + 1}</CardTitle>
+                </CardHeader>
+                
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor={`role-title-${index}`}>Título del Rol</Label>
+                      <Input
+                        id={`role-title-${index}`}
+                        value={role.titulo}
+                        onChange={(e) => updateRole(index, 'titulo', e.target.value)}
+                        placeholder="Ej: Desarrollador Frontend"
+                        required
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor={`role-level-${index}`}>Nivel de Experiencia</Label>
+                      <Select 
+                        value={role.nivel_experiencia_requerido.toString()} 
+                        onValueChange={(value) => updateRole(index, 'nivel_experiencia_requerido', parseInt(value))}
+                      >
+                        <SelectTrigger id={`role-level-${index}`}>
+                          <SelectValue placeholder="Seleccionar nivel" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="1">Junior</SelectItem>
+                          <SelectItem value="2">Semi-Senior</SelectItem>
+                          <SelectItem value="3">Senior</SelectItem>
+                          <SelectItem value="4">Experto</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor={`role-desc-${index}`}>Descripción del Rol</Label>
+                    <Textarea 
+                      id={`role-desc-${index}`}
+                      value={role.descripcion}
+                      onChange={(e) => updateRole(index, 'descripcion', e.target.value)}
+                      placeholder="Describe las responsabilidades de este rol"
+                      rows={2}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2 mt-4">
+                  <div className="flex justify-between items-center">
+                    <Label>Habilidades requeridas</Label>
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => addSkillToRole(index)} 
+                      className="flex items-center gap-1"
+                      disabled={loadingSkills || skills.length === 0}
+                    >
+                      <PlusCircle className="h-4 w-4" />
+                      Añadir Habilidad
+                    </Button>
+                  </div>
+                  
+                  {role.habilidades.length === 0 ? (
+                    <div className="text-center p-2 bg-gray-50 rounded-md">
+                      <p className="text-xs text-gray-500">No hay habilidades definidas.</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {role.habilidades.map((skill, skillIndex) => (
+                        <div key={skillIndex} className="grid grid-cols-12 gap-2 items-center p-2 rounded-md bg-gray-50">
+                          <div className="col-span-4">
+                            <Select 
+                              value={skill.id_habilidad.toString()} 
+                              onValueChange={(value) => updateSkill(index, skillIndex, 'id_habilidad', parseInt(value))}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Seleccionar habilidad" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {skills.map((s) => (
+                                  <SelectItem key={s.id_habilidad} value={s.id_habilidad.toString()}>
+                                    {s.nombre}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          
+                          <div className="col-span-3">
+                            <Label className="text-xs">Nivel mínimo</Label>
+                            <Select 
+                              value={skill.nivel_minimo_requerido.toString()} 
+                              onValueChange={(value) => updateSkill(index, skillIndex, 'nivel_minimo_requerido', parseInt(value))}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Nivel" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="1">1</SelectItem>
+                                <SelectItem value="2">2</SelectItem>
+                                <SelectItem value="3">3</SelectItem>
+                                <SelectItem value="4">4</SelectItem>
+                                <SelectItem value="5">5</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          
+                          <div className="col-span-3">
+                            <Label className="text-xs">Importancia</Label>
+                            <Select 
+                              value={skill.importancia.toString()} 
+                              onValueChange={(value) => updateSkill(index, skillIndex, 'importancia', parseInt(value))}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Importancia" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="1">Baja</SelectItem>
+                                <SelectItem value="3">Media</SelectItem>
+                                <SelectItem value="5">Alta</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          
+                          <div className="col-span-2 flex justify-end">
+                            <Button 
+                              type="button" 
+                              variant="ghost" 
+                              size="sm" 
+                              onClick={() => removeSkillFromRole(index, skillIndex)}
+                              className="h-8 w-8 p-0 text-red-500 hover:text-red-700"
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+      </div>
+        
+        <div className="flex justify-end space-x-2 pt-4">
+          <Button 
+            type="submit"
+            disabled={loading}
+          >
+            {loading ? 'Creando...' : 'Crear Proyecto'}
+          </Button>
+        </div>
+      </form>
+    );
+  };
   const filteredProjects = useMemo(() => {
     return projects.filter((project) => {
       const matchSearch = project.project.toLowerCase().includes(searchTerm.toLowerCase());
@@ -578,6 +1128,28 @@ export default function ProyectosPage() {
         project={selectedProject}
         manager={{ name: selectedProject?.managerName || "Gerente del Proyecto" }}
       />
+      <Dialog open={showNewProjectDialog} onOpenChange={setShowNewProjectDialog}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Crear Nuevo Proyecto</DialogTitle>
+          </DialogHeader>
+          
+          {/* New Project Form goes here */}
+          <div className="grid gap-4 py-4">
+            {/* Form fields */}
+            <NewProjectForm onSuccess={() => {
+              setShowNewProjectDialog(false);
+              // Refresh your projects list
+            }} />
+          </div>
+          
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setShowNewProjectDialog(false)}>
+              Cancelar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
