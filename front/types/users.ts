@@ -14,6 +14,8 @@ export interface UserInfoBanca {
   puesto_actual: string;
   antiguedad: number;
   historial_profesional: string;
+  porcentaje_match?: number;
+  nombre_completo?: string;
 }
 
 export interface UpdateProfileData {

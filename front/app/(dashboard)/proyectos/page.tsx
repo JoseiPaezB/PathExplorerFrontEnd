@@ -52,6 +52,18 @@ import {
 import { getEmpleadosBanca } from "@/app/(dashboard)/usuarios/actions";
 import { UserInfoBanca } from "@/types/users";
 
+// == THIS IS A HYBRID TEST (REAL DATA + PLACEHOLDER DATA) == //
+import { getBestCandidatesForRole } from "@/app/(dashboard)/proyectos/actions";
+
+const roleToIdMap: Record<string, number> = {
+  "Desarrollador Frontend": 52,
+  "DevOps Engineer": 22,
+  "Desarrollador Full Stack": 7,
+  "UI/UX Designer": 9,
+  "QA Engineer": 10
+};
+// == THIS IS A HYBRID TEST (REAL DATA + PLACEHOLDER DATA) == //
+
 export default function ProyectosPage() {
   const [activeTab, setActiveTab] = useState("kanban");
   const [showNewProjectDialog, setShowNewProjectDialog] = useState(false);
@@ -62,7 +74,8 @@ export default function ProyectosPage() {
   const [empleadosBanca, setEmpleadosBanca] = useState<UserInfoBanca[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
 
-  const handleAssignClick = async (project: string, role: string) => {
+  // == THIS IS A HYBRID TEST (REAL DATA + PLACEHOLDER DATA) == //
+  const handleAssignClick = async (project: string, role: string, roleId?: number) => {
     setCurrentProject(project);
     setCurrentRole(role);
     setLoading(true);
@@ -70,15 +83,30 @@ export default function ProyectosPage() {
     
     try {
       const token = localStorage.getItem("token");
-      const response = await getEmpleadosBanca(token||"");
-      if (response.success && response.employees) {
-        const employeesArray = Array.isArray(response.employees) 
-          ? response.employees 
-          : [response.employees];
-        
-        setEmpleadosBanca(employeesArray);
+      // Usar el roleId pasado como parámetro o buscar en el mapa como fallback
+      const actualRoleId = roleId || roleToIdMap[role] || 0;
+      
+      if (actualRoleId === 0) {
+        console.error(`No se encontró ID para el rol: ${role}`);
+        return;
+      }
+      
+      console.log(`Obteniendo candidatos para el rol ID: ${actualRoleId}`);
+      
+      const response = await getBestCandidatesForRole(actualRoleId, token || "");
+      if (response.success && response.candidates) {
+        setEmpleadosBanca(response.candidates);
       } else {
-        console.error("Error al obtener empleados en banca:", response.message);
+        console.error("Error al obtener candidatos:", response.message);
+        // Si falla, intentamos fallback a todos los empleados en banca
+        const backupResponse = await getEmpleadosBanca(token || "");
+        if (backupResponse.success && backupResponse.employees) {
+          const employeesArray = Array.isArray(backupResponse.employees) 
+            ? backupResponse.employees 
+            : [backupResponse.employees];
+          
+          setEmpleadosBanca(employeesArray);
+        }
       }
     } catch (error) {
       console.error("Error:", error);
@@ -86,6 +114,7 @@ export default function ProyectosPage() {
       setLoading(false);
     }
   };
+  // == THIS IS A HYBRID TEST (REAL DATA + PLACEHOLDER DATA) == //
 
   const closeAssignDialog = () => {
     setShowAssignDialog(false);
@@ -102,18 +131,14 @@ export default function ProyectosPage() {
   };
 
   const filteredEmpleados = empleadosBanca.filter(
-    (empleado) =>
-      empleado.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      empleado.apellido.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      empleado.puesto_actual.toLowerCase().includes(searchTerm.toLowerCase())
+    (empleado) => {
+      const nombreCompleto = empleado.nombre_completo || '';
+      const puesto = empleado.puesto_actual || '';
+      
+      return nombreCompleto.toLowerCase().includes(searchTerm.toLowerCase()) ||
+             puesto.toLowerCase().includes(searchTerm.toLowerCase());
+    }
   );
-
-  // Mock function to calculate match percentage (replace with actual logic later)
-  const calculateMatchPercentage = (empleado: UserInfoBanca, role: string) => {
-    // Esta es una función simulada que debería ser reemplazada con la lógica real
-    // Por ahora se devuelve un valor aleatorio entre 60 y 95
-    return Math.floor(Math.random() * 36) + 60;
-  };
 
   return (
     <div className="space-y-6">
@@ -264,7 +289,7 @@ export default function ProyectosPage() {
                   <Button
                     size="sm"
                     className="h-8 bg-primary hover:bg-primary/90"
-                    onClick={() => handleAssignClick("Sistema CRM", "Desarrollador Frontend")}
+                    onClick={() => handleAssignClick("Sistema CRM", "Desarrollador Frontend", 52)}
                   >
                     Asignar
                   </Button>
@@ -324,7 +349,7 @@ export default function ProyectosPage() {
                   <Button
                     size="sm"
                     className="h-8 bg-primary hover:bg-primary/90"
-                    onClick={() => handleAssignClick("Migración a la Nube", "DevOps Engineer")}
+                    onClick={() => handleAssignClick("Migración a la Nube", "DevOps Engineer", 22)}
                   >
                     Asignar
                   </Button>
@@ -516,9 +541,11 @@ export default function ProyectosPage() {
               <div>Acciones</div>
             </div>
             {[
+              // == THIS IS A HYBRID TEST (REAL DATA + PLACEHOLDER DATA) == //
               {
                 project: "Sistema CRM",
                 role: "Desarrollador Frontend",
+                roleId: 52,
                 status: "Pendiente",
                 assignedTo: null,
                 startDate: "15/04/2025",
@@ -528,6 +555,7 @@ export default function ProyectosPage() {
               {
                 project: "App Móvil Banca",
                 role: "Desarrollador Full Stack",
+                roleId: 7,
                 status: "En progreso",
                 assignedTo: "Juan Díaz",
                 startDate: "10/02/2025",
@@ -537,6 +565,7 @@ export default function ProyectosPage() {
               {
                 project: "Portal de Clientes",
                 role: "UI/UX Designer",
+                roleId: 9,
                 status: "En progreso",
                 assignedTo: "María Rodríguez",
                 startDate: "05/01/2025",
@@ -546,12 +575,14 @@ export default function ProyectosPage() {
               {
                 project: "Migración a la Nube",
                 role: "DevOps Engineer",
+                roleId: 22,
                 status: "Completado",
                 assignedTo: "Pedro Sánchez",
                 startDate: "10/07/2024",
                 endDate: "10/01/2025",
                 progress: 100,
               },
+              // == THIS IS A HYBRID TEST (REAL DATA + PLACEHOLDER DATA) == //
             ].map((item, index) => (
               <div
                 key={index}
@@ -631,12 +662,12 @@ export default function ProyectosPage() {
       {/* Diálogo de asignación de empleados */}
       <Dialog open={showAssignDialog} onOpenChange={closeAssignDialog}>
         <DialogContent className="sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Asignar empleado a rol</DialogTitle>
-            <DialogDescription>
-              Selecciona un empleado para el rol {currentRole} en el proyecto {currentProject}
-            </DialogDescription>
-          </DialogHeader>
+        <DialogHeader>
+          <DialogTitle>Asignar empleado a rol</DialogTitle>
+          <DialogDescription>
+            Selecciona un empleado para el rol {currentRole} en el proyecto {currentProject}
+          </DialogDescription>
+        </DialogHeader>
           
           {loading ? (
             <div className="flex justify-center py-8">
@@ -658,68 +689,77 @@ export default function ProyectosPage() {
               </div>
 
               <div className="max-h-[300px] overflow-y-auto">
-                {filteredEmpleados.length > 0 ? (
-                  filteredEmpleados
-                    .sort((a, b) => {
-                      const matchA = calculateMatchPercentage(a, currentRole);
-                      const matchB = calculateMatchPercentage(b, currentRole);
-                      return matchB - matchA; // Ordenar por mayor porcentaje
-                    })
-                    .map((empleado) => {
-                      const matchPercentage = calculateMatchPercentage(empleado, currentRole);
-                      return (
-                        <div
-                          key={empleado.id_persona}
-                          className="mb-2 rounded-md border p-3 hover:bg-muted cursor-pointer"
-                          onClick={() => assignEmployee(empleado)}
-                        >
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                              <Avatar className="h-10 w-10">
-                                <AvatarFallback>
-                                  {empleado.nombre.charAt(0)}
-                                  {empleado.apellido.charAt(0)}
-                                </AvatarFallback>
-                              </Avatar>
-                              <div>
-                                <h4 className="font-medium">
-                                  {empleado.nombre} {empleado.apellido}
-                                </h4>
-                                <p className="text-sm text-muted-foreground">
-                                  {empleado.puesto_actual}
-                                </p>
-                              </div>
-                            </div>
-                            <div className="text-right">
-                              <Badge
-                                variant="outline"
-                                className={
-                                  matchPercentage >= 80
-                                    ? "bg-green-50 text-green-700"
-                                    : matchPercentage >= 70
-                                    ? "bg-blue-50 text-blue-700"
-                                    : "bg-yellow-50 text-yellow-700"
-                                }
-                              >
-                                {matchPercentage}% match
-                              </Badge>
-                              <p className="mt-1 text-xs text-muted-foreground">
-                                Disponibilidad: {empleado.porcentaje_disponibilidad}%
+              {filteredEmpleados.length > 0 ? (
+                filteredEmpleados
+                  .sort((a, b) => {
+                    // Extraer solo el número del porcentaje para ordenar
+                    const matchA = a.porcentaje_match ? parseFloat(String(a.porcentaje_match).replace('%', '')) : 0;
+                    const matchB = b.porcentaje_match ? parseFloat(String(b.porcentaje_match).replace('%', '')) : 0;
+                    return matchB - matchA; // Ordenar por mayor porcentaje
+                  })
+                  .map((empleado) => {
+                    // Asegurarnos de que estamos usando nombre_completo
+                    const nombreEmpleado = empleado.nombre_completo || "Sin nombre";
+                    // Generar iniciales para avatar
+                    const iniciales = nombreEmpleado
+                      .split(' ')
+                      .map(parte => parte[0])
+                      .join('')
+                      .substring(0, 2)
+                      .toUpperCase();
+                      
+                    return (
+                      <div
+                        key={empleado.id_empleado}
+                        className="mb-2 rounded-md border p-3 hover:bg-muted cursor-pointer"
+                        onClick={() => assignEmployee(empleado)}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <Avatar className="h-10 w-10">
+                              <AvatarFallback>
+                                {iniciales}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <h4 className="font-medium">
+                                {nombreEmpleado}
+                              </h4>
+                              <p className="text-sm text-muted-foreground">
+                                {empleado.puesto_actual || 'Sin puesto'}
                               </p>
                             </div>
                           </div>
+                          <div className="text-right">
+                            <Badge
+                              variant="outline"
+                              className={
+                                empleado.porcentaje_match && empleado.porcentaje_match >= 80
+                                  ? "bg-green-50 text-green-700"
+                                  : empleado.porcentaje_match && empleado.porcentaje_match >= 70
+                                  ? "bg-blue-50 text-blue-700"
+                                  : "bg-yellow-50 text-yellow-700"
+                              }
+                            >
+                              {empleado.porcentaje_match || '0%'}
+                            </Badge>
+                            <p className="mt-1 text-xs text-muted-foreground">
+                              Disponibilidad: {empleado.porcentaje_disponibilidad || '0%'}
+                            </p>
+                          </div>
                         </div>
-                      );
-                    })
-                ) : (
-                  <div className="flex flex-col items-center justify-center py-8">
-                    <User className="h-10 w-10 text-muted-foreground" />
-                    <h3 className="mt-4 text-lg font-medium">No hay empleados disponibles</h3>
-                    <p className="mt-2 text-sm text-muted-foreground">
-                      No se encontraron empleados en estado de banca que coincidan con la búsqueda.
-                    </p>
-                  </div>
-                )}
+                      </div>
+                    );
+                  })
+              ) : (
+                <div className="flex flex-col items-center justify-center py-8">
+                  <User className="h-10 w-10 text-muted-foreground" />
+                  <h3 className="mt-4 text-lg font-medium">No hay empleados disponibles</h3>
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    No se encontraron empleados que coincidan con la búsqueda.
+                  </p>
+                </div>
+              )}
               </div>
             </>
           )}
