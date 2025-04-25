@@ -98,7 +98,6 @@ export default function AddCertificationForm() {
   };
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Form data:", formData);
     if (
       !formData.id_certificacion ||
       !formData.fecha_obtencion ||

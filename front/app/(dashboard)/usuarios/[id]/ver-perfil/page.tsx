@@ -1,16 +1,14 @@
 "use client";
-
-import { useState, useEffect } from "react";
-
+import { useState, useEffect, use } from "react";
+import { useRouter } from "next/navigation";
 import {
   Award,
   Briefcase,
   Calendar,
-  Edit,
-  FileText,
   Flag,
   GraduationCap,
   User,
+  ArrowLeft,
   Mail,
 } from "lucide-react";
 
@@ -26,146 +24,170 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import type {
-  CertificationsUserResponse,
+import { UserInfoBanca } from "@/types/users";
+import { params } from "@/types/parameters";
+import {
+  getUserCertifications,
+  getUserCourses,
+  getUserSkills,
+  getUserProfessionalHistory,
+  getUserTrajectoryAndGoals,
+} from "./actions";
+import {
   CoursesUserResponse,
+  CertificationsUserResponse,
+  UserTrajectoryResponse,
   ProfessionalHistory,
   SkillsResponse,
-  UserTrajectoryResponse,
 } from "@/types/users";
 
-import { useAuth } from "@/contexts/auth-context";
-import Link from "next/link";
-
-export default function PerfilPage() {
-  const {
-    user,
-    professionalHistory: fetchProfessionalHistory,
-    courses: fetchCourses,
-    certifications: fetchCertifications,
-    skills: fetchSkills,
-    goalsAndTrajectory: fetchGoalsAndTrajectory,
-  } = useAuth();
-
+export default function UserDetailsPage({ params }: { params: params }) {
+  const unwrappedParams: params = use(params);
+  const userId = unwrappedParams.id;
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState("informacion");
-  const [certifications, setCertifications] =
-    useState<CertificationsUserResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [professionalHistoryData, setProfessionalHistoryData] =
+  const [user, setUser] = useState<UserInfoBanca | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [courses, setCourses] = useState<CoursesUserResponse | null>(null);
+  const [certifications, setCertifications] =
+    useState<CertificationsUserResponse | null>(null);
+  const [professionalHistory, setProfessionalHistory] =
     useState<ProfessionalHistory | null>(null);
-  const [coursesData, setCoursesData] = useState<CoursesUserResponse | null>(
-    null
-  );
-  const [skills, setSkills] = useState<SkillsResponse>();
-  const [goalsAndTrajectory, setGoalsAndTrajectory] =
+  const [userTrajectory, setUserTrajectory] =
     useState<UserTrajectoryResponse | null>(null);
+  const [skills, setSkills] = useState<SkillsResponse | null>(null);
 
   useEffect(() => {
-    const loadProfessionalHistory = async () => {
-      try {
-        const history = await fetchProfessionalHistory();
-        if (history) {
-          setProfessionalHistoryData(history);
+    try {
+      const storedUser = sessionStorage.getItem("selectedUser");
+      setLoading(true);
+
+      if (storedUser) {
+        const userData = JSON.parse(storedUser) as UserInfoBanca;
+        if (userData.id_persona.toString() === userId) {
+          setUser(userData);
+          setLoading(false);
+          return;
         }
+      }
+      setLoading(false);
+    } catch (err) {
+      setLoading(false);
+      setError("Error parsing user data");
+      console.error("Error retrieving user data:", err);
+      setLoading(false);
+    }
+  }, [userId]);
+
+  useEffect(() => {
+    const fetchUserCourses = async () => {
+      try {
+        setLoading(true);
+        const token = localStorage.getItem("token") || "";
+        const userCoursesData = await getUserCourses(userId, token);
+        setCourses(userCoursesData);
+        setLoading(false);
       } catch (error) {
+        setLoading(false);
+        setError("Error parsing user data");
+        console.error("Error fetching user courses:", error);
+      }
+    };
+
+    fetchUserCourses();
+  }, [userId]);
+
+  useEffect(() => {
+    const fetchUserCertifications = async () => {
+      try {
+        setLoading(true);
+        const token = localStorage.getItem("token") || "";
+        const userCertificationsData = await getUserCertifications(
+          userId,
+          token
+        );
+        setCertifications(userCertificationsData);
+        setLoading(false);
+      } catch (error) {
+        setLoading(false);
+        setError("Error parsing user data");
+
+        console.error("Error fetching user certifications:", error);
+      }
+    };
+
+    fetchUserCertifications();
+  }, [userId]);
+
+  useEffect(() => {
+    const fetchUserTrajectory = async () => {
+      try {
+        setLoading(true);
+        const token = localStorage.getItem("token") || "";
+        const response = await getUserTrajectoryAndGoals(userId, token);
+        setUserTrajectory(response);
+        setLoading(false);
+      } catch (error) {
+        setLoading(false);
+        setError("Error parsing user data");
+        console.error("Error fetching user trajectory:", error);
+      }
+    };
+
+    fetchUserTrajectory();
+  }, [userId]);
+
+  useEffect(() => {
+    const fetchProfessionalHistory = async () => {
+      try {
+        setLoading(true);
+        const token = localStorage.getItem("token") || "";
+        const response = await getUserProfessionalHistory(userId, token);
+        setProfessionalHistory(response);
+        setLoading(false);
+      } catch (error) {
+        setLoading(false);
+        setError("Error parsing user data");
         console.error("Error fetching professional history:", error);
-        setError(
-          error instanceof Error
-            ? error.message
-            : "An unknown error occurred while fetching professional history."
-        );
       }
     };
 
-    loadProfessionalHistory();
-  }, [fetchProfessionalHistory]);
+    fetchProfessionalHistory();
+  }, [userId]);
 
   useEffect(() => {
-    const loadCourses = async () => {
+    const fetchUserSkills = async () => {
       try {
-        const courses = await fetchCourses();
-        if (courses) {
-          setCoursesData(courses);
-        }
-      } catch (error) {
-        console.error("Error fetching courses:", error);
-        setError(
-          error instanceof Error
-            ? error.message
-            : "An unknown error occurred while fetching courses."
-        );
-      }
-    };
-
-    loadCourses();
-  }, [fetchCourses]);
-
-  useEffect(() => {
-    const loadCertifications = async () => {
-      try {
-        setIsLoading(true);
-        const certificationsData = await fetchCertifications();
-
-        if (certificationsData?.certifications) {
-          setCertifications(certificationsData);
-        }
-      } catch (error) {
-        console.error("Error fetching certifications:", error);
-        setError(
-          error instanceof Error
-            ? error.message
-            : "An unknown error occurred while fetching certifications."
-        );
-      } finally {
+        setLoading(true);
+        const token = localStorage.getItem("token") || "";
+        const response = await getUserSkills(userId, token);
+        setSkills(response);
         setIsLoading(false);
-      }
-    };
-
-    loadCertifications();
-  }, [fetchCertifications]);
-
-  useEffect(() => {
-    const loadSkills = async () => {
-      try {
-        const skillsData = await fetchSkills();
-        if (skillsData) {
-          setSkills(skillsData);
-        }
       } catch (error) {
-        console.error("Error fetching skills:", error);
-        setError(
-          error instanceof Error
-            ? error.message
-            : "An unknown error occurred while fetching skills."
-        );
+        setLoading(false);
+        setError("Error parsing user data");
+        console.error("Error fetching user skills:", error);
       }
     };
 
-    loadSkills();
-  }, [fetchSkills]);
-
-  useEffect(() => {
-    const loadGoalsAndTrajectory = async () => {
-      try {
-        const goalsAndTrajectoryData = await fetchGoalsAndTrajectory();
-        if (goalsAndTrajectoryData) {
-          setGoalsAndTrajectory(goalsAndTrajectoryData);
-        }
-      } catch (error) {
-        console.error("Error fetching goals and trajectory:", error);
-        setError(
-          error instanceof Error
-            ? error.message
-            : "An unknown error occurred while fetching goals and trajectory."
-        );
-      }
-    };
-    loadGoalsAndTrajectory();
-  }, [fetchGoalsAndTrajectory]);
+    fetchUserSkills();
+  }, [userId]);
 
   return (
     <div className="space-y-6">
+      <div className="flex items-center gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => router.back()}
+          className="gap-1"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          <span>Volver a usuarios</span>
+        </Button>
+      </div>
       <Card>
         <CardContent className="p-6">
           <div className="flex flex-col gap-6 md:flex-row md:items-center">
@@ -177,7 +199,7 @@ export default function PerfilPage() {
               <AvatarFallback className="text-2xl">JD</AvatarFallback>
             </Avatar>
             <div className="space-y-1.5">
-              <p className="text-lg text-muted-foreground">{`${user?.profile.puesto_actual}`}</p>
+              <p className="text-lg text-muted-foreground">{`${user?.puesto_actual}`}</p>
               <div className="flex flex-wrap gap-3 pt-1">
                 <div className="flex items-center gap-1 text-sm text-muted-foreground">
                   <Calendar className="h-4 w-4" />
@@ -199,22 +221,6 @@ export default function PerfilPage() {
                   <span>{user?.email}</span>
                 </div>
               </div>
-            </div>
-            <div className="ml-auto flex flex-col gap-2 md:flex-row">
-              <Link href="/configuracion">
-                <Button variant="outline" size="sm" className="gap-1">
-                  <Edit className="h-4 w-4" />
-                  Editar perfil
-                </Button>
-              </Link>
-
-              <Button
-                size="sm"
-                className="gap-1 bg-primary hover:bg-primary/90"
-              >
-                <FileText className="h-4 w-4" />
-                Descargar CV
-              </Button>
             </div>
           </div>
         </CardContent>
@@ -242,8 +248,8 @@ export default function PerfilPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-3">
-                  {coursesData && coursesData.courses.length > 0 ? (
-                    coursesData.courses.map((course) => (
+                  {courses && courses.courses.length > 0 ? (
+                    courses.courses.map((course) => (
                       <div key={course.id_curso} className="space-y-1">
                         <div className="flex items-center justify-between">
                           <h4 className="text-sm font-medium">
@@ -319,9 +325,9 @@ export default function PerfilPage() {
                   <p>Cargando historial profesional...</p>
                 ) : error ? (
                   <p className="text-red-500">{error}</p>
-                ) : professionalHistoryData &&
-                  professionalHistoryData.professionalHistory.length > 0 ? (
-                  professionalHistoryData.professionalHistory.map(
+                ) : professionalHistory &&
+                  professionalHistory.professionalHistory.length > 0 ? (
+                  professionalHistory.professionalHistory.map(
                     (entry, index) => (
                       <div
                         key={index}
@@ -434,30 +440,6 @@ export default function PerfilPage() {
               </CardContent>
             </Card>
           </div>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <GraduationCap className="h-5 w-5 text-primary" />
-                Gráfico de Competencias
-              </CardTitle>
-              <CardDescription>
-                Visualización de habilidades técnicas y blandas en formato radar
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex h-80 items-center justify-center">
-                <div className="text-center">
-                  <div className="mb-4 rounded-full bg-primary/10 p-4">
-                    <GraduationCap className="h-8 w-8 text-primary" />
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    El gráfico de radar de habilidades se visualizará aquí
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
         </TabsContent>
 
         <TabsContent value="metas" className="space-y-4">
@@ -488,8 +470,8 @@ export default function PerfilPage() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-8">
-                  {goalsAndTrajectory?.trajectory &&
-                    goalsAndTrajectory.trajectory.map((career, index) => (
+                  {userTrajectory?.trajectory &&
+                    userTrajectory.trajectory.map((career, index) => (
                       <div
                         key={career.id_trayectoria}
                         className="relative border-l border-primary pl-6"
@@ -553,9 +535,9 @@ export default function PerfilPage() {
 
                   <div className="pt-4">
                     <h4 className="font-medium mb-4">Metas Profesionales</h4>
-                    {goalsAndTrajectory?.professionalGoals &&
-                    goalsAndTrajectory.professionalGoals.length > 0 ? (
-                      goalsAndTrajectory.professionalGoals.map((goal) => (
+                    {userTrajectory?.professionalGoals &&
+                    userTrajectory.professionalGoals.length > 0 ? (
+                      userTrajectory.professionalGoals.map((goal) => (
                         <div
                           key={goal.id_meta}
                           className="relative border-l border-muted pl-6 pb-6"
