@@ -698,7 +698,6 @@ export default function ProyectosPage() {
                     return matchB - matchA; // Ordenar por mayor porcentaje
                   })
                   .map((empleado) => {
-                    // Asegurarnos de que estamos usando nombre_completo
                     const nombreEmpleado = empleado.nombre_completo || "Sin nombre";
                     // Generar iniciales para avatar
                     const iniciales = nombreEmpleado
