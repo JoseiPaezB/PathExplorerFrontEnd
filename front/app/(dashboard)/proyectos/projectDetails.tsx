@@ -1,4 +1,5 @@
 import React from 'react';
+import { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -13,8 +14,31 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { CalendarIcon, ClockIcon, InfoIcon, UserIcon } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { editProject } from './projectService'; // Assuming you have this function in your service
 
 
+interface EditableProject {
+  id: number;
+  id_proyecto: number;
+  project: string;
+  description: string;
+  startDate: string;
+  endDate: string;
+  priority: number;
+  prioridad ?: number;
+  status: string;
+  allRoles?: {
+    titulo: string;
+    descripcion: string;
+    assignments?: { nombre: string; apellido: string }[];
+    skills?: { 
+      id_habilidad: number;
+      nombre: string; 
+      nivel_minimo_requerido: number;
+      importancia: number;
+    }[];
+  }[];
+}
 
 
 interface ProjectDetailsModalProps {
@@ -39,12 +63,24 @@ interface ProjectDetailsModalProps {
     }[];
   } | null;
   manager: { name: string } | null;
+  onProjectUpdated?: (updatedProject: EditableProject) => void;
 }
 
 const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({ isOpen, onClose, project, manager }) => {
   console.log("Project details in modal:", project);
-  
-  // Add this to specifically check the roles and their skills
+  const [editedProject, setEditedProject] = useState<EditableProject | null>(null);
+  const [isEditMode, setIsEditMode] = useState(false);  // Add this to specifically check the roles and their skills
+
+  useEffect(() => {
+    if (project) {
+      setEditedProject({ ...project } as EditableProject);
+      // Reset to view mode when a new project is loaded
+      setIsEditMode(false);
+    }
+  }, [project]);
+
+  if (!project) return null;
+
   if (project?.allRoles) {
     console.log("Project roles:", project.allRoles);
     project.allRoles.forEach((role, index) => {
@@ -54,6 +90,123 @@ const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({ isOpen, onClo
 
   if (!project) return null;
 
+ 
+
+  
+  // Log changes as they happen
+const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+  const { name, value } = e.target;
+  console.log(`Field changed: ${name} = ${value}`);
+  
+  setEditedProject((prev: EditableProject | null) => {
+    if (!prev) return null;
+    const updated = {
+      ...prev,
+      [name]: value,
+    };
+    console.log("Updated project state:", updated);
+    return updated;
+  });
+};
+
+// Log before save attempt
+// In your handleSave function in ProjectDetailsModal
+const handleSave = async (e: React.FormEvent) => {
+  e.preventDefault();
+  console.log("Attempting to save project with data:", editedProject);
+  
+  try {
+    console.log("Before API call");
+    
+    // Format data correctly with helper functions
+    const formattedData = {
+      id_proyecto: editedProject?.id,
+      nombre: editedProject?.project,
+      descripcion: editedProject?.description,
+      fecha_inicio: formatDateForApi(editedProject?.startDate ?? ''),
+      fecha_fin_estimada: formatDateForApi(editedProject?.endDate ?? ''),
+      prioridad: parsePriority(editedProject?.priority),
+      // Make sure ALL required fields are included
+      estado: editedProject?.status || "ACTIVO"
+    };
+    
+    // Log the formatted data with types for debugging
+    console.log("Formatted data:", formattedData);
+    console.log("id_proyecto type:", typeof formattedData.id_proyecto);
+    
+    
+    // Make the API call
+    console.log("Calling editProject API");
+    const result = await editProject(formattedData);
+    
+    console.log("API call completed", result);
+    
+    // Handle empty project array in response
+    if (result.success) {
+      setIsEditMode(false);
+      onClose();
+      alert("Proyecto actualizado exitosamente");
+      
+      // Refresh your projects list if needed
+      // refreshProjects();
+    }
+  } catch (error) {
+    console.error("Error in handleSave:", error);
+    alert("Error al guardar el proyecto. Por favor intente de nuevo.");
+  } finally {
+    console.log("Save attempt complete (in finally block)");
+  }
+};
+
+// Helper functions
+function formatDateForApi(displayDate: string | null) {
+  if (!displayDate) return null;
+  
+  // If it's already in YYYY-MM-DD format, return as is
+  if (/^\d{4}-\d{2}-\d{2}$/.test(displayDate)) {
+    return displayDate;
+  }
+  
+  try {
+    // Parse DD/MM/YYYY format
+    const parts = displayDate.split('/');
+    if (parts.length !== 3) {
+      console.error("Invalid date format:", displayDate);
+      return null;
+    }
+    
+    const day = parts[0].padStart(2, '0');
+    const month = parts[1].padStart(2, '0');
+    const year = parts[2];
+    
+    return `${year}-${month}-${day}`;
+  } catch (error) {
+    console.error("Error formatting date:", error);
+    return null;
+  }
+}
+
+function parsePriority(priority: number | string | undefined) {
+  // If it's already a number, return it
+  if (typeof priority === 'number' && !isNaN(priority)) {
+    return priority;
+  }
+  
+  // If it's a string that can be converted to a number
+  if (typeof priority === 'string' && !isNaN(Number(priority))) {
+    return Number(priority);
+  }
+  
+  // Default fallback
+  return 3; // Default to medium priority
+}
+
+// Log when edit mode is toggled
+const toggleEditMode = () => {
+  const newMode = !isEditMode;
+  console.log(`Switching to ${newMode ? 'edit' : 'view'} mode`);
+  setIsEditMode(newMode);
+};
 
   const getBadgeColor = (status: string) => {
     switch (status) {
@@ -74,6 +227,7 @@ const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({ isOpen, onClo
     switch (importance) {
       case "Baja":
       case 1:
+      case 2:
         return "bg-green-100 text-green-800 text-xs";
       case "Media":
       case 3:
@@ -118,13 +272,29 @@ const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({ isOpen, onClo
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-lg max-h-screen">
         <DialogHeader className="pb-2">
-          <DialogTitle className="text-xl font-bold">
-            {project.project}
-          </DialogTitle>
+          <div className="flex justify-between items-center">
+            <DialogTitle className="text-xl font-bold">
+              {isEditMode ? "Editar Proyecto" : "Detalles del Proyecto"}
+            </DialogTitle>
+            {!isEditMode && (
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={toggleEditMode} 
+                className="h-8 w-8"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
+                </svg>
+                <span className="sr-only">Edit</span>
+              </Button>
+            )}
+          </div>
         </DialogHeader>
 
         <ScrollArea className="h-[60vh] pr-4">
           <div className="space-y-4">
+            {/* Manager and Status - Always visible */}
             <div className="grid grid-cols-2 gap-3 text-sm">
               <div className="space-y-1">
                 <div className="flex items-center gap-2 text-gray-600">
@@ -134,7 +304,7 @@ const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({ isOpen, onClo
                 <div className="flex items-center gap-2">
                   <Avatar className="h-6 w-6">
                     <AvatarImage src="/placeholder.svg" alt={manager?.name} />
-                    <AvatarFallback>{getInitials(manager?.name || "")}</AvatarFallback>
+                    <AvatarFallback>{manager?.name?.[0]}</AvatarFallback>
                   </Avatar>
                   <span>{manager?.name || "No asignado"}</span>
                 </div>
@@ -145,129 +315,182 @@ const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({ isOpen, onClo
                   <InfoIcon size={14} />
                   <span className="font-medium">Estado</span>
                 </div>
-                <Badge 
-                  variant="outline" 
-                  className={getBadgeColor(project.status)}
-                >
+                <Badge variant="outline" className={getBadgeColor(project.status)}>
                   {project.status}
                 </Badge>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 text-sm">
-              <div className="space-y-1">
-                <div className="flex items-center gap-2 text-gray-600">
-                  <CalendarIcon size={14} />
-                  <span className="font-medium">Fecha inicio</span>
-                </div>
-                <div>{project.startDate}</div>
-              </div>
-
-              <div className="space-y-1">
-                <div className="flex items-center gap-2 text-gray-600">
-                  <CalendarIcon size={14} />
-                  <span className="font-medium">Fecha fin</span>
-                </div>
-                <div>{project.endDate}</div>
-              </div>
-            </div>
-
-            <div className="pt-2 pb-2">
-              <h3 className="font-medium text-sm mb-1 text-gray-700">Descripción</h3>
-              <p className="text-sm text-gray-600">{project.description}</p>
-            </div>
-
-            <div className="space-y-3">
-              <h3 className="font-medium text-sm text-gray-700">Roles del Proyecto</h3>
-              
-              {project.allRoles.map((role, index) => (
-                
-              <Card key={index} className="shadow-sm border-gray-200">
-                <CardHeader className="py-2 px-3">
-                  <CardTitle className="text-sm flex justify-between items-center">
-                    <span>{role.titulo}</span>
-                    {role.assignments && role.assignments.length > 0 ? (
-                      <Badge variant="outline" className="bg-green-50 text-green-700 text-xs py-0">
-                        Asignado
-                      </Badge>
-                    ) : (
-                      <Badge variant="outline" className="bg-red-50 text-red-700 text-xs py-0">
-                        Sin asignar
-                      </Badge>
-                    )}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="py-2 px-3 text-xs">
-                  <p className="text-gray-700 mb-2">{role.descripcion}</p>
-                  
-                  {/* Skills Section */}
-                  {role.skills && role.skills.length > 0 && (
-                    <div className="mb-3">
-                      {/* Header */}
-                <div className="grid grid-cols-3 items-center font-medium text-sm px-1 mb-1">
-                  <span>Skills requeridas:</span>
-                  <span className="text-center text-xs text-gray-500">Nivel mínimo</span>
-                  <span className="text-center text-xs text-gray-500">Importancia</span>
+            {isEditMode ? (
+              // Edit Mode Form
+              <div className="space-y-4 pt-4">
+                <div className="space-y-1">
+                  <label className="block text-sm text-gray-600" htmlFor="projectName">
+                    Nombre del Proyecto
+                  </label>
+                  <input
+                    type="text"
+                    id="projectName"
+                    name="project"
+                    value={editedProject?.project || ""}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  />
                 </div>
 
-            {/* Skill rows */}
-            <div className="space-y-1">
-              {role.skills.map((skill, skillIndex) => (
-                <div
-                  key={skillIndex}
-                  className="grid grid-cols-3 items-center bg-gray-50 p-1 rounded-md text-sm"
-                >
-                  <span className="font-medium">{skill.nombre}</span>
-                  <Badge
-                    variant="outline"
-                    className="bg-blue-50 text-blue-700 text-xs justify-self-center py-0"
+                <div className="space-y-1">
+                  <label className="block text-sm text-gray-600" htmlFor="description">
+                    Descripción
+                  </label>
+                  <textarea
+                    id="description"
+                    name="description"
+                    value={editedProject?.description || ""}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md min-h-[100px]"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="block text-sm text-gray-600" htmlFor="startDate">
+                      Fecha Inicio
+                    </label>
+                    <input
+                      type="date"
+                      id="startDate"
+                      name="startDate"
+                      value={editedProject?.startDate || ""}
+                      onChange={handleChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="block text-sm text-gray-600" htmlFor="endDate">
+                      Fecha Fin Estimada
+                    </label>
+                    <input
+                      type="date"
+                      id="endDate"
+                      name="endDate"
+                      value={editedProject?.endDate || ""}
+                      onChange={handleChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="block text-sm text-gray-600" htmlFor="priority">
+                    Prioridad
+                  </label>
+                  <select
+                    id="priority"
+                    name="priority"
+                    value={editedProject?.priority || ""}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
                   >
-                    Nivel: {skill.nivel_minimo_requerido}
-                  </Badge>
-                  <Badge
-                    variant="outline"
-                    className={`text-xs py-0 justify-self-center ${getBadgeImportance(skill.importancia)}`}
-                  >
-                    {getImportanceText(skill.importancia)}
-                  </Badge>
+                    <option value="1">Baja</option>
+                    <option value="3">Media</option>
+                    <option value="5">Alta</option>
+                  </select>
                 </div>
-              ))}
-            </div>
-
-
+              </div>
+            ) : (
+              // View Mode
+              <div className="space-y-4 pt-4">
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-lg">{project.project}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <h4 className="text-sm font-medium text-gray-500">Descripción</h4>
+                      <p className="text-sm">{project.description}</p>
                     </div>
-                  )}
-                  
-                  {/* Assignments Section */}
-                  {role.assignments && role.assignments.length > 0 ? (
-                    <div className="space-y-1">
-                      <h4 className="font-medium">Asignado a:</h4>
-                      {role.assignments.map((person, i) => (
-                        <div key={i} className="flex items-center gap-2 bg-gray-50 p-1 rounded-md">
-                          <Avatar className="h-5 w-5">
-                            <AvatarImage src="/placeholder.svg" alt={`${person.nombre} ${person.apellido}`} />
-                            <AvatarFallback>
-                              {getInitials(`${person.nombre} ${person.apellido}`)}
-                            </AvatarFallback>
-                          </Avatar>
-                          <span>{person.nombre} {person.apellido}</span>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <h4 className="text-sm font-medium text-gray-500">Fecha Inicio</h4>
+                        <div className="flex items-center gap-2">
+                          <CalendarIcon size={14} />
+                          <span className="text-sm">{project.startDate}</span>
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-1">
+                        <h4 className="text-sm font-medium text-gray-500">Fecha Fin</h4>
+                        <div className="flex items-center gap-2">
+                          <CalendarIcon size={14} />
+                          <span className="text-sm">{project.endDate}</span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    
+                  </CardContent>
+                </Card>
+                
+                {project.allRoles && project.allRoles.length > 0 && (
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-lg">Roles en el Proyecto</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      {project.allRoles.map((role, index) => (
+                        <div key={index} className="border-b pb-3 last:border-0 last:pb-0">
+                          <h4 className="font-medium">{role.titulo}</h4>
+                          <p className="text-sm text-gray-600 mt-1">{role.descripcion}</p>
+                          
+                          {role.skills && role.skills.length > 0 && (
+                            <div className="mt-2">
+                              <h5 className="text-xs font-medium text-gray-500 mb-1">Habilidades requeridas</h5>
+                              <div className="flex flex-wrap gap-1">
+                                {role.skills.map((skill, idx) => (
+                                  <Badge key={idx} variant="outline" className={getBadgeImportance(skill.importancia)}>
+                                    {skill.nombre}
+                                  </Badge>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                          
+                          {role.assignments && role.assignments.length > 0 && (
+                            <div className="mt-2">
+                              <h5 className="text-xs font-medium text-gray-500 mb-1">Asignados</h5>
+                              <div className="flex flex-wrap gap-1">
+                                {role.assignments.map((person, idx) => (
+                                  <div key={idx} className="flex items-center gap-1 text-xs">
+                                    <Avatar className="h-5 w-5">
+                                      <AvatarFallback>{getInitials(`${person.nombre} ${person.apellido}`)}</AvatarFallback>
+                                    </Avatar>
+                                    <span>{person.nombre} {person.apellido}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
                         </div>
                       ))}
-                    </div>
-                  ) : (
-                    <div className="text-gray-500 italic">
-                      Este rol no tiene personas asignadas
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            ))}
-            </div>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            )}
           </div>
         </ScrollArea>
 
         <DialogFooter className="pt-2">
-          <Button onClick={onClose} size="sm">Cerrar</Button>
+          {isEditMode ? (
+            <>
+              <Button onClick={handleSave} size="sm">Guardar Cambios</Button>
+              <Button onClick={() => setIsEditMode(false)} size="sm" variant="outline">Cancelar</Button>
+            </>
+          ) : (
+            <Button onClick={onClose} size="sm">Cerrar</Button>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>

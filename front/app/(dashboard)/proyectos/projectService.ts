@@ -154,6 +154,28 @@ export const getAllSkills = async (): Promise<Skill[]> => {
     throw error;
   }
 };
+// In projectService.ts
+export const editProject = async (projectData: any) => {
+  try {
+    console.log('Data being sent:', JSON.stringify(projectData));
+    
+    const response = await axios.patch(
+      'http://localhost:4000/api/projects/edit-project',
+      projectData, // This should be the full object
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+    
+    return response.data;
+  } catch (error) {
+    console.error('Error editing project:', error);
+    throw error;
+  }
+};
 
 export default {
   getUserProjectAndRole,
@@ -161,5 +183,6 @@ export default {
   createProject,
   calculateProjectProgress,
   formatDate,
-  getAllSkills  // Add this line
+  getAllSkills,
+  editProject  
 };
