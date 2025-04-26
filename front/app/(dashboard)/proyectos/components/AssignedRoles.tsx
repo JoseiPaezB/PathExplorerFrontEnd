@@ -11,7 +11,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Clock, User } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
-import formatDate from "@/lib/functions";
+import { formatDate } from "@/lib/functions";
 import { RolesByStatus } from "../types/projects";
 function AssignedRoles({ rolesByStatus }: { rolesByStatus: RolesByStatus }) {
   return (

@@ -5,6 +5,7 @@ import { ProjectAndRoles } from "@/types/projectAndRoles";
 import { getUserProjectAndRole } from "./actions";
 import { Calendar, BookOpen, Code, Users, ArrowLeft } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { formatDate, getStatusColor } from "@/lib/functions";
 
 import {
   Card,
@@ -23,6 +24,7 @@ export default function UserStatePage({ params }: { params: params }) {
     useState<ProjectAndRoles>();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  console.log(userProjectAndRole);
 
   useEffect(() => {
     const fetchUserProjectState = async () => {
@@ -63,12 +65,24 @@ export default function UserStatePage({ params }: { params: params }) {
   ) {
     return (
       <Card className="border-none shadow-md">
+        <div className="flex items-center gap-2 pt-4 pb-2 px-4">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => router.back()}
+            className="gap-1"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            <span>Volver a usuarios</span>
+          </Button>
+        </div>
         <CardHeader>
           <CardTitle className="text-xl flex items-center gap-2">
             <BookOpen className="h-5 w-5 text-primary" />
             Información del rol del empleado
           </CardTitle>
         </CardHeader>
+
         <CardContent className="text-center py-8">
           <p className="text-lg text-gray-600">
             Este empleado no está asignado a ningún proyecto actualmente.
@@ -77,36 +91,6 @@ export default function UserStatePage({ params }: { params: params }) {
       </Card>
     );
   }
-
-  const formatDate = (dateString: string) => {
-    if (!dateString) return "No definida";
-
-    const date = new Date(dateString);
-    return date.toLocaleDateString("es-ES", {
-      day: "2-digit",
-      month: "long",
-      year: "numeric",
-    });
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status?.toLowerCase()) {
-      case "activo":
-      case "active":
-        return "bg-green-100 text-green-800 hover:bg-green-100";
-      case "en pausa":
-      case "paused":
-        return "bg-yellow-100 text-yellow-800 hover:bg-yellow-100";
-      case "completado":
-      case "completed":
-        return "bg-blue-100 text-blue-800 hover:bg-blue-100";
-      case "cancelado":
-      case "cancelled":
-        return "bg-red-100 text-red-800 hover:bg-red-100";
-      default:
-        return "bg-gray-100 text-gray-800 hover:bg-gray-100";
-    }
-  };
 
   const project = userProjectAndRole?.userProject[0];
   const role = userProjectAndRole?.userRole?.[0];

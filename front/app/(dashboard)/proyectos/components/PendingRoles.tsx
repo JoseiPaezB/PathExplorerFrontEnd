@@ -9,7 +9,7 @@ import {
   CardFooter,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import formatDate from "@/lib/functions";
+import { formatDate } from "@/lib/functions";
 import { RolesByStatus, Role } from "../types/projects";
 
 function PendingRoles({

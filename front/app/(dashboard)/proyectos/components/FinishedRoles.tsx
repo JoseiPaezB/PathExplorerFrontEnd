@@ -10,8 +10,8 @@ import {
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import formatDate from "@/lib/functions";
-import { Check } from "lucide-react";
+import { formatDate } from "@/lib/functions";
+import { Check, Clock } from "lucide-react";
 import { RolesByStatus } from "../types/projects";
 
 function FinishedRoles({ rolesByStatus }: { rolesByStatus: RolesByStatus }) {

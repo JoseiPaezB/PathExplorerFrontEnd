@@ -40,6 +40,7 @@ import {
   ProfessionalHistory,
   SkillsResponse,
 } from "@/types/users";
+import { formatDate } from "@/lib/functions";
 
 export default function UserDetailsPage({ params }: { params: params }) {
   const unwrappedParams: params = use(params);
@@ -203,18 +204,7 @@ export default function UserDetailsPage({ params }: { params: params }) {
               <div className="flex flex-wrap gap-3 pt-1">
                 <div className="flex items-center gap-1 text-sm text-muted-foreground">
                   <Calendar className="h-4 w-4" />
-                  <span>
-                    {" "}
-                    {user?.fecha_contratacion &&
-                      new Date(user.fecha_contratacion).toLocaleDateString(
-                        "es-ES",
-                        {
-                          year: "numeric",
-                          month: "long",
-                          day: "2-digit",
-                        }
-                      )}
-                  </span>
+                  <span> {formatDate(user?.fecha_contratacion)}</span>
                 </div>
                 <div className="flex items-center gap-1 text-sm text-muted-foreground">
                   <Mail className="h-4 w-4" />
@@ -518,15 +508,7 @@ export default function UserDetailsPage({ params }: { params: params }) {
                               Tiempo estimado: {career.tiempo_estimado} meses
                             </p>
                             <p className="text-xs text-muted-foreground">
-                              Fecha de inicio:{" "}
-                              {new Date(career.fecha_inicio).toLocaleDateString(
-                                "es-ES",
-                                {
-                                  day: "2-digit",
-                                  month: "long",
-                                  year: "numeric",
-                                }
-                              )}
+                              Fecha de inicio: {formatDate(career.fecha_inicio)}
                             </p>
                           </div>
                         </div>
@@ -565,13 +547,7 @@ export default function UserDetailsPage({ params }: { params: params }) {
                               <Calendar className="h-4 w-4" />
                               <span>
                                 Establecida:{" "}
-                                {new Date(
-                                  goal.fecha_establecimiento
-                                ).toLocaleDateString("es-ES", {
-                                  day: "2-digit",
-                                  month: "long",
-                                  year: "numeric",
-                                })}
+                                {formatDate(goal.fecha_establecimiento)}
                               </span>
                             </div>
                             <p className="text-sm text-muted-foreground">

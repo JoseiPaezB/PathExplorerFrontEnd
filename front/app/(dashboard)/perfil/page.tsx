@@ -33,9 +33,9 @@ import type {
   SkillsResponse,
   UserTrajectoryResponse,
 } from "@/types/users";
-
 import { useAuth } from "@/contexts/auth-context";
 import Link from "next/link";
+import { formatDate } from "@/lib/functions";
 
 export default function PerfilPage() {
   const {
@@ -184,14 +184,7 @@ export default function PerfilPage() {
                   <span>
                     {" "}
                     {user?.fecha_contratacion &&
-                      new Date(user.fecha_contratacion).toLocaleDateString(
-                        "es-ES",
-                        {
-                          year: "numeric",
-                          month: "long",
-                          day: "2-digit",
-                        }
-                      )}
+                      formatDate(user.fecha_contratacion)}
                   </span>
                 </div>
                 <div className="flex items-center gap-1 text-sm text-muted-foreground">

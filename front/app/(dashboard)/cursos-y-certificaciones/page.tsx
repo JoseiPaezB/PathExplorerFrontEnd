@@ -29,6 +29,7 @@ import Link from "next/link";
 import { useAuth } from "@/contexts/auth-context";
 import { useEffect } from "react";
 import { CoursesUserResponse, CertificationsUserResponse } from "@/types/users";
+import { formatDate } from "@/lib/functions";
 
 export default function CursosPage() {
   const [activeTab, setActiveTab] = useState("en-curso");
@@ -275,13 +276,7 @@ export default function CursosPage() {
                           Fecha completado
                         </span>
                         <p className="font-medium">
-                          {new Date(
-                            course.fecha_finalizacion
-                          ).toLocaleDateString("es-ES", {
-                            day: "2-digit",
-                            month: "long",
-                            year: "numeric",
-                          })}
+                          {formatDate(course.fecha_finalizacion)}
                         </p>
                       </div>
                       <div className="space-y-1">
@@ -332,14 +327,7 @@ export default function CursosPage() {
                         Fecha de obtención:
                       </span>
                       <span className="font-medium">
-                        {new Date(cert.fecha_obtencion).toLocaleDateString(
-                          "es-ES",
-                          {
-                            day: "2-digit",
-                            month: "long",
-                            year: "numeric",
-                          }
-                        )}
+                        {formatDate(cert.fecha_obtencion)}
                       </span>
                     </div>
                     <div className="flex items-center justify-between">

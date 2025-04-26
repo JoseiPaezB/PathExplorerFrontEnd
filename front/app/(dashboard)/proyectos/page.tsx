@@ -9,7 +9,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import axios from "axios";
-import formatDate from "@/lib/functions";
+import { formatDate } from "@/lib/functions";
 import { getEmpleadosBanca } from "@/app/(dashboard)/usuarios/actions";
 import { getBestCandidatesForRole } from "./actions";
 import ProjectDetailsModal from "./projectDetails";
