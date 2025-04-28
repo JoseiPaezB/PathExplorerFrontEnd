@@ -1,7 +1,7 @@
 import { Notification } from "@/types/notificaciones";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
-import { markNotificationAsRead } from "./actions";
+import { useMarkNotificationsAsRead } from "@/hooks/useMarkNotificationsAsRead";
 
 export default function NotificationDetail({
   notification,
@@ -10,18 +10,15 @@ export default function NotificationDetail({
 }) {
   const [isLoading, setIsLoading] = useState(false);
   const [isRead, setIsRead] = useState(notification.leida);
+  const { markNotificationAsRead } = useMarkNotificationsAsRead();
+
   const handleMarkAsRead = async () => {
-    setIsLoading(true);
-    try {
-      const token = localStorage.getItem("token");
-      await markNotificationAsRead(notification.id_notificacion, token || "");
+    const success = await markNotificationAsRead(notification.id_notificacion);
+    if (success) {
       setIsRead(true);
-    } catch (error) {
-      console.error("Error marking notification as read:", error);
-    } finally {
-      setIsLoading(false);
     }
   };
+
   return (
     <div className="border border-solid border-gray-200 rounded-md p-4 w-full mb-2 shadow-sm">
       <h2 className="font-medium text-base">{notification.titulo}</h2>

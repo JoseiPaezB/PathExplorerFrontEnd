@@ -335,13 +335,7 @@ export default function CursosPage() {
                         Válida hasta:
                       </span>
                       <span className="font-medium">
-                        {new Date(
-                          cert.fecha_vencimiento || ""
-                        ).toLocaleDateString("es-ES", {
-                          day: "2-digit",
-                          month: "long",
-                          year: "numeric",
-                        })}
+                        {formatDate(cert.fecha_vencimiento || "")}
                       </span>
                     </div>
                   </div>
