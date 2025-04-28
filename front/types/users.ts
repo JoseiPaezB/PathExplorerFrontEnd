@@ -28,7 +28,7 @@ export interface UpdateProfileData {
 export interface UserInfoBancaResponse {
   success: boolean;
   message: string;
-  employees: UserInfoBanca;
+  employees: UserInfoBanca[];
 }
 
 export interface CoursesUser {
