@@ -1,37 +1,27 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Calendar, BookOpen } from "lucide-react";
-import Link from "next/link";
+import { useState } from "react";
+import { BookOpen } from "lucide-react";
 
 import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-
-import { addCourse, getCourses } from "./actions";
 import { Course, CourseFormData } from "@/types/courses";
+import { fetchGetCourses } from "@/hooks/fetchGetCourses";
+import { useAddCourse } from "@/hooks/useAddCourse";
+import CursosForm from "@/components/cursos-y-certificaciones/cursos/crear-cursos/CursosForm";
+import SelectedCourseSection from "@/components/cursos-y-certificaciones/cursos/crear-cursos/SelectedCourseSection";
+import CoursesFormFooter from "@/components/cursos-y-certificaciones/cursos/crear-cursos/CoursesFormFooter";
 
 export default function AddCourseForm() {
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [courses, setCourses] = useState<Course[]>([]);
+  const { courses, isLoading } = fetchGetCourses();
+  const { addCourse, error: courseError } = useAddCourse();
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState<CourseFormData>({
@@ -42,64 +32,6 @@ export default function AddCourseForm() {
     certificado: "",
     progreso: "",
   });
-
-  useEffect(() => {
-    const fetchCourses = async () => {
-      try {
-        setIsLoading(true);
-        const token = localStorage.getItem("token") || undefined;
-        const data = await getCourses(token);
-        setCourses(data);
-      } catch (err) {
-        console.error("Error fetching courses:", err);
-        setError(
-          err instanceof Error ? err.message : "An unknown error occurred"
-        );
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchCourses();
-  }, []);
-
-  const handleInputChange = (
-    e:
-      | React.ChangeEvent<HTMLInputElement>
-      | React.ChangeEvent<HTMLTextAreaElement>
-  ) => {
-    const { name, value } = e.target;
-    if (name === "calificacion") {
-      const numericValue = parseFloat(value);
-      setFormData((prev) => ({
-        ...prev,
-        [name]: isNaN(numericValue) ? null : numericValue,
-      }));
-    } else {
-      setFormData((prev) => ({
-        ...prev,
-        [name]: value,
-      }));
-    }
-  };
-
-  const handleSelectChange = (name: string, value: string) => {
-    if (name === "id_curso") {
-      const numericValue = parseInt(value, 10);
-      setFormData((prev) => ({
-        ...prev,
-        [name]: numericValue,
-      }));
-
-      const course = courses.find((course) => course.id_curso === numericValue);
-      setSelectedCourse(course || null);
-    } else {
-      setFormData((prev) => ({
-        ...prev,
-        [name]: value,
-      }));
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -150,8 +82,12 @@ export default function AddCourseForm() {
     setIsSubmitting(true);
 
     try {
-      const token = localStorage.getItem("token") || undefined;
-      await addCourse(formData, token);
+      const result = await addCourse(formData);
+
+      if (!result) {
+        setError(courseError);
+        return;
+      }
 
       setShowSuccessMessage(true);
 
@@ -192,184 +128,15 @@ export default function AddCourseForm() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="grid gap-6 md:grid-cols-2">
-            <div className="space-y-2">
-              <label htmlFor="id_curso" className="text-sm font-medium">
-                Seleccionar Curso Existente
-              </label>
-              <select
-                name="id_curso"
-                id="id_curso"
-                value={formData.id_curso}
-                onChange={(e) => handleSelectChange("id_curso", e.target.value)}
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                disabled={isLoading}
-              >
-                <option value="" disabled>
-                  {isLoading ? "Cargando cursos..." : "Selecciona un curso"}
-                </option>
-                {!isLoading &&
-                  courses.map((course) => (
-                    <option key={course.id_curso} value={course.id_curso}>
-                      {course.nombre}
-                    </option>
-                  ))}
-              </select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="certificado">Tiene certificado?</Label>
-              <Select
-                value={formData.certificado}
-                onValueChange={(value) =>
-                  handleSelectChange("certificado", value)
-                }
-              >
-                <SelectTrigger className="h-10">
-                  <SelectValue placeholder="Selecciona una opción" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="t">Sí</SelectItem>
-                  <SelectItem value="f">No</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <div className="grid gap-6 md:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="fechaInicio">Fecha de Inicio</Label>
-              <div className="relative">
-                <Calendar className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="fecha_inicio"
-                  name="fecha_inicio"
-                  type="date"
-                  value={formData.fecha_inicio}
-                  onChange={handleInputChange}
-                  className="h-10 pl-10"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="fecha_finalizacion">Fecha de Finalización</Label>
-              <div className="relative">
-                <Calendar className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="fecha_finalizacion"
-                  name="fecha_finalizacion"
-                  type="date"
-                  value={formData.fecha_finalizacion ?? ""}
-                  onChange={handleInputChange}
-                  className="h-10 pl-10"
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="calificacion">Calificación</Label>
-              <div className="relative">
-                <Input
-                  id="calificacion"
-                  name="calificacion"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={formData.calificacion ?? ""}
-                  onChange={handleInputChange}
-                  className="h-10 pl-10"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="progreso">Progreso</Label>
-              <div className="relative">
-                <Input
-                  id="progreso"
-                  name="progreso"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={formData.progreso}
-                  onChange={handleInputChange}
-                  className="h-10 pl-10"
-                />
-              </div>
-            </div>
-          </div>
+          <CursosForm
+            setFormData={setFormData}
+            formData={formData}
+            courses={courses}
+            setSelectedCourse={setSelectedCourse}
+            isLoading={isLoading}
+          />
           {selectedCourse && (
-            <>
-              <div className="grid gap-6 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="nombre">Nombre del Curso</Label>
-                  <Input
-                    id="nombre"
-                    name="nombre"
-                    type="text"
-                    value={selectedCourse.nombre}
-                    className="h-10"
-                    disabled
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="institucion">Institución</Label>
-                  <Input
-                    id="institucion"
-                    name="institucion"
-                    type="text"
-                    value={selectedCourse.institucion}
-                    className="h-10"
-                    disabled
-                  />
-                </div>
-              </div>
-              <div className="grid gap-6 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="descripcion">Descripción</Label>
-                  <Textarea
-                    id="descripcion"
-                    name="descripcion"
-                    value={selectedCourse.descripcion}
-                    className="h-10"
-                    disabled
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="modalidad">Modalidad</Label>
-                  <Input
-                    id="modalidad"
-                    name="modalidad"
-                    type="text"
-                    value={selectedCourse.modalidad}
-                    className="h-10"
-                    disabled
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="categoria">Categoria</Label>
-                  <Input
-                    id="categoria"
-                    name="categoria"
-                    type="text"
-                    value={selectedCourse.categoria}
-                    className="h-10"
-                    disabled
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="duracion">Duración</Label>
-                <Input
-                  id="duracion"
-                  name="duracion"
-                  type="text"
-                  value={selectedCourse.duracion}
-                  className="h-10"
-                  disabled
-                />
-              </div>
-            </>
+            <SelectedCourseSection selectedCourse={selectedCourse} />
           )}
         </CardContent>
         {showSuccessMessage && (
@@ -404,46 +171,7 @@ export default function AddCourseForm() {
             <span>{error}</span>
           </div>
         )}
-        <CardFooter className="flex justify-between border-t pt-6">
-          <Link href="/cursos-y-certificaciones">
-            <Button variant="outline" type="button">
-              Cancelar
-            </Button>
-          </Link>
-          <Button
-            className="bg-primary hover:bg-primary/90"
-            type="submit"
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? (
-              <>
-                <svg
-                  className="animate-spin -ml-1 mr-3 h-4 w-4 text-white"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  ></circle>
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  ></path>
-                </svg>
-                Guardando...
-              </>
-            ) : (
-              "Guardar Curso"
-            )}
-          </Button>
-        </CardFooter>
+        <CoursesFormFooter isSubmitting={isSubmitting} />
       </Card>
     </form>
   );

@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { Course, CourseFormData } from "@/types/courses";
+import { CourseFormData } from "@/types/courses";
 
 export async function editUserCourse(
   courseData: CourseFormData,
