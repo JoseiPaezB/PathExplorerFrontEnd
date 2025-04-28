@@ -7,7 +7,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { UserInfoBanca } from "../types/projects";
+import { UserInfoBanca } from "@/types/projectsAdministration";
 
 function ConfirmationDialog({
   showConfirmDialog,
@@ -18,6 +18,7 @@ function ConfirmationDialog({
   closeAssignDialog,
   setShowConfirmDialog,
   setSelectedEmployee,
+  onSuccess,
 }: {
   showConfirmDialog: boolean;
   selectedEmployee: UserInfoBanca | null;
@@ -29,6 +30,7 @@ function ConfirmationDialog({
   setSelectedEmployee: React.Dispatch<
     React.SetStateAction<UserInfoBanca | null>
   >;
+  onSuccess?: () => void;
 }) {
   const confirmAssignment = async () => {
     if (!selectedEmployee || !currentRoleId) {
@@ -42,8 +44,15 @@ function ConfirmationDialog({
       if (!token) {
         throw new Error("No authentication token found");
       }
+
       closeConfirmDialog();
       closeAssignDialog();
+
+      // Logica para asignar el empleado al rol
+
+      if (onSuccess) {
+        onSuccess();
+      }
     } catch (error) {
       console.error("Error assigning employee:", error);
     }
@@ -53,6 +62,7 @@ function ConfirmationDialog({
     setShowConfirmDialog(false);
     setSelectedEmployee(null);
   };
+
   return (
     <Dialog open={showConfirmDialog} onOpenChange={closeConfirmDialog}>
       <DialogContent className="sm:max-w-md">

@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { formatDate } from "@/lib/functions";
-import { RolesByStatus, Role } from "../types/projects";
+import { RolesByStatus, Role } from "@/types/projectsAdministration";
 
 function PendingRoles({
   rolesByStatus,

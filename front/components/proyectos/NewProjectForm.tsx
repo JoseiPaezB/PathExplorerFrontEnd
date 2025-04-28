@@ -4,7 +4,7 @@ import {
   ProjectRole,
   ProjectFormData,
   RoleSkill,
-} from "../types/projects";
+} from "@/types/projectsAdministration";
 import axios from "axios";
 import { format } from "date-fns";
 import AddRoleDialog from "./AddRoleDialog";

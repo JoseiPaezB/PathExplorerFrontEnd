@@ -79,3 +79,52 @@ export interface RolesByStatus {
   asignados: Role[];
   completados: Role[];
 }
+
+export interface EditableProject {
+  id: number;
+  id_proyecto: number;
+  project: string;
+  description: string;
+  startDate: string;
+  endDate: string;
+  priority: number;
+  prioridad?: number;
+  status: string;
+  allRoles?: {
+    titulo: string;
+    descripcion: string;
+    assignments?: { nombre: string; apellido: string }[];
+    skills?: {
+      id_habilidad: number;
+      nombre: string;
+      nivel_minimo_requerido: number;
+      importancia: number;
+    }[];
+  }[];
+}
+
+export interface ProjectDetailsProps {
+  isOpen: boolean;
+  onClose: () => void;
+  project: {
+    id: number;
+    project: string;
+    startDate: string;
+    endDate: string;
+    status: string;
+    description: string;
+    allRoles: {
+      titulo: string;
+      descripcion: string;
+      assignments?: { nombre: string; apellido: string }[];
+      skills?: {
+        id_habilidad: number;
+        nombre: string;
+        nivel_minimo_requerido: number;
+        importancia: number;
+      }[];
+    }[];
+  } | null;
+  manager: { name: string } | null;
+  onProjectUpdated?: (updatedProject: EditableProject) => void;
+}

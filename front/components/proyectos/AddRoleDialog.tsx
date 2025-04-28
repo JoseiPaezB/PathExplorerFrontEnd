@@ -16,7 +16,7 @@ import {
   ProjectRole,
   ProjectFormData,
   RoleSkill,
-} from "../types/projects";
+} from "@/types/projectsAdministration";
 
 function AddRoleDialog({
   addRole,

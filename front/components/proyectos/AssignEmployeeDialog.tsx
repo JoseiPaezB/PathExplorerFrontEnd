@@ -12,7 +12,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Search, User } from "lucide-react";
 import { useMemo } from "react";
-import { UserInfoBanca } from "../types/projects";
+import { UserInfoBanca } from "@/types/projectsAdministration";
 
 function AssignEmployeeDialog({
   showAssignDialog,

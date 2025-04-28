@@ -1,8 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { TransformedProject } from "../types/projects";
-
+import { TransformedProject } from "@/types/projectsAdministration";
 function ProjectsList({
   projects,
   filteredProjects,
