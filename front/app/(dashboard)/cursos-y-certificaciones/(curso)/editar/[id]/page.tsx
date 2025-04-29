@@ -25,7 +25,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-import { editUserCourse } from "./actions";
+import { useEditUserCourse } from "@/hooks/useEditUserCourse";
 import { Course, CourseFormData } from "@/types/courses";
 import { EditCourseFormProps } from "@/types/parameters";
 import { useRouter } from "next/navigation";
@@ -49,6 +49,7 @@ export default function EditCourseForm({ params }: EditCourseFormProps) {
     certificado: "",
     progreso: "",
   });
+  const { editCourse } = useEditUserCourse();
 
   useEffect(() => {
     if (!courseId) return;
@@ -159,18 +160,14 @@ export default function EditCourseForm({ params }: EditCourseFormProps) {
     setIsSubmitting(true);
 
     try {
-      const token = localStorage.getItem("token") || undefined;
-      await editUserCourse(
-        {
-          id_curso: formData.id_curso,
-          fecha_inicio: formData.fecha_inicio,
-          fecha_finalizacion: formData.fecha_finalizacion,
-          calificacion: formData.calificacion,
-          certificado: formData.certificado,
-          progreso: formData.progreso,
-        },
-        token
-      );
+      await editCourse({
+        id_curso: formData.id_curso,
+        fecha_inicio: formData.fecha_inicio,
+        fecha_finalizacion: formData.fecha_finalizacion,
+        calificacion: formData.calificacion,
+        certificado: formData.certificado,
+        progreso: formData.progreso,
+      });
 
       setShowSuccessMessage(true);
 

@@ -3,25 +3,14 @@
 import { useState } from "react";
 import axios from "axios";
 import { apiUrl } from "@/constants";
+import { CourseFormData } from "@/types/courses";
 
-interface EditProjectData {
-  id_proyecto: number;
-  nombre: string;
-  descripcion: string;
-  fecha_inicio: string | null;
-  fecha_fin_estimada: string | null;
-  prioridad: number;
-  estado: string;
-}
-
-export function useEditProject() {
+export function useEditUserCourse() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [updatedProject, setUpdatedProject] = useState<EditProjectData | null>(
-    null
-  );
+  const [updateCourse, setUpdateCourse] = useState<CourseFormData | null>(null);
 
-  const editProject = async (projectData: EditProjectData): Promise<any> => {
+  const editCourse = async (courseData: CourseFormData): Promise<any> => {
     try {
       setIsLoading(true);
       setError(null);
@@ -32,8 +21,8 @@ export function useEditProject() {
       }
 
       const response = await axios.patch(
-        `${apiUrl}/projects/edit-project`,
-        projectData,
+        `${apiUrl}/development/edit-course`,
+        courseData,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -42,7 +31,7 @@ export function useEditProject() {
         }
       );
 
-      setUpdatedProject(response.data);
+      setUpdateCourse(response.data);
       return response.data;
     } catch (err) {
       const errorMessage =
@@ -50,10 +39,10 @@ export function useEditProject() {
           ? err.response.data.message
           : err instanceof Error
           ? err.message
-          : "Error editing project";
+          : "Error updating course";
 
       setError(errorMessage);
-      console.error("Error editing project:", err);
+      console.error("Error editing course:", err);
       return {
         success: false,
         message: errorMessage,
@@ -66,7 +55,7 @@ export function useEditProject() {
   return {
     isLoading,
     error,
-    updatedProject,
-    editProject,
+    updateCourse,
+    editCourse,
   };
 }
