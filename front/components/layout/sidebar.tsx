@@ -3,7 +3,6 @@ import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  BarChart3,
   BookOpen,
   Briefcase,
   Home,
@@ -11,7 +10,7 @@ import {
   User,
   Users,
   FileCheck,
-  Building,
+  Bell,
   Settings,
 } from "lucide-react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
@@ -59,23 +58,21 @@ export function Sidebar({
         href: "/cursos-y-certificaciones",
         icon: BookOpen,
       },
-      { title: "Mi Desempeño", href: "/analitica", icon: BarChart3 },
     ],
     manager: [
       { title: "Gestión de Proyectos", href: "/proyectos", icon: Briefcase },
       { title: "Equipo", href: "/equipo", icon: Users },
-      { title: "Analítica", href: "/analitica", icon: BarChart3 },
     ],
     administrador: [
       { title: "Gestión de Usuarios", href: "/usuarios", icon: Users },
       { title: "Autorizaciones", href: "/autorizaciones", icon: FileCheck },
-      { title: "Departamentos", href: "/departamentos", icon: Building },
     ],
   };
 
   const navItems = [
     ...baseItems,
     ...(roleItems[userRole as keyof typeof roleItems] || []),
+    { title: "Notificaciones", href: "/notificaciones", icon: Bell },
     { title: "Configuración", href: "/configuracion", icon: Settings },
   ];
 

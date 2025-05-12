@@ -1,25 +1,12 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-
+import Link from "next/link";
 import { useState, useEffect } from "react";
-import {
-  Bell,
-  Search,
-  X,
-  Calendar,
-  Moon,
-  Sun,
-  Menu,
-  User,
-  Settings,
-  LogOut,
-} from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { Bell, Calendar, Menu, User, Settings, LogOut } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -32,7 +19,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import type { User as AuthUser } from "@/types/auth";
 import { useAuth } from "@/contexts/auth-context";
-import PerfilPage from "@/app/(dashboard)/perfil/page";
+import { NotificationResponse } from "@/types/notificaciones";
 
 interface HeaderProps {
   user: AuthUser | null;
@@ -40,15 +27,28 @@ interface HeaderProps {
 }
 
 export function Header({ user, collapsed }: HeaderProps) {
-  
-  const [showSearch, setShowSearch] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
   const [scrolled, setScrolled] = useState(false);
-  const [theme, setTheme] = useState<"light" | "dark">("light");
   const [currentTime, setCurrentTime] = useState(new Date());
-  const { logout } = useAuth();
+  const [userNotifications, setUserNotifications] =
+    useState<NotificationResponse | null>(null);
+  const { notifications, logout } = useAuth();
+  const unreadCount =
+    userNotifications?.notifications?.filter(
+      (notification) => !notification.leida
+    ).length || 0;
 
-  // Handle scroll effect
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        const response = await notifications();
+        setUserNotifications(response);
+      } catch (error) {
+        console.error("Error fetching notifications:", error);
+      }
+    };
+    fetchNotifications();
+  }, [notifications]);
+
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 10);
@@ -57,7 +57,6 @@ export function Header({ user, collapsed }: HeaderProps) {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Update time every minute
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentTime(new Date());
@@ -81,53 +80,22 @@ export function Header({ user, collapsed }: HeaderProps) {
     minute: "2-digit",
   }).format(currentTime);
 
-  // Capitalize first letter
   const capitalizedDate =
     formattedDate.charAt(0).toUpperCase() + formattedDate.slice(1);
 
-  const toggleTheme = () => {
-    const newTheme = theme === "light" ? "dark" : "light";
-    setTheme(newTheme);
-    document.documentElement.classList.toggle("dark");
-  };
   const router = useRouter();
 
   return (
     <header
       className={cn(
-        "fixed right-0 top-0 z-40 flex h-16 items-center border-b px-8 transition-all duration-300",
-        collapsed ? "left-[80px]" : "left-[280px]", // Dynamic left position
+        "fixed right-0 top-0 z-40 flex h-16 items-center border-b px-8 transition-all duration-300 justify-between",
+        collapsed ? "left-[80px]" : "left-[280px]",
         scrolled
           ? "glass border-transparent shadow-subtle"
           : "bg-white border-transparent"
       )}
     >
-      {/* Left section - Icons */}
       <div className="flex items-center space-x-2">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-10 w-10 rounded-full hover:bg-muted transition-colors"
-          onClick={toggleTheme}
-        >
-          <AnimatePresence mode="wait" initial={false}>
-            <motion.div
-              key={theme}
-              initial={{ y: -20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: 20, opacity: 0 }}
-              transition={{ duration: 0.2 }}
-            >
-              {theme === "light" ? (
-                <Moon className="h-5 w-5" />
-              ) : (
-                <Sun className="h-5 w-5" />
-              )}
-            </motion.div>
-          </AnimatePresence>
-          <span className="sr-only">Cambiar tema</span>
-        </Button>
-
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
@@ -136,112 +104,58 @@ export function Header({ user, collapsed }: HeaderProps) {
               className="relative h-10 w-10 rounded-full hover:bg-muted transition-colors"
             >
               <Bell className="h-5 w-5" />
-              <Badge className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary p-0 text-xs text-white">
-                3
-              </Badge>
+              {unreadCount > 0 ? (
+                <Badge className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary p-0 text-xs text-white">
+                  {unreadCount}
+                </Badge>
+              ) : (
+                <Badge className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary p-0 text-xs text-white opacity-0"></Badge>
+              )}
               <span className="sr-only">Notificaciones</span>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-80">
-            <DropdownMenuLabel className="flex items-center justify-between">
+            <DropdownMenuLabel className="flex items-center">
               <span>Notificaciones</span>
-              <Button variant="ghost" size="sm" className="h-8 text-xs">
-                Marcar todas como leídas
-              </Button>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            {[
-              {
-                title: "Nueva tarea asignada",
-                description:
-                  "Se te ha asignado la tarea 'Implementar dashboard'",
-                time: "Hace 5 minutos",
-                unread: true,
-              },
-              {
-                title: "Reunión programada",
-                description: "Reunión de equipo a las 15:00",
-                time: "Hace 1 hora",
-                unread: true,
-              },
-              {
-                title: "Comentario en tarea",
-                description: "Juan ha comentado en tu tarea 'Diseño de UI'",
-                time: "Hace 3 horas",
-                unread: true,
-              },
-            ].map((notification, index) => (
-              <DropdownMenuItem
-                key={index}
-                className="flex flex-col items-start p-3 focus:bg-muted"
-              >
-                <div className="flex w-full justify-between">
-                  <span className="font-medium">{notification.title}</span>
-                  {notification.unread && (
-                    <Badge className="h-2 w-2 rounded-full bg-primary p-0" />
-                  )}
-                </div>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  {notification.description}
-                </p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  {notification.time}
+            {unreadCount > 0 ? (
+              userNotifications?.notifications
+                .filter((notification) => !notification.leida)
+                .map((notification, index) => (
+                  <DropdownMenuItem
+                    key={index}
+                    className="flex flex-col items-start p-3 focus:bg-muted"
+                  >
+                    <div className="flex w-full justify-between">
+                      <span className="font-medium">{notification.titulo}</span>
+                    </div>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      {notification.mensaje}
+                    </p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {notification.fecha_creacion}
+                    </p>
+                  </DropdownMenuItem>
+                ))
+            ) : (
+              <DropdownMenuItem disabled>
+                <p className="py-2 text-center w-full">
+                  No tienes notificaciones sin leer
                 </p>
               </DropdownMenuItem>
-            ))}
+            )}
+
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="justify-center text-center font-medium text-primary">
-              Ver todas las notificaciones
-            </DropdownMenuItem>
+            <Link href="/notificaciones">
+              <DropdownMenuItem className="justify-center text-center font-medium text-primary">
+                Ver todas las notificaciones
+              </DropdownMenuItem>
+            </Link>
           </DropdownMenuContent>
         </DropdownMenu>
-
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-10 w-10 rounded-full hover:bg-muted transition-colors"
-          onClick={() => setShowSearch(true)}
-        >
-          <Search className="h-5 w-5" />
-          <span className="sr-only">Buscar</span>
-        </Button>
       </div>
 
-      {/* Middle section - search bar when active */}
-      <div className="flex-1 mx-4">
-        <AnimatePresence mode="wait">
-          {showSearch && (
-            <motion.div
-              key="search-input"
-              initial={{ opacity: 0, width: 0 }}
-              animate={{ opacity: 1, width: "100%" }}
-              exit={{ opacity: 0, width: 0 }}
-              transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-              className="relative"
-            >
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                type="search"
-                placeholder="Buscar..."
-                className="w-full rounded-full border border-input bg-white/90 pl-10 pr-10 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                autoFocus
-              />
-              <Button
-                variant="ghost"
-                size="icon"
-                className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full"
-                onClick={() => setShowSearch(false)}
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-
-      {/* Right section - User info, date and avatar */}
       <div className="flex items-center space-x-4">
         <div className="hidden md:flex items-center text-sm text-muted-foreground">
           <Calendar className="h-4 w-4 mr-2" />

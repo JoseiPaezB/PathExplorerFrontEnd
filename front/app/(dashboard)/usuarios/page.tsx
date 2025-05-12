@@ -1,59 +1,27 @@
 "use client";
-import { ChevronDown, Lock, Mail, Search, Trash } from "lucide-react";
-
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-
+import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
-import { UserInfoBanca, UserInfoBancaResponse } from "@/types/users";
-import { getEmpleadosBanca } from "./actions";
+import { UserInfoBanca } from "@/types/users";
+import { useFetchGetEmpleadosBanca } from "@/hooks/fetchGetEmpleadosBanca";
+import UsuariosHeader from "@/components/usuarios/UsuariosHeader";
+import UsuariosList from "@/components/usuarios/UsuariosList";
 
 export default function UsuariosPage() {
-  const [usuarios, setUsuarios] = useState<UserInfoBanca[]>([]);
+  const router = useRouter();
+  const { empleadosBanca, isLoading, error } = useFetchGetEmpleadosBanca();
   const [filteredUsuarios, setFilteredUsuarios] = useState<UserInfoBanca[]>([]);
-  const [filtro, setFiltro] = useState<string>("");
 
   useEffect(() => {
-    const fetchUsuarios = async () => {
-      try {
-        const data = (await getEmpleadosBanca(
-          localStorage.getItem("token") || ""
-        )) as UserInfoBancaResponse;
-        const employeesList = Array.isArray(data.employees)
-          ? data.employees
-          : [];
-
-        setUsuarios(employeesList);
-        setFilteredUsuarios(employeesList);
-      } catch (error) {
-        console.error("Error fetching users:", error);
-        setUsuarios([]);
-        setFilteredUsuarios([]);
-      }
-    };
-
-    fetchUsuarios();
-  }, []);
-
-  const handleFilter = (filtro: string) => {
-    setFiltro(filtro);
-    applyFilters("", filtro);
-  };
+    if (empleadosBanca?.employees && empleadosBanca.employees.length > 0) {
+      setFilteredUsuarios(empleadosBanca.employees);
+    }
+  }, [empleadosBanca]);
 
   const applyFilters = (searchTerm: string, stateFilter: string) => {
     searchTerm = searchTerm.toLowerCase();
 
-    let result = usuarios;
+    let result = empleadosBanca?.employees;
+    if (!result) return;
 
     if (stateFilter) {
       result = result.filter((user) => user.estado === stateFilter);
@@ -70,10 +38,6 @@ export default function UsuariosPage() {
     setFilteredUsuarios(result);
   };
 
-  const userSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const searchTerm = e.target.value.toLowerCase();
-    applyFilters(searchTerm, filtro);
-  };
   return (
     <div className="space-y-6">
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
@@ -87,91 +51,14 @@ export default function UsuariosPage() {
         </div>
       </div>
 
-      <div className="flex items-center gap-2">
-        <div className="relative flex-1">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            type="search"
-            placeholder="Buscar usuarios..."
-            className="w-full rounded-md border border-input bg-white pl-8 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-            onChange={userSearch}
-          />
-        </div>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm" className="gap-1">
-              <span>Estado</span>
-              <ChevronDown className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Filtrar por estado</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onSelect={() => handleFilter("ASIGNADO")}>
-              ASIGNADO
-            </DropdownMenuItem>
-            <DropdownMenuItem onSelect={() => handleFilter("BANCA")}>
-              BANCA
-            </DropdownMenuItem>
-            <DropdownMenuItem onSelect={() => handleFilter("")}>
-              Todos
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
+      <UsuariosHeader applyFilters={applyFilters} />
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Lista de Usuarios</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {filteredUsuarios.map((user, index) => (
-              <div
-                key={index}
-                className="flex items-center justify-between rounded-lg border p-4 hover:bg-muted/50"
-              >
-                <div className="flex items-center gap-4">
-                  <div>
-                    <p className="font-medium">{user.nombre}</p>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Mail className="h-3.5 w-3.5" />
-                      <span>{user.email}</span>
-                    </div>
-                  </div>
-                </div>
-                <div className="flex items-center gap-4">
-                  <div className="text-right">
-                    <Badge
-                      variant="outline"
-                      className={
-                        user.estado === "ASIGNADO"
-                          ? "bg-green-50 text-green-700"
-                          : "bg-red-50 text-red-700"
-                      }
-                    >
-                      {user.estado}
-                    </Badge>
-                  </div>
-                  <Badge>{user.puesto_actual}</Badge>
-                  <div className="flex items-center gap-2">
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
-                      <Lock className="h-4 w-4 text-muted-foreground" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 text-red-500 hover:text-red-600"
-                    >
-                      <Trash className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+      <UsuariosList
+        filteredUsuarios={filteredUsuarios}
+        isLoading={isLoading}
+        error={error}
+        router={router}
+      />
     </div>
   );
 }

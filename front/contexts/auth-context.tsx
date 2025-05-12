@@ -16,7 +16,12 @@ import type {
   CoursesUserResponse,
   UpdateProfileData,
   CertificationsUserResponse,
+  SkillsResponse,
+  ProfessionalHistory,
+  UserTrajectoryResponse,
 } from "@/types/users";
+import type { NotificationResponse } from "@/types/notificaciones";
+import { apiUrl } from "@/constants";
 
 interface AuthContextType extends AuthState {
   login: (email: string, password: string) => Promise<User | void>;
@@ -24,12 +29,14 @@ interface AuthContextType extends AuthState {
   updateUserProfile: (profileData: UpdateProfileData) => Promise<User | void>;
   courses: () => Promise<CoursesUserResponse | void>;
   certifications: () => Promise<CertificationsUserResponse | void>;
+  professionalHistory: () => Promise<ProfessionalHistory | null>;
+  skills: () => Promise<SkillsResponse | null>;
+  goalsAndTrajectory: () => Promise<UserTrajectoryResponse | null>;
+  notifications: () => Promise<NotificationResponse | null>;
   isLoggingOut: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-const API_URL = "http://localhost:4000/api";
 
 const setCookie = (name: string, value: string, days: number = 7) => {
   const date = new Date();
@@ -117,7 +124,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     async (email: string, password: string): Promise<User | void> => {
       try {
         const response = await axios.post<LoginResponse>(
-          `${API_URL}/auth/login`,
+          `${apiUrl}/auth/login`,
           {
             email,
             password,
@@ -175,7 +182,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       const response = await axios.get<CoursesUserResponse>(
-        `${API_URL}/auth/courses`,
+        `${apiUrl}/auth/courses`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -215,7 +222,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
 
         const response = await axios.get<CertificationsUserResponse>(
-          `${API_URL}/auth/certifications`,
+          `${apiUrl}/auth/certifications`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -239,6 +246,152 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     }, []);
 
+  const professionalHistory =
+    useCallback(async (): Promise<ProfessionalHistory | null> => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) {
+          throw new Error("No authentication token found");
+        }
+        if (isTokenExpired(token)) {
+          clearAuthData();
+          router.push("/login");
+          throw new Error("Session expired. Please login again.");
+        }
+        const response = await axios.get<ProfessionalHistory>(
+          `${apiUrl}/auth/professional-history`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        if (response.data) {
+          return response.data;
+        } else {
+          throw new Error("Error fetching professional history");
+        }
+      } catch (error) {
+        console.error("Professional history fetch error:", error);
+        if (axios.isAxiosError(error)) {
+          throw new Error(
+            error.response?.data?.message ||
+              "Failed to fetch professional history"
+          );
+        }
+        throw error;
+      }
+    }, []);
+
+  const skills = useCallback(async (): Promise<SkillsResponse | null> => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        throw new Error("No authentication token found");
+      }
+      if (isTokenExpired(token)) {
+        clearAuthData();
+        router.push("/login");
+        throw new Error("Session expired. Please login again.");
+      }
+      const response = await axios.get<SkillsResponse>(
+        `${apiUrl}/auth/skills`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      if (response.data) {
+        return response.data;
+      } else {
+        throw new Error("Error fetching skills");
+      }
+    } catch (error) {
+      console.error("Skills fetch error:", error);
+      if (axios.isAxiosError(error)) {
+        throw new Error(
+          error.response?.data?.message || "Failed to fetch skills"
+        );
+      }
+      throw error;
+    }
+  }, []);
+
+  const goalsAndTrajectory =
+    useCallback(async (): Promise<UserTrajectoryResponse | null> => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) {
+          throw new Error("No authentication token found");
+        }
+        if (isTokenExpired(token)) {
+          clearAuthData();
+          router.push("/login");
+          throw new Error("Session expired. Please login again.");
+        }
+        const response = await axios.get<UserTrajectoryResponse>(
+          `${apiUrl}/auth/trajectory-and-goals`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        if (response.data) {
+          return response.data;
+        } else {
+          throw new Error("Error fetching goals and trajectory");
+        }
+      } catch (error) {
+        console.error("Goals and trajectory fetch error:", error);
+        if (axios.isAxiosError(error)) {
+          throw new Error(
+            error.response?.data?.message ||
+              "Failed to fetch goals and trajectory"
+          );
+        }
+        throw error;
+      }
+    }, []);
+
+  const notifications =
+    useCallback(async (): Promise<NotificationResponse | null> => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) {
+          throw new Error("No authentication token found");
+        }
+        if (isTokenExpired(token)) {
+          clearAuthData();
+          router.push("/login");
+          throw new Error("Session expired. Please login again.");
+        }
+        const response = await axios.get<NotificationResponse>(
+          `${apiUrl}/notifications/user-notifications`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        if (response.data) {
+          return response.data;
+        } else {
+          throw new Error("Error fetching user notifications");
+        }
+      } catch (error) {
+        console.error("User notifications fetch error:", error);
+        if (axios.isAxiosError(error)) {
+          throw new Error(
+            error.response?.data?.message ||
+              "Failed to fetch user notifications"
+          );
+        }
+        throw error;
+      }
+    }, []);
+
   const updateUserProfile = useCallback(
     async (profileData: UpdateProfileData): Promise<User | void> => {
       try {
@@ -255,7 +408,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
 
         const response = await axios.patch(
-          `${API_URL}/auth/update`,
+          `${apiUrl}/auth/update`,
           profileData,
           {
             headers: {
@@ -329,6 +482,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         updateUserProfile,
         courses,
         certifications,
+        skills,
+        professionalHistory,
+        goalsAndTrajectory,
+        notifications,
         isLoggingOut,
       }}
     >
