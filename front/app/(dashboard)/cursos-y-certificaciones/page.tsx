@@ -123,6 +123,21 @@ export default function CursosPage() {
 
         <CertificationsSection
           getFilteredCertifications={getFilteredCertifications}
+          refreshCertifications={() => {
+            const fetchCertifications = async () => {
+              try {
+                const certificationsData = await certifications();
+                if (certificationsData) {
+                  setUserCertifications(certificationsData);
+                }
+                setError(null);
+              } catch (err) {
+                console.error("Error refreshing certifications:", err);
+                setError("Failed to refresh certifications");
+              }
+            };
+            fetchCertifications();
+          }}
         />
       </Tabs>
     </div>

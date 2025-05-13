@@ -1,3 +1,5 @@
+// components/cursos-y-certificaciones/CertificationsSection.tsx
+import { useState } from "react";
 import { TabsContent } from "@/components/ui/tabs";
 import {
   Card,
@@ -12,16 +14,58 @@ import { formatDate } from "@/lib/functions";
 import { CertificationsUser } from "@/types/users";
 import { Award, BookOpen } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { EditCertificationDialog } from "./EditCertificadoDialog";
 
 function CertificationsSection({
   getFilteredCertifications,
+  refreshCertifications,
 }: {
   getFilteredCertifications: () => CertificationsUser[];
+  refreshCertifications: () => void;
 }) {
+  const [selectedCertification, setSelectedCertification] = useState<CertificationsUser | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  
+  // Log to debug
+  const certifications = getFilteredCertifications();
+  console.log("Certificates in section:", certifications);
+  console.log("Rendering certifications section with", certifications.length, "certifications");
+
+  const handleRenovarClick = (cert: CertificationsUser) => {
+    console.log("Opening dialog for cert:", cert);
+    setSelectedCertification(cert);
+    setIsDialogOpen(true);
+  };
+
+  const handleDialogClose = () => {
+    setIsDialogOpen(false);
+    setSelectedCertification(null);
+  };
+
+  const handleSuccessfulUpdate = () => {
+    console.log("Certificate updated successfully, refreshing...");
+    refreshCertifications();
+  };
+
+  if (certifications.length === 0) {
+    return (
+      <TabsContent value="certificaciones" className="space-y-4">
+        <div className="flex items-center justify-center p-8 text-center">
+          <div>
+            <h3 className="text-lg font-medium">No tienes certificaciones</h3>
+            <p className="text-sm text-muted-foreground mt-2">
+              Cuando obtengas certificaciones, aparecerán aquí.
+            </p>
+          </div>
+        </div>
+      </TabsContent>
+    );
+  }
+
   return (
     <TabsContent value="certificaciones" className="space-y-4">
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {getFilteredCertifications().map((cert, index) => (
+        {certifications.map((cert, index) => (
           <Card key={index}>
             <CardHeader>
               <div className="flex items-start justify-between">
@@ -68,7 +112,10 @@ function CertificationsSection({
                 <Award className="h-4 w-4" />
                 Ver credencial
               </Button>
-              <Button className="gap-2 bg-primary hover:bg-primary/90">
+              <Button 
+                className="gap-2 bg-primary hover:bg-primary/90"
+                onClick={() => handleRenovarClick(cert)}
+              >
                 <BookOpen className="h-4 w-4" />
                 Renovar
               </Button>
@@ -76,6 +123,15 @@ function CertificationsSection({
           </Card>
         ))}
       </div>
+
+      {isDialogOpen && selectedCertification && (
+        <EditCertificationDialog
+          certification={selectedCertification}
+          isOpen={isDialogOpen}
+          onClose={handleDialogClose}
+          onSuccessfulUpdate={handleSuccessfulUpdate}
+        />
+      )}
     </TabsContent>
   );
 }
