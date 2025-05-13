@@ -1,11 +1,12 @@
-import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import Login from '@/app/login/page';
+// test/Login.test.js
 
-// ✅ MOCKS
+// 1) Mocks globales: NEXT APP ROUTER
+jest.mock('next/navigation', () => ({
+  useRouter: () => ({ push: jest.fn(), replace: jest.fn(), prefetch: jest.fn() }),
+}));
+
+// 2) Mock de useAuth
 const mockLogin = jest.fn();
-
-// 🧠 Mock del contexto de autenticación
 jest.mock('@/contexts/auth-context', () => ({
   useAuth: () => ({
     login: mockLogin,
@@ -15,80 +16,60 @@ jest.mock('@/contexts/auth-context', () => ({
   }),
 }));
 
-// 🧠 Mock de router
-jest.mock('next/navigation', () => ({
-  useRouter: () => ({
-    push: jest.fn(),
-  }),
-}));
+import React from 'react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import LoginPage from '@/app/login/page';
 
-// 🧠 Mock del sistema de notificaciones
-const mockToast = jest.fn();
-jest.mock('@/components/ui/use-toast', () => ({
-  useToast: () => ({ toast: mockToast }),
-}));
-
-// 🧪 PRUEBA 1: Login exitoso
-test('login exitoso con credenciales válidas', async () => {
-  mockLogin.mockResolvedValueOnce({}); // Simula login exitoso
-
-  render(<Login />);
-
-  fireEvent.change(screen.getByLabelText(/correo/i), {
-    target: { value: 'usuario@accenture.com' },
-  });
-
-  fireEvent.change(screen.getByLabelText(/contraseña/i), {
-    target: { value: 'password123' },
-  });
-
-  fireEvent.click(screen.getByRole('button', { name: /iniciar sesión/i }));
-
-  await waitFor(() => {
-    expect(mockLogin).toHaveBeenCalledWith('usuario@accenture.com', 'password123');
-    expect(mockToast).toHaveBeenCalledWith(
-      expect.objectContaining({
-        title: expect.stringMatching(/inicio de sesión/i),
-        description: expect.any(String),
-      })
-    );
-  });
+beforeEach(() => {
+  jest.clearAllMocks();
 });
 
-// 🧪 PRUEBA 2: Login fallido
-test('muestra error con credenciales inválidas', async () => {
-  mockLogin.mockImplementationOnce(() => {
-    throw new Error('Credenciales inválidas');
+describe('LoginPage', () => {
+  test('muestra alerta de error con credenciales inválidas', async () => {
+    // Simula un login "fallido"
+    mockLogin.mockRejectedValueOnce(new Error('Credenciales inválidas'));
+
+    render(<LoginPage />);
+
+    fireEvent.change(screen.getByLabelText(/correo electrónico/i), {
+      target: { value: 'incorrecto@correo.com' },
+    });
+    fireEvent.change(screen.getByLabelText(/contraseña/i), {
+      target: { value: 'wrongpass' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /iniciar sesión/i }));
+
+    // Espera a que aparezca el alert inline
+    await waitFor(() => {
+      expect(mockLogin).toHaveBeenCalledWith('incorrecto@correo.com', 'wrongpass');
+
+      // Aquí confirmamos que exista un role="alert" con el mensaje esperado
+      const alerta = screen.getByRole('alert');
+      expect(alerta).toHaveTextContent(/verifica tus credenciales/i);
+    });
   });
 
-  render(<Login />);
+  test('al hacer login exitoso muestra la pantalla de éxito', async () => {
+    // Simula un login "exitoso"
+    mockLogin.mockResolvedValueOnce({ success: true });
 
-  fireEvent.change(screen.getByLabelText(/correo/i), {
-    target: { value: 'incorrecto@correo.com' },
+    render(<LoginPage />);
+
+    fireEvent.change(screen.getByLabelText(/correo electrónico/i), {
+      target: { value: 'usuario@accenture.com' },
+    });
+    fireEvent.change(screen.getByLabelText(/contraseña/i), {
+      target: { value: 'password123' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /iniciar sesión/i }));
+
+    // Espera a que cambie a la UI de éxito
+    await waitFor(() => {
+      expect(mockLogin).toHaveBeenCalledWith('usuario@accenture.com', 'password123');
+
+      // Comprueba que aparezca el título de éxito inline
+      expect(screen.getByText(/¡inicio de sesión exitoso!/i)).toBeInTheDocument();
+      expect(screen.getByText(/redirigiendo al dashboard/i)).toBeInTheDocument();
+    });
   });
-
-  fireEvent.change(screen.getByLabelText(/contraseña/i), {
-    target: { value: 'wrongpass' },
-  });
-
-  fireEvent.click(screen.getByRole('button', { name: /iniciar sesión/i }));
-
-  await waitFor(() => {
-    expect(mockLogin).toHaveBeenCalledWith('incorrecto@correo.com', 'wrongpass');
-    expect(mockToast).toHaveBeenCalledWith(
-      expect.objectContaining({
-        title: expect.stringMatching(/error de inicio/i),
-        description: expect.stringMatching(/verifica tus credenciales/i),
-      })
-    );
-  });
-});
-
-// 🧪 PRUEBA 3: Carga inicial de campos
-test('renderiza campos de correo y contraseña', () => {
-  render(<Login />);
-
-  expect(screen.getByLabelText(/correo/i)).toBeInTheDocument();
-  expect(screen.getByLabelText(/contraseña/i)).toBeInTheDocument();
-  expect(screen.getByRole('button', { name: /iniciar sesión/i })).toBeInTheDocument();
 });
