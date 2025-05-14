@@ -9,7 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { availableCharts, availableDataSets } from "@/constants/index";
-import { RectRadius } from "recharts/types/shape/Rectangle";
+
 function ExportDataModal({
   open,
   setOpen,
@@ -28,6 +28,47 @@ function ExportDataModal({
   const [selectedDataSets, setSelectedDataSets] = useState<string[]>([]);
   const [selectedFormat, setSelectedFormat] = useState<string>("excel");
   const [title, setTitle] = useState<string>("informes");
+
+  // Handle toggling individual chart selection
+  const handleChartToggle = (chartId: string) => {
+    setSelectedCharts(prev => 
+      prev.includes(chartId) 
+        ? prev.filter(id => id !== chartId) 
+        : [...prev, chartId]
+    );
+  };
+
+  // Handle toggling individual dataset selection
+  const handleDatasetToggle = (datasetId: string) => {
+    setSelectedDataSets(prev => 
+      prev.includes(datasetId) 
+        ? prev.filter(id => id !== datasetId) 
+        : [...prev, datasetId]
+    );
+  };
+
+  // Handle "Select All" for charts
+  const handleSelectAllCharts = () => {
+    if (selectedCharts.length === availableCharts.length) {
+      // If all are selected, deselect all
+      setSelectedCharts([]);
+    } else {
+      // Otherwise, select all
+      setSelectedCharts(availableCharts.map(chart => chart.id));
+    }
+  };
+
+  // Handle "Select All" for datasets
+  const handleSelectAllDatasets = () => {
+    if (selectedDataSets.length === availableDataSets.length) {
+      // If all are selected, deselect all
+      setSelectedDataSets([]);
+    } else {
+      // Otherwise, select all
+      setSelectedDataSets(availableDataSets.map(dataset => dataset.id));
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
@@ -44,6 +85,7 @@ function ExportDataModal({
               type="text"
               className="w-full border rounded-md p-2 mt-1"
               onChange={(event) => setTitle(event.target.value)}
+              value={title}
             />
           </div>
 
@@ -62,7 +104,17 @@ function ExportDataModal({
           </div>
 
           <div>
-            <Label className="font-medium">Gráficos a incluir</Label>
+            <div className="flex justify-between items-center">
+              <Label className="font-medium">Gráficos a incluir</Label>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleSelectAllCharts}
+                className="text-xs py-1"
+              >
+                {selectedCharts.length === availableCharts.length ? "Deseleccionar todos" : "Seleccionar todos"}
+              </Button>
+            </div>
             <div className="grid grid-cols-1 gap-2 mt-1">
               {availableCharts.map((chart) => (
                 <div className="flex items-center space-x-2" key={chart.id}>
@@ -70,9 +122,8 @@ function ExportDataModal({
                     type="checkbox"
                     id={chart.id}
                     className="rounded"
-                    onClick={() =>
-                      setSelectedCharts((prev) => [...prev, chart.id])
-                    }
+                    checked={selectedCharts.includes(chart.id)}
+                    onChange={() => handleChartToggle(chart.id)}
                   />
                   <Label htmlFor={chart.id}>{chart.name}</Label>
                 </div>
@@ -81,7 +132,17 @@ function ExportDataModal({
           </div>
 
           <div>
-            <Label className="font-medium">Datos a incluir</Label>
+            <div className="flex justify-between items-center">
+              <Label className="font-medium">Datos a incluir</Label>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleSelectAllDatasets}
+                className="text-xs py-1"
+              >
+                {selectedDataSets.length === availableDataSets.length ? "Deseleccionar todos" : "Seleccionar todos"}
+              </Button>
+            </div>
             <div className="grid grid-cols-1 gap-2 mt-1">
               {availableDataSets.map((dataSet) => (
                 <div className="flex items-center space-x-2" key={dataSet.id}>
@@ -89,9 +150,8 @@ function ExportDataModal({
                     type="checkbox"
                     id={dataSet.id}
                     className="rounded"
-                    onClick={() =>
-                      setSelectedDataSets((prev) => [...prev, dataSet.id])
-                    }
+                    checked={selectedDataSets.includes(dataSet.id)}
+                    onChange={() => handleDatasetToggle(dataSet.id)}
                   />
                   <Label htmlFor={dataSet.id}>{dataSet.name}</Label>
                 </div>
@@ -121,4 +181,5 @@ function ExportDataModal({
     </Dialog>
   );
 }
+
 export default ExportDataModal;
