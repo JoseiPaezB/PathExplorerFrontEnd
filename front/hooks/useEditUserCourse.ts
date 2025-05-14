@@ -20,7 +20,7 @@ export function useEditUserCourse() {
         throw new Error("No authentication token found");
       }
 
-      const response = await axios.put(
+      const response = await axios.patch(
         `${apiUrl}/development/edit-course`,
         courseData,
         {

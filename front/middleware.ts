@@ -65,8 +65,18 @@ export function middleware(request: NextRequest) {
         return NextResponse.next();
       }
     } else if (role === "manager") {
-      const managerRoutes = ["/proyectos", "/analitica"];
+      const managerRoutes = [
+        "/proyectos",
+        "/analitica",
+        "/cursos-y-certificaciones",
+        "/cursos-y-certificaciones/agregar-certificacion",
+        "/cursos-y-certificaciones/agregar-curso",
+      ];
       if (managerRoutes.some((route) => path === route)) {
+        return NextResponse.next();
+      }
+
+      if (path.startsWith("/cursos-y-certificaciones/editar/")) {
         return NextResponse.next();
       }
     } else if (role === "empleado") {
@@ -75,7 +85,6 @@ export function middleware(request: NextRequest) {
         "/cursos-y-certificaciones",
         "/cursos-y-certificaciones/agregar-certificacion",
         "/cursos-y-certificaciones/agregar-curso",
-        "/analitica",
       ];
 
       if (empleadoStaticRoutes.some((route) => path === route)) {

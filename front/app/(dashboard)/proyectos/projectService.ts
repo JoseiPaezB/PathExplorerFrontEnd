@@ -1,4 +1,4 @@
-import axios, { AxiosRequestConfig } from 'axios';
+import axios, { AxiosRequestConfig } from "axios";
 
 interface AuthHeader {
   headers: {
@@ -8,11 +8,11 @@ interface AuthHeader {
 
 // Get the JWT token from localStorage
 const getAuthHeader = (): AxiosRequestConfig => {
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem("token");
   return {
     headers: {
-      Authorization: `Bearer ${token}`
-    }
+      Authorization: `Bearer ${token}`,
+    },
   };
 };
 
@@ -24,16 +24,18 @@ interface UserProjectRole {
 }
 
 // Fetch a user's project and role
-export const getUserProjectAndRole = async (id_empleado: string): Promise<UserProjectRole> => {
+export const getUserProjectAndRole = async (
+  id_empleado: string
+): Promise<UserProjectRole> => {
   try {
     const response = await axios.post<UserProjectRole>(
-      'http://localhost:4000/api/projects/user-projects-with-roles', 
+      "http://localhost:4000/api/projects/user-projects-with-roles",
       { id_empleado },
       getAuthHeader()
     );
     return response.data;
   } catch (error) {
-    console.error('Error fetching user project and role:', error);
+    console.error("Error fetching user project and role:", error);
     throw error;
   }
 };
@@ -44,19 +46,18 @@ interface ManagerProject {
   name: string;
   roles: string[];
   assignments: any[]; // Ajusta según el contenido
-
 }
 
 // Fetch projects for a manager with roles and assignments
 export const getManagerProjects = async (): Promise<ManagerProject[]> => {
   try {
     const response = await axios.get<ManagerProject[]>(
-      'http://localhost:4000/api/projects/manager-projects-with-roles',
+      "http://localhost:4000/api/projects/manager-projects-with-roles",
       getAuthHeader()
     );
     return response.data;
   } catch (error) {
-    console.error('Error fetching manager projects:', error);
+    console.error("Error fetching manager projects:", error);
     throw error;
   }
 };
@@ -90,24 +91,30 @@ interface CreatedProjectResponse {
 
 // Create a new project
 // Create a new project
-export const createProject = async (projectData: CreateProjectData): Promise<any> => {
+export const createProject = async (
+  projectData: CreateProjectData
+): Promise<any> => {
   try {
     const response = await axios.post(
-      'http://localhost:4000/api/projects/create-project',
+      "http://localhost:4000/api/projects/create-project",
       projectData,
       getAuthHeader()
     );
     return response.data;
   } catch (error) {
-    console.error('Error creating project:', error);
+    console.error("Error creating project:", error);
     throw error;
   }
 };
 
 // Function to calculate project progress based on start and end dates
-export const calculateProjectProgress = (startDate: string, endDate: string, status: string): number => {
-  if (status === 'Completado') return 100;
-  if (status === 'Pendiente') return 0;
+export const calculateProjectProgress = (
+  startDate: string,
+  endDate: string,
+  status: string
+): number => {
+  if (status === "Completado") return 100;
+  if (status === "Pendiente") return 0;
 
   const start = new Date(startDate);
   const end = new Date(endDate);
@@ -126,7 +133,11 @@ export const calculateProjectProgress = (startDate: string, endDate: string, sta
 export const formatDate = (dateString?: string): string => {
   if (!dateString) return "N/A";
   const date = new Date(dateString);
-  return date.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  return date.toLocaleDateString("es-ES", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
 };
 
 // Skill type definition
@@ -140,39 +151,36 @@ interface Skill {
 // Fetch all available skills
 export const getAllSkills = async (): Promise<Skill[]> => {
   try {
-    const response = await axios.get<{ success: boolean, skills: Skill[] }>(
-      'http://localhost:4000/api/projects/all-skills',
+    const response = await axios.get<{ success: boolean; skills: Skill[] }>(
+      "http://localhost:4000/api/projects/all-skills",
       getAuthHeader()
     );
-    
+
     if (response.data.success) {
       return response.data.skills;
     }
     return [];
   } catch (error) {
-    console.error('Error fetching skills:', error);
+    console.error("Error fetching skills:", error);
     throw error;
   }
 };
-// In projectService.ts
 export const editProject = async (projectData: any) => {
   try {
-    console.log('Data being sent:', JSON.stringify(projectData));
-    
     const response = await axios.patch(
-      'http://localhost:4000/api/projects/edit-project',
-      projectData, // This should be the full object
+      "http://localhost:4000/api/projects/edit-project",
+      projectData,
       {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-          'Content-Type': 'application/json'
-        }
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          "Content-Type": "application/json",
+        },
       }
     );
-    
+
     return response.data;
   } catch (error) {
-    console.error('Error editing project:', error);
+    console.error("Error editing project:", error);
     throw error;
   }
 };
@@ -184,5 +192,5 @@ export default {
   calculateProjectProgress,
   formatDate,
   getAllSkills,
-  editProject  
+  editProject,
 };

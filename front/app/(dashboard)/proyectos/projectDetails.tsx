@@ -1,12 +1,12 @@
-import React from 'react';
-import { useState, useEffect } from 'react';
+import React from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogDescription,
-  DialogFooter
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -14,8 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { CalendarIcon, ClockIcon, InfoIcon, UserIcon } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { editProject } from './projectService'; // Assuming you have this function in your service
-
+import { editProject } from "./projectService"; // Assuming you have this function in your service
 
 interface EditableProject {
   id: number;
@@ -25,21 +24,20 @@ interface EditableProject {
   startDate: string;
   endDate: string;
   priority: number;
-  prioridad ?: number;
+  prioridad?: number;
   status: string;
   allRoles?: {
     titulo: string;
     descripcion: string;
     assignments?: { nombre: string; apellido: string }[];
-    skills?: { 
+    skills?: {
       id_habilidad: number;
-      nombre: string; 
+      nombre: string;
       nivel_minimo_requerido: number;
       importancia: number;
     }[];
   }[];
 }
-
 
 interface ProjectDetailsModalProps {
   isOpen: boolean;
@@ -54,9 +52,9 @@ interface ProjectDetailsModalProps {
       titulo: string;
       descripcion: string;
       assignments?: { nombre: string; apellido: string }[];
-      skills?: { 
+      skills?: {
         id_habilidad: number;
-        nombre: string; 
+        nombre: string;
         nivel_minimo_requerido: number;
         importancia: number;
       }[];
@@ -66,147 +64,112 @@ interface ProjectDetailsModalProps {
   onProjectUpdated?: (updatedProject: EditableProject) => void;
 }
 
-const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({ isOpen, onClose, project, manager }) => {
-  console.log("Project details in modal:", project);
-  const [editedProject, setEditedProject] = useState<EditableProject | null>(null);
-  const [isEditMode, setIsEditMode] = useState(false);  // Add this to specifically check the roles and their skills
+const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
+  isOpen,
+  onClose,
+  project,
+  manager,
+}) => {
+  const [editedProject, setEditedProject] = useState<EditableProject | null>(
+    null
+  );
+  const [isEditMode, setIsEditMode] = useState(false);
 
   useEffect(() => {
     if (project) {
       setEditedProject({ ...project } as EditableProject);
-      // Reset to view mode when a new project is loaded
       setIsEditMode(false);
     }
   }, [project]);
 
   if (!project) return null;
 
-  if (project?.allRoles) {
-    console.log("Project roles:", project.allRoles);
-    project.allRoles.forEach((role, index) => {
-      console.log(`Role ${index + 1} (${role.titulo}) skills:`, role.skills);
-    });
-  }
-
   if (!project) return null;
 
- 
+  const handleChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >
+  ) => {
+    const { name, value } = e.target;
+    setEditedProject((prev: EditableProject | null) => {
+      if (!prev) return null;
+      const updated = {
+        ...prev,
+        [name]: value,
+      };
+      return updated;
+    });
+  };
 
-  
-  // Log changes as they happen
-const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-  const { name, value } = e.target;
-  console.log(`Field changed: ${name} = ${value}`);
-  
-  setEditedProject((prev: EditableProject | null) => {
-    if (!prev) return null;
-    const updated = {
-      ...prev,
-      [name]: value,
-    };
-    console.log("Updated project state:", updated);
-    return updated;
-  });
-};
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-// Log before save attempt
-// In your handleSave function in ProjectDetailsModal
-const handleSave = async (e: React.FormEvent) => {
-  e.preventDefault();
-  console.log("Attempting to save project with data:", editedProject);
-  
-  try {
-    console.log("Before API call");
-    
-    // Format data correctly with helper functions
-    const formattedData = {
-      id_proyecto: editedProject?.id,
-      nombre: editedProject?.project,
-      descripcion: editedProject?.description,
-      fecha_inicio: formatDateForApi(editedProject?.startDate ?? ''),
-      fecha_fin_estimada: formatDateForApi(editedProject?.endDate ?? ''),
-      prioridad: parsePriority(editedProject?.priority),
-      // Make sure ALL required fields are included
-      estado: editedProject?.status || "ACTIVO"
-    };
-    
-    // Log the formatted data with types for debugging
-    console.log("Formatted data:", formattedData);
-    console.log("id_proyecto type:", typeof formattedData.id_proyecto);
-    
-    
-    // Make the API call
-    console.log("Calling editProject API");
-    const result = await editProject(formattedData);
-    
-    console.log("API call completed", result);
-    
-    // Handle empty project array in response
-    if (result.success) {
-      setIsEditMode(false);
-      onClose();
-      alert("Proyecto actualizado exitosamente");
-      
-      // Refresh your projects list if needed
-      // refreshProjects();
+    try {
+      const formattedData = {
+        id_proyecto: editedProject?.id,
+        nombre: editedProject?.project,
+        descripcion: editedProject?.description,
+        fecha_inicio: formatDateForApi(editedProject?.startDate ?? ""),
+        fecha_fin_estimada: formatDateForApi(editedProject?.endDate ?? ""),
+        prioridad: parsePriority(editedProject?.priority),
+        estado: editedProject?.status || "ACTIVO",
+      };
+
+      const result = await editProject(formattedData);
+
+      if (result.success) {
+        setIsEditMode(false);
+        onClose();
+        alert("Proyecto actualizado exitosamente");
+      }
+    } catch (error) {
+      console.error("Error in handleSave:", error);
+      alert("Error al guardar el proyecto. Por favor intente de nuevo.");
     }
-  } catch (error) {
-    console.error("Error in handleSave:", error);
-    alert("Error al guardar el proyecto. Por favor intente de nuevo.");
-  } finally {
-    console.log("Save attempt complete (in finally block)");
-  }
-};
+  };
 
-// Helper functions
-function formatDateForApi(displayDate: string | null) {
-  if (!displayDate) return null;
-  
-  // If it's already in YYYY-MM-DD format, return as is
-  if (/^\d{4}-\d{2}-\d{2}$/.test(displayDate)) {
-    return displayDate;
-  }
-  
-  try {
-    // Parse DD/MM/YYYY format
-    const parts = displayDate.split('/');
-    if (parts.length !== 3) {
-      console.error("Invalid date format:", displayDate);
+  function formatDateForApi(displayDate: string | null) {
+    if (!displayDate) return null;
+
+    if (/^\d{4}-\d{2}-\d{2}$/.test(displayDate)) {
+      return displayDate;
+    }
+
+    try {
+      const parts = displayDate.split("/");
+      if (parts.length !== 3) {
+        console.error("Invalid date format:", displayDate);
+        return null;
+      }
+
+      const day = parts[0].padStart(2, "0");
+      const month = parts[1].padStart(2, "0");
+      const year = parts[2];
+
+      return `${year}-${month}-${day}`;
+    } catch (error) {
+      console.error("Error formatting date:", error);
       return null;
     }
-    
-    const day = parts[0].padStart(2, '0');
-    const month = parts[1].padStart(2, '0');
-    const year = parts[2];
-    
-    return `${year}-${month}-${day}`;
-  } catch (error) {
-    console.error("Error formatting date:", error);
-    return null;
   }
-}
 
-function parsePriority(priority: number | string | undefined) {
-  // If it's already a number, return it
-  if (typeof priority === 'number' && !isNaN(priority)) {
-    return priority;
-  }
-  
-  // If it's a string that can be converted to a number
-  if (typeof priority === 'string' && !isNaN(Number(priority))) {
-    return Number(priority);
-  }
-  
-  // Default fallback
-  return 3; // Default to medium priority
-}
+  function parsePriority(priority: number | string | undefined) {
+    if (typeof priority === "number" && !isNaN(priority)) {
+      return priority;
+    }
 
-// Log when edit mode is toggled
-const toggleEditMode = () => {
-  const newMode = !isEditMode;
-  console.log(`Switching to ${newMode ? 'edit' : 'view'} mode`);
-  setIsEditMode(newMode);
-};
+    if (typeof priority === "string" && !isNaN(Number(priority))) {
+      return Number(priority);
+    }
+
+    return 3;
+  }
+
+  const toggleEditMode = () => {
+    const newMode = !isEditMode;
+    setIsEditMode(newMode);
+  };
 
   const getBadgeColor = (status: string) => {
     switch (status) {
@@ -240,9 +203,7 @@ const toggleEditMode = () => {
         return "bg-gray-100 text-gray-800 text-xs";
     }
   };
-  
-  
-  
+
   const getImportanceText = (importance: number) => {
     switch (importance) {
       case 1:
@@ -257,9 +218,8 @@ const toggleEditMode = () => {
         return "Media";
     }
   };
-  
 
-  const getInitials = (name:string) => {
+  const getInitials = (name: string) => {
     if (!name) return "?";
     return name
       .split(" ")
@@ -277,13 +237,23 @@ const toggleEditMode = () => {
               {isEditMode ? "Editar Proyecto" : "Detalles del Proyecto"}
             </DialogTitle>
             {!isEditMode && (
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                onClick={toggleEditMode} 
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={toggleEditMode}
                 className="h-8 w-8"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
                   <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
                 </svg>
                 <span className="sr-only">Edit</span>
@@ -315,7 +285,10 @@ const toggleEditMode = () => {
                   <InfoIcon size={14} />
                   <span className="font-medium">Estado</span>
                 </div>
-                <Badge variant="outline" className={getBadgeColor(project.status)}>
+                <Badge
+                  variant="outline"
+                  className={getBadgeColor(project.status)}
+                >
                   {project.status}
                 </Badge>
               </div>
@@ -325,7 +298,10 @@ const toggleEditMode = () => {
               // Edit Mode Form
               <div className="space-y-4 pt-4">
                 <div className="space-y-1">
-                  <label className="block text-sm text-gray-600" htmlFor="projectName">
+                  <label
+                    className="block text-sm text-gray-600"
+                    htmlFor="projectName"
+                  >
                     Nombre del Proyecto
                   </label>
                   <input
@@ -339,7 +315,10 @@ const toggleEditMode = () => {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="block text-sm text-gray-600" htmlFor="description">
+                  <label
+                    className="block text-sm text-gray-600"
+                    htmlFor="description"
+                  >
                     Descripción
                   </label>
                   <textarea
@@ -353,7 +332,10 @@ const toggleEditMode = () => {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <label className="block text-sm text-gray-600" htmlFor="startDate">
+                    <label
+                      className="block text-sm text-gray-600"
+                      htmlFor="startDate"
+                    >
                       Fecha Inicio
                     </label>
                     <input
@@ -367,7 +349,10 @@ const toggleEditMode = () => {
                   </div>
 
                   <div className="space-y-1">
-                    <label className="block text-sm text-gray-600" htmlFor="endDate">
+                    <label
+                      className="block text-sm text-gray-600"
+                      htmlFor="endDate"
+                    >
                       Fecha Fin Estimada
                     </label>
                     <input
@@ -382,7 +367,10 @@ const toggleEditMode = () => {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="block text-sm text-gray-600" htmlFor="priority">
+                  <label
+                    className="block text-sm text-gray-600"
+                    htmlFor="priority"
+                  >
                     Prioridad
                   </label>
                   <select
@@ -407,66 +395,96 @@ const toggleEditMode = () => {
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="space-y-2">
-                      <h4 className="text-sm font-medium text-gray-500">Descripción</h4>
+                      <h4 className="text-sm font-medium text-gray-500">
+                        Descripción
+                      </h4>
                       <p className="text-sm">{project.description}</p>
                     </div>
-                    
+
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-1">
-                        <h4 className="text-sm font-medium text-gray-500">Fecha Inicio</h4>
+                        <h4 className="text-sm font-medium text-gray-500">
+                          Fecha Inicio
+                        </h4>
                         <div className="flex items-center gap-2">
                           <CalendarIcon size={14} />
                           <span className="text-sm">{project.startDate}</span>
                         </div>
                       </div>
-                      
+
                       <div className="space-y-1">
-                        <h4 className="text-sm font-medium text-gray-500">Fecha Fin</h4>
+                        <h4 className="text-sm font-medium text-gray-500">
+                          Fecha Fin
+                        </h4>
                         <div className="flex items-center gap-2">
                           <CalendarIcon size={14} />
                           <span className="text-sm">{project.endDate}</span>
                         </div>
                       </div>
                     </div>
-                    
-                    
                   </CardContent>
                 </Card>
-                
+
                 {project.allRoles && project.allRoles.length > 0 && (
                   <Card>
                     <CardHeader className="pb-2">
-                      <CardTitle className="text-lg">Roles en el Proyecto</CardTitle>
+                      <CardTitle className="text-lg">
+                        Roles en el Proyecto
+                      </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-3">
                       {project.allRoles.map((role, index) => (
-                        <div key={index} className="border-b pb-3 last:border-0 last:pb-0">
+                        <div
+                          key={index}
+                          className="border-b pb-3 last:border-0 last:pb-0"
+                        >
                           <h4 className="font-medium">{role.titulo}</h4>
-                          <p className="text-sm text-gray-600 mt-1">{role.descripcion}</p>
-                          
+                          <p className="text-sm text-gray-600 mt-1">
+                            {role.descripcion}
+                          </p>
+
                           {role.skills && role.skills.length > 0 && (
                             <div className="mt-2">
-                              <h5 className="text-xs font-medium text-gray-500 mb-1">Habilidades requeridas</h5>
+                              <h5 className="text-xs font-medium text-gray-500 mb-1">
+                                Habilidades requeridas
+                              </h5>
                               <div className="flex flex-wrap gap-1">
                                 {role.skills.map((skill, idx) => (
-                                  <Badge key={idx} variant="outline" className={getBadgeImportance(skill.importancia)}>
+                                  <Badge
+                                    key={idx}
+                                    variant="outline"
+                                    className={getBadgeImportance(
+                                      skill.importancia
+                                    )}
+                                  >
                                     {skill.nombre}
                                   </Badge>
                                 ))}
                               </div>
                             </div>
                           )}
-                          
+
                           {role.assignments && role.assignments.length > 0 && (
                             <div className="mt-2">
-                              <h5 className="text-xs font-medium text-gray-500 mb-1">Asignados</h5>
+                              <h5 className="text-xs font-medium text-gray-500 mb-1">
+                                Asignados
+                              </h5>
                               <div className="flex flex-wrap gap-1">
                                 {role.assignments.map((person, idx) => (
-                                  <div key={idx} className="flex items-center gap-1 text-xs">
+                                  <div
+                                    key={idx}
+                                    className="flex items-center gap-1 text-xs"
+                                  >
                                     <Avatar className="h-5 w-5">
-                                      <AvatarFallback>{getInitials(`${person.nombre} ${person.apellido}`)}</AvatarFallback>
+                                      <AvatarFallback>
+                                        {getInitials(
+                                          `${person.nombre} ${person.apellido}`
+                                        )}
+                                      </AvatarFallback>
                                     </Avatar>
-                                    <span>{person.nombre} {person.apellido}</span>
+                                    <span>
+                                      {person.nombre} {person.apellido}
+                                    </span>
                                   </div>
                                 ))}
                               </div>
@@ -485,11 +503,21 @@ const toggleEditMode = () => {
         <DialogFooter className="pt-2">
           {isEditMode ? (
             <>
-              <Button onClick={handleSave} size="sm">Guardar Cambios</Button>
-              <Button onClick={() => setIsEditMode(false)} size="sm" variant="outline">Cancelar</Button>
+              <Button onClick={handleSave} size="sm">
+                Guardar Cambios
+              </Button>
+              <Button
+                onClick={() => setIsEditMode(false)}
+                size="sm"
+                variant="outline"
+              >
+                Cancelar
+              </Button>
             </>
           ) : (
-            <Button onClick={onClose} size="sm">Cerrar</Button>
+            <Button onClick={onClose} size="sm">
+              Cerrar
+            </Button>
           )}
         </DialogFooter>
       </DialogContent>

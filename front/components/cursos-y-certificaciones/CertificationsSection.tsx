@@ -1,4 +1,3 @@
-// components/cursos-y-certificaciones/CertificationsSection.tsx
 import { useState } from "react";
 import { TabsContent } from "@/components/ui/tabs";
 import {
@@ -23,16 +22,13 @@ function CertificationsSection({
   getFilteredCertifications: () => CertificationsUser[];
   refreshCertifications: () => void;
 }) {
-  const [selectedCertification, setSelectedCertification] = useState<CertificationsUser | null>(null);
+  const [selectedCertification, setSelectedCertification] =
+    useState<CertificationsUser | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  
-  // Log to debug
+
   const certifications = getFilteredCertifications();
-  console.log("Certificates in section:", certifications);
-  console.log("Rendering certifications section with", certifications.length, "certifications");
 
   const handleRenovarClick = (cert: CertificationsUser) => {
-    console.log("Opening dialog for cert:", cert);
     setSelectedCertification(cert);
     setIsDialogOpen(true);
   };
@@ -43,7 +39,6 @@ function CertificationsSection({
   };
 
   const handleSuccessfulUpdate = () => {
-    console.log("Certificate updated successfully, refreshing...");
     refreshCertifications();
   };
 
@@ -112,7 +107,7 @@ function CertificationsSection({
                 <Award className="h-4 w-4" />
                 Ver credencial
               </Button>
-              <Button 
+              <Button
                 className="gap-2 bg-primary hover:bg-primary/90"
                 onClick={() => handleRenovarClick(cert)}
               >
