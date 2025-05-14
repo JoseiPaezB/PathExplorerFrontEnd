@@ -71,13 +71,6 @@ function AssignedRoles({ rolesByStatus }: { rolesByStatus: RolesByStatus }) {
                       </p>
                     </div>
                   </div>
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">Progreso:</span>
-                      <span>{progress}%</span>
-                    </div>
-                    <Progress value={progress} className="h-2" />
-                  </div>
                 </div>
               </CardContent>
               <CardFooter className="flex items-center justify-between border-t p-4">

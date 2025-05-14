@@ -60,7 +60,12 @@ export function middleware(request: NextRequest) {
     }
 
     if (role === "administrador") {
-      const adminRoutes = ["/usuarios", "/autorizaciones", "/departamentos"];
+      const adminRoutes = [
+        "/usuarios",
+        "/autorizaciones",
+        "/departamentos",
+        "/informes",
+      ];
       if (adminRoutes.some((route) => path === route)) {
         return NextResponse.next();
       }
@@ -86,7 +91,6 @@ export function middleware(request: NextRequest) {
         return NextResponse.next();
       }
     }
-
     console.log(
       `Usuario con rol ${role} no tiene permiso para acceder a ${path}`
     );

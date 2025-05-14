@@ -40,7 +40,7 @@ function CertificationsFormFooter({ isSubmitting }: { isSubmitting: boolean }) {
             Guardando...
           </>
         ) : (
-          "Guardar Curso"
+          "Guardar Certificación"
         )}
       </Button>
     </CardFooter>
