@@ -1,4 +1,3 @@
-// components/cursos-y-certificaciones/CertificationsSection.tsx
 import { useState } from "react";
 import { TabsContent } from "@/components/ui/tabs";
 import {

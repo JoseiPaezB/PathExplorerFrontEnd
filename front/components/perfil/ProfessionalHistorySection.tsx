@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Briefcase } from "lucide-react";
 import { ProfessionalHistory } from "@/types/users";
+import LoadingSpinner from "@/components/loading/LoadingSpinner";
 
 function ProfessionalHistorySection({
   isLoading,
@@ -23,8 +24,9 @@ function ProfessionalHistorySection({
         <div className="space-y-16">
           {" "}
           {isLoading ? (
-            <p>Cargando historial profesional...</p>
-          ) : error ? (
+          <div className="flex justify-center py-8">
+            <LoadingSpinner size="md" color="primary" text="Cargando historial profesional..." />
+          </div>          ) : error ? (
             <p className="text-red-500">{error}</p>
           ) : professionalHistory &&
             professionalHistory.professionalHistory.length > 0 ? (

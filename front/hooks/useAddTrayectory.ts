@@ -1,27 +1,31 @@
 "use client";
-
 import { useState } from "react";
 import axios from "axios";
-import { CourseFormData } from "@/types/courses";
+import { TrayectoryFormData } from "@/types/trayectory";
 import { apiUrl } from "@/constants";
-export function useAddCourse() {
+
+export function useAddTrayectory() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSuccess, setIsSuccess] = useState(false);
 
-  const addCourse = async (formData: CourseFormData) => {
+  const addTrayectory = async (formData: TrayectoryFormData) => {
     try {
       setIsSubmitting(true);
       setError(null);
 
       const token = localStorage.getItem("token") || "";
 
-      await axios.post(`${apiUrl}/development/create-course`, formData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
+      await axios.post(
+        `${apiUrl}/recommendations/development-recommendations`,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
       setIsSuccess(true);
 
@@ -32,10 +36,10 @@ export function useAddCourse() {
       return true;
     } catch (err) {
       const errorMessage =
-        err instanceof Error ? err.message : "Error al agregar el curso";
+        err instanceof Error ? err.message : "Error al agregar la trayectoria";
 
       setError(errorMessage);
-      console.error("Error adding course:", err);
+      console.error("Error adding trayectory:", err);
       return false;
     } finally {
       setIsSubmitting(false);
@@ -46,6 +50,6 @@ export function useAddCourse() {
     isSubmitting,
     error,
     isSuccess,
-    addCourse,
+    addTrayectory,
   };
 }
