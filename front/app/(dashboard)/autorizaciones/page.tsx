@@ -7,6 +7,8 @@ import AutorizationDetailModal from "@/components/solicitudes/AutorizationDetail
 import SolicitudesHeader from "@/components/solicitudes/SolicitudesHeader";
 import PendingSolicitudesSection from "@/components/solicitudes/PendingSolicitudesSection";
 import CompletedSolicitudesSection from "@/components/solicitudes/CompletedSolicitudesSection";
+import LoadingSpinner from "@/components/loading/LoadingSpinner";
+
 
 export default function AutorizacionesPage() {
   const { solicitudes, isLoading, error, refetch } =
@@ -88,8 +90,11 @@ export default function AutorizacionesPage() {
   );
 
   if (isLoading) {
-    return <div>Cargando solicitudes...</div>;
-  }
+    return (
+          <div className="flex justify-center py-8">
+            <LoadingSpinner size="md" color="primary" text="Cargando solicitudes..." />
+          </div>
+         ) }
 
   if (error) {
     return <div>Error: {error}</div>;

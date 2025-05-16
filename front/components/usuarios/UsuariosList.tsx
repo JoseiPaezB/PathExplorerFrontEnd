@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Edit, Mail, User } from "lucide-react";
 import { UserInfoBanca } from "@/types/users";
+import LoadingSpinner  from "@/components/loading/LoadingSpinner";
 
 function UsuariosList({
   isLoading,
@@ -30,10 +31,9 @@ function UsuariosList({
       </CardHeader>
       <CardContent>
         {isLoading ? (
-          <div className="flex justify-center items-center py-8">
-            <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
-            <span className="ml-3">Cargando usuarios...</span>
-          </div>
+          <div className="flex justify-center py-8">
+            <LoadingSpinner size="md" color="primary" text="Cargando usuarios..." />
+              </div>
         ) : error ? (
           <div className="text-center py-8 text-red-500">
             Error al cargar usuarios: {error}

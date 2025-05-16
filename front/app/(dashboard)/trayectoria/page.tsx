@@ -14,6 +14,8 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
+import LoadingSpinner from "@/components/loading/LoadingSpinner";
+
 
 function Page() {
   const { trayectory, isLoading: isLoadingTrayectory, error: trayectoryError } = fetchTrayectory();
@@ -69,7 +71,9 @@ function Page() {
       </CardHeader>
       <CardContent>
         {isLoading ? (
-          <p>Cargando...</p>
+          <div className="flex justify-center py-8">
+            <LoadingSpinner size="md" color="primary" text="Cargando trayectorias..." />
+          </div>
         ) : hasUserTrayectory && userTrayectory ? (
           <div>
             <h3 className="text-lg font-medium">{userTrayectory.nombre}</h3>
