@@ -12,6 +12,7 @@ import {
   FileCheck,
   Bell,
   Settings,
+  TrendingUp,
 } from "lucide-react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 
@@ -57,6 +58,11 @@ export function Sidebar({
         title: "Mis Cursos",
         href: "/cursos-y-certificaciones",
         icon: BookOpen,
+      },
+      {
+        title: "Trayectoria profesional",
+        href: "/trayectoria",
+        icon: TrendingUp,
       },
     ],
     manager: [
