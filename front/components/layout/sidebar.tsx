@@ -55,7 +55,7 @@ export function Sidebar({
     empleado: [
       { title: "Mi Proyecto", href: "/proyecto-actual", icon: Briefcase },
       {
-        title: "Mis Cursos",
+        title: "Mis Cursos y Certificaciones",
         href: "/cursos-y-certificaciones",
         icon: BookOpen,
       },
@@ -66,8 +66,12 @@ export function Sidebar({
       },
     ],
     manager: [
+      {
+        title: "Mis Cursos y Certificaciones",
+        href: "/cursos-y-certificaciones",
+        icon: BookOpen,
+      },
       { title: "Gestión de Proyectos", href: "/proyectos", icon: Briefcase },
-      { title: "Equipo", href: "/equipo", icon: Users },
     ],
     administrador: [
       { title: "Gestión de Usuarios", href: "/usuarios", icon: Users },

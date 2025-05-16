@@ -63,6 +63,14 @@ export interface CertificationsUser {
   estado_validacion: boolean;
   fecha_creacion: string;
 }
+// Add this to your types/users.ts file
+export interface CertificationFormData {
+  id_certificacion: number;
+  fecha_obtencion: string;
+  fecha_vencimiento: string;
+  estado_validacion: boolean;
+  fecha_creacion?: string;
+}
 
 export interface CertificationsUserResponse {
   success: boolean;

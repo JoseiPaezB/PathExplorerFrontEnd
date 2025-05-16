@@ -25,7 +25,7 @@ function NewProjectForm({ onSuccess }: { onSuccess: () => void }) {
   });
 
   const [formLoading, setFormLoading] = useState(false);
-  const [formError, setFormError] = useState(null);
+  const [formError, setFormError] = useState<string | null>(null);
 
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
@@ -158,6 +158,16 @@ function NewProjectForm({ onSuccess }: { onSuccess: () => void }) {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (formData.roles.length === 0) {
+      setFormError('Debes añadir al menos un rol antes de crear el proyecto.');
+      return;
+    }
+    const start = new Date(formData.fecha_inicio);
+    const end = new Date(formData.fecha_fin_estimada);
+    if (end < start) {
+      setFormError("La fecha estimada de finalización debe ser igual o posterior a la fecha de inicio.");
+      return;
+    }
     setFormLoading(true);
 
     try {
@@ -255,7 +265,23 @@ function NewProjectForm({ onSuccess }: { onSuccess: () => void }) {
       />
 
       <div className="flex justify-end space-x-2 pt-4">
-        <Button type="submit" disabled={formLoading}>
+        <Button
+          type="submit"
+          disabled={
+            formLoading ||
+            formData.roles.length === 0 ||
+            (startDate !== undefined && endDate !== undefined && endDate < startDate)
+          }
+          title={
+            formLoading
+              ? ""
+              : formData.roles.length === 0
+                ? "Añade al menos un rol para habilitar"
+                : startDate !== undefined && endDate !== undefined && endDate < startDate
+                  ? "La fecha de fin no puede ser anterior a la fecha de inicio"
+                  : ""
+          }
+        >
           {formLoading ? "Creando..." : "Crear Proyecto"}
         </Button>
       </div>
