@@ -78,7 +78,6 @@ function page() {
   // A simpler, more direct approach to chart capture
   const captureChart = async (chartElement: HTMLElement) => {
     try {
-      console.log(`Starting chart capture for: ${chartElement.id}`);
       
       // First try Chart.js if available
       if (typeof window.Chart !== 'undefined') {
@@ -88,7 +87,6 @@ function page() {
             // Try to get Chart.js instance
             const chartInstance = window.Chart.getChart(canvas);
             if (chartInstance) {
-              console.log(`Using Chart.js native export for: ${chartElement.id}`);
               return {
                 imageData: chartInstance.toBase64Image('image/png', 1.0),
                 width: canvas.width,
@@ -96,25 +94,21 @@ function page() {
               };
             }
           } catch (e) {
-            console.log(`Chart.js not available for: ${chartElement.id}`, e);
           }
           
           // If no Chart.js instance, try canvas directly
           try {
-            console.log(`Using canvas.toDataURL for: ${chartElement.id}`);
             return {
               imageData: canvas.toDataURL('image/png', 1.0),
               width: canvas.width,
               height: canvas.height
             };
           } catch (e) {
-            console.log(`Canvas export failed for: ${chartElement.id}`, e);
           }
         }
       }
       
       // If we get here, we need to use html2canvas
-      console.log(`Falling back to html2canvas for: ${chartElement.id}`);
       
       // Dynamically import html2canvas
       const html2canvas = (await import('html2canvas')).default;
@@ -157,7 +151,6 @@ function page() {
         });
       }
     } catch (error) {
-      console.error(`Chart capture failed for: ${chartElement.id}`, error);
       throw error;
     }
   };
@@ -453,7 +446,6 @@ function page() {
         doc.save(pdfFileName);
       }
     } catch (error) {
-      console.error('Error during export:', error);
       const errorMessage = error instanceof Error ? error.message : "Error desconocido";
       alert(`Error durante la exportación: ${errorMessage}`);
     } finally {
