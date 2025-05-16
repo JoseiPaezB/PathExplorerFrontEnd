@@ -75,131 +75,131 @@ function page() {
 
   // Helper function to capture charts with html2canvas fallback
   // Universal chart capture function that excludes checkboxes and other unwanted elements
-// Universal chart capture function that excludes checkboxes and other unwanted elements
-// A simpler, more direct approach to chart capture
-const captureChart = async (chartElement: HTMLElement) => {
-  try {
-    console.log(`Starting chart capture for: ${chartElement.id}`);
-    
-    // First try Chart.js if available
-    if (typeof window.Chart !== 'undefined') {
-      const canvas = chartElement.querySelector('canvas');
-      if (canvas) {
-        try {
-          // Try to get Chart.js instance
-          const chartInstance = window.Chart.getChart(canvas);
-          if (chartInstance) {
-            console.log(`Using Chart.js native export for: ${chartElement.id}`);
+  // A simpler, more direct approach to chart capture
+  const captureChart = async (chartElement: HTMLElement) => {
+    try {
+      console.log(`Starting chart capture for: ${chartElement.id}`);
+      
+      // First try Chart.js if available
+      if (typeof window.Chart !== 'undefined') {
+        const canvas = chartElement.querySelector('canvas');
+        if (canvas) {
+          try {
+            // Try to get Chart.js instance
+            const chartInstance = window.Chart.getChart(canvas);
+            if (chartInstance) {
+              console.log(`Using Chart.js native export for: ${chartElement.id}`);
+              return {
+                imageData: chartInstance.toBase64Image('image/png', 1.0),
+                width: canvas.width,
+                height: canvas.height
+              };
+            }
+          } catch (e) {
+            console.log(`Chart.js not available for: ${chartElement.id}`, e);
+          }
+          
+          // If no Chart.js instance, try canvas directly
+          try {
+            console.log(`Using canvas.toDataURL for: ${chartElement.id}`);
             return {
-              imageData: chartInstance.toBase64Image('image/png', 1.0),
+              imageData: canvas.toDataURL('image/png', 1.0),
               width: canvas.width,
               height: canvas.height
             };
+          } catch (e) {
+            console.log(`Canvas export failed for: ${chartElement.id}`, e);
           }
-        } catch (e) {
-          console.log(`Chart.js not available for: ${chartElement.id}`, e);
-        }
-        
-        // If no Chart.js instance, try canvas directly
-        try {
-          console.log(`Using canvas.toDataURL for: ${chartElement.id}`);
-          return {
-            imageData: canvas.toDataURL('image/png', 1.0),
-            width: canvas.width,
-            height: canvas.height
-          };
-        } catch (e) {
-          console.log(`Canvas export failed for: ${chartElement.id}`, e);
         }
       }
-    }
-    
-    // If we get here, we need to use html2canvas
-    console.log(`Falling back to html2canvas for: ${chartElement.id}`);
-    
-    // Dynamically import html2canvas
-    const html2canvas = (await import('html2canvas')).default;
-    
-    // Temporarily hide checkboxes while capturing
-    const elementsToHide: { element: HTMLElement; display: string }[] = [];
-    chartElement.querySelectorAll('input, button, select, textarea, .checkbox-container, .legend-checkbox')
-      .forEach(el => {
-        const element = el as HTMLElement;
-        elementsToHide.push({
-          element,
-          display: element.style.display
+      
+      // If we get here, we need to use html2canvas
+      console.log(`Falling back to html2canvas for: ${chartElement.id}`);
+      
+      // Dynamically import html2canvas
+      const html2canvas = (await import('html2canvas')).default;
+      
+      // Temporarily hide checkboxes while capturing
+      const elementsToHide: { element: HTMLElement; display: string }[] = [];
+      chartElement.querySelectorAll('input, button, select, textarea, .checkbox-container, .legend-checkbox')
+        .forEach(el => {
+          const element = el as HTMLElement;
+          elementsToHide.push({
+            element,
+            display: element.style.display
+          });
+          element.style.display = 'none';
         });
-        element.style.display = 'none';
-      });
-    
-    try {
-      // Use html2canvas directly on the original element
-      const canvasOptions = {
-        scale: 2,
-        backgroundColor: '#ffffff',
-        useCORS: true,
-        allowTaint: true,
-        foreignObjectRendering: false, // Try setting this to false as it can cause issues
-        removeContainer: false // Don't remove the container, which can cause "element not found" errors
-      };
       
-      // Capture the chart
-      const canvas = await html2canvas(chartElement, canvasOptions);
-      
-      return {
-        imageData: canvas.toDataURL('image/png', 1.0),
-        width: canvas.width / canvasOptions.scale,
-        height: canvas.height / canvasOptions.scale
-      };
-    } finally {
-      // Restore visibility regardless of success or failure
-      elementsToHide.forEach(item => {
-        item.element.style.display = item.display;
-      });
+      try {
+        // Use html2canvas directly on the original element
+        const canvasOptions = {
+          scale: 2,
+          backgroundColor: '#ffffff',
+          useCORS: true,
+          allowTaint: true,
+          foreignObjectRendering: false, // Try setting this to false as it can cause issues
+          removeContainer: false // Don't remove the container, which can cause "element not found" errors
+        };
+        
+        // Capture the chart
+        const canvas = await html2canvas(chartElement, canvasOptions);
+        
+        return {
+          imageData: canvas.toDataURL('image/png', 1.0),
+          width: canvas.width / canvasOptions.scale,
+          height: canvas.height / canvasOptions.scale
+        };
+      } finally {
+        // Restore visibility regardless of success or failure
+        elementsToHide.forEach(item => {
+          item.element.style.display = item.display;
+        });
+      }
+    } catch (error) {
+      console.error(`Chart capture failed for: ${chartElement.id}`, error);
+      throw error;
     }
-  } catch (error) {
-    console.error(`Chart capture failed for: ${chartElement.id}`, error);
-    throw error;
-  }
-};
+  };
 
-const prepareChartsForExport = () => {
-  // Get all chart containers
-  document.querySelectorAll('[id$="-graph"]').forEach(chart => {
-    // Call any prepareForExport method the chart component might have exposed
-    if (chart && typeof (chart as any).prepareForExport === 'function') {
-      (chart as any).prepareForExport();
-    }
-    
-    // Or hide all interactive elements
-    chart.querySelectorAll('input, button, select').forEach(el => {
-      (el as HTMLElement).style.display = 'none';
+  const prepareChartsForExport = () => {
+    // Get all chart containers
+    document.querySelectorAll('[id$="-graph"]').forEach(chart => {
+      // Call any prepareForExport method the chart component might have exposed
+      if (chart && typeof (chart as any).prepareForExport === 'function') {
+        (chart as any).prepareForExport();
+      }
+      
+      // Or hide all interactive elements
+      chart.querySelectorAll('input, button, select').forEach(el => {
+        (el as HTMLElement).style.display = 'none';
+      });
     });
-  });
-};
+  };
 
- const handleExport = async (
-  title: string = "informes",
-  selectedFormat: string = "excel",
-  selectedCharts: string[] = [],
-  selectedDataSets: string[] = []
-) => {
-  if (
-    title === "" ||
-    title === undefined ||
-    selectedFormat === "" ||
-    selectedFormat === undefined ||
-    (selectedCharts.length === 0 && selectedDataSets.length === 0)
-  ) {
-    alert("Por favor, complete todos los campos.");
-    return;
-  }
+  const handleExport = async (
+    title: string = "informes",
+    selectedFormat: string = "excel",
+    selectedCharts: string[] = [], // Este parámetro seguirá existiendo pero será un array vacío
+    selectedDataSets: string[] = []
+  ) => {
+    // Modificamos la validación para que solo verifique datasets, no charts
+    if (
+      title === "" ||
+      title === undefined ||
+      selectedFormat === "" ||
+      selectedFormat === undefined ||
+      selectedDataSets.length === 0 // Solo validamos que haya datasets seleccionados
+    ) {
+      alert("Por favor, complete todos los campos y seleccione al menos un conjunto de datos.");
+      return;
+    }
 
     // Store current export details for cleanup tracking
     setPreviousExport({
       title,
       format: selectedFormat,
-      charts: [...selectedCharts],
+      charts: [], // Siempre vacío
       datasets: [...selectedDataSets]
     });
 
@@ -216,10 +216,10 @@ const prepareChartsForExport = () => {
     loadingEl.style.borderRadius = '4px';
     loadingEl.style.zIndex = '9999';
     document.body.appendChild(loadingEl);
-    prepareChartsForExport();
+    
     try {
-      // Give charts time to fully render
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Give charts time to fully render (aunque ya no exportamos gráficos, mantenemos un pequeño delay)
+      await new Promise(resolve => setTimeout(resolve, 500));
 
       // EXCEL EXPORT
       if (selectedFormat === "excel") {
@@ -347,8 +347,8 @@ const prepareChartsForExport = () => {
         const currentDate = new Date();
         doc.text(`Informe generado el ${currentDate.toLocaleDateString()}`, 14, 80);
 
-        // Table of contents
-        if (selectedDataSets.length > 0 || selectedCharts.length > 0) {
+        // Table of contents - modificado para mostrar solo datasets, no charts
+        if (selectedDataSets.length > 0) {
           doc.setFontSize(14);
           doc.setFont('', 'bold');
           doc.text("Contenido", 14, 100);
@@ -363,17 +363,6 @@ const prepareChartsForExport = () => {
             doc.text(`${contentNum}. Datos: ${dataset}`, 14, contentY);
             contentY += 8;
             contentNum++;
-          }
-          
-          // List selected charts
-          for (const chartId of selectedCharts) {
-            const chartElement = document.getElementById(chartId);
-            if (chartElement) {
-              const chartTitle = chartElement?.getAttribute("data-title") || chartId;
-              doc.text(`${contentNum}. Gráfico: ${chartTitle}`, 14, contentY);
-              contentY += 8;
-              contentNum++;
-            }
           }
         }
         
@@ -444,67 +433,6 @@ const prepareChartsForExport = () => {
             }
           }
         }
-
-        // Add charts using Chart.js native export or html2canvas fallback
-        if (selectedCharts.length > 0) {
-          let yPosition = 20;
-          let firstChart = true;
-          
-          for (const chartId of selectedCharts) {
-            const chartElement = document.getElementById(chartId);
-
-            if (chartElement) {
-              if (firstChart) {
-                if (selectedDataSets.length > 0) {
-                  doc.addPage();
-                }
-                firstChart = false;
-              } else if (yPosition > 180) {
-                doc.addPage();
-                yPosition = 20;
-              }
-              
-              try {
-                // Section header with styling
-                const chartTitle = chartElement.getAttribute("data-title") || chartId;
-                doc.setFillColor(245, 245, 245);
-                doc.rect(0, yPosition - 10, doc.internal.pageSize.width, 20, 'F');
-                
-                doc.setFontSize(14);
-                doc.setFont('', 'bold');
-                doc.setTextColor(40, 40, 40);
-                doc.text(`${sectionNum}. ${chartTitle}`, 14, yPosition);
-                yPosition += 15;
-                sectionNum++;
-                
-                // Use our universal capture function which handles all types of charts
-                const { imageData, width, height } = await captureChart(chartElement);
-                
-                // Calculate aspect ratio and dimensions
-                const aspectRatio = width / height || 2; // Default to 2:1 if dimensions are 0
-                const imageWidth = 180;
-                const imageHeight = imageWidth / aspectRatio;
-                
-                // Add a border and the image
-                doc.setDrawColor(220, 220, 220);
-                doc.setLineWidth(0.5);
-                doc.rect(14, yPosition, imageWidth, imageHeight);
-                doc.addImage(imageData, "PNG", 14, yPosition, imageWidth, imageHeight);
-                
-                yPosition += imageHeight + 25;
-              } catch (error) {
-                console.error(`Error capturing chart ${chartId}:`, error);
-                
-                // Add error message to PDF
-                doc.setTextColor(200, 0, 0);
-                doc.setFontSize(10);
-                const errorMessage = error instanceof Error ? error.message : "Error desconocido";
-                doc.text(`Error al generar gráfico: ${errorMessage}`, 14, yPosition);
-                yPosition += 20;
-              }
-            }
-          }
-        }
         
         // Add page numbers
         const pageCount = doc.getNumberOfPages();
@@ -554,13 +482,8 @@ const prepareChartsForExport = () => {
         });
       }
     }
-      alert("Exportación completada con éxito. La página se recargará para limpiar la memoria.");
-       setTimeout(() => {
-      // Force page refresh
-      window.location.reload();
-    }, 1500);
     
-   
+    alert("Exportación completada con éxito.");
   };
 
   // ExportDataModal should reset selected values when closed
