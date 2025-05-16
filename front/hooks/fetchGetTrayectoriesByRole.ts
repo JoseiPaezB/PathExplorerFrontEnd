@@ -1,4 +1,3 @@
-// hooks/fetchGetTrayectoriesByRole.ts
 "use client";
 
 import { useState, useEffect } from "react";
@@ -20,20 +19,17 @@ export function fetchGetTrayectoriesByRole(role: string = "defaultRole") {
       if (!token) {
         throw new Error("No authentication token found");
       }
-      
+
       const url = `${apiUrl}/recommendations/development-recommendations`;
-      console.log("Fetching trayectorias by role from:", url);
 
       const response = await axios.get<GeneratedTrayectoriesResponse>(url, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
         params: {
-          role: role
-        }
+          role: role,
+        },
       });
-
-      console.log("Respuesta de trayectorias por rol:", response.data);
 
       if (response.data && response.data.recommendations) {
         setTrayectories(response.data.recommendations);
@@ -52,16 +48,22 @@ export function fetchGetTrayectoriesByRole(role: string = "defaultRole") {
 
       setError(errorMessage);
       console.error("Error fetching trayectories:", err);
-      console.error("Status:", axios.isAxiosError(err) ? err.response?.status : "Unknown");
-      console.error("URL:", `${apiUrl}/recommendations/development-recommendations`);
-      
+      console.error(
+        "Status:",
+        axios.isAxiosError(err) ? err.response?.status : "Unknown"
+      );
+      console.error(
+        "URL:",
+        `${apiUrl}/recommendations/development-recommendations`
+      );
+
       setTrayectories([]);
       return [];
     } finally {
       setIsLoading(false);
     }
   };
-  
+
   useEffect(() => {
     fetchTrayectoriesByRole();
   }, []);

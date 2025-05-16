@@ -3,7 +3,7 @@ export interface Trayectory {
   id_persona: number;
   nombre: string;
   descripcion: string;
-  roles_secuenciales: string;
+  roles_secuenciales: string | string[];
   tiempo_estimado: number;
   progreso: string;
   etapa_actual: string;
@@ -12,7 +12,7 @@ export interface Trayectory {
 export interface TrayectoryResponse {
   success: boolean;
   message: string;
-  trayectoria: Trayectory;
+  trayectoria: Trayectory | undefined;
 }
 
 export interface TrayectoryFormData {
