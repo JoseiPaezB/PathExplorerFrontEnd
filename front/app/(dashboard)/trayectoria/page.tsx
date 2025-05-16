@@ -101,11 +101,7 @@ function Page() {
       <CardContent>
         {showLoadingSpinner ? (
           <div className="flex justify-center py-8">
-            <LoadingSpinner
-              size="md"
-              color="primary"
-              text="Cargando trayectorias..."
-            />
+            Cargando trayectoria...
           </div>
         ) : hasUserTrayectory && userTrayectory ? (
           <div>
