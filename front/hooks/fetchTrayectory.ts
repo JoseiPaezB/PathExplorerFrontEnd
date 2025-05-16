@@ -19,19 +19,36 @@ export function fetchTrayectory() {
       if (!token) {
         throw new Error("No authentication token found");
       }
-
-      const response = await axios.get<{
-        success: boolean;
-        message: string;
-        trayectoria: Trayectory;
-      }>(`${apiUrl}/recommendations/get-user-trajectoria`, {
+      
+      const url = `${apiUrl}/recommendations/get-user-trajectoria`;
+      console.log("Fetching trayectoria from:", url);
+      
+      const response = await axios.get(url, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-
-      setTrayectory(response.data as TrayectoryResponse);
-      return response.data;
+      
+      console.log("Token:", token);
+      console.log("Respuesta completa (JSON):", JSON.stringify(response.data, null, 2));
+      
+      if (response.data && response.data.success) {
+        if (response.data.trayectoria) {
+          console.log("Trayectoria encontrada:", response.data.trayectoria);
+          setTrayectory(response.data as TrayectoryResponse);
+        } else {
+          console.log("Usuario sin trayectoria asignada");
+          setTrayectory({
+            success: response.data.success,
+            message: response.data.message,
+            trayectoria: undefined
+          });
+        }
+        return response.data as TrayectoryResponse;
+      } else {
+        console.error("Respuesta inesperada:", response.data);
+        throw new Error("Respuesta inesperada del servidor");
+      }
     } catch (err) {
       const errorMessage =
         axios.isAxiosError(err) && err.response?.data?.message
@@ -40,14 +57,18 @@ export function fetchTrayectory() {
           ? err.message
           : "Error fetching trayectory";
 
+      console.error("Error detallado:", err);
+      console.error("Status:", axios.isAxiosError(err) ? err.response?.status : "Unknown");
+      console.error("URL:", `${apiUrl}/recommendations/get-user-trajectoria`);
+      
       setError(errorMessage);
-      console.error("Error fetching trayectory:", err);
       setTrayectory(undefined);
       return undefined;
     } finally {
       setIsLoading(false);
     }
   };
+  
   useEffect(() => {
     fetchTrayectory();
   }, []);
