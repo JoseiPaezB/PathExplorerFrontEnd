@@ -12,10 +12,10 @@ export function fetchGetCoursesAndCertificationsRecommendations() {
 
   const getCoursesAndCertificationsRecommendations = async (
     coursesCategory: string | null = null,
-    certificationsAbilities: string | null = null,
-    coursesAbilities: string | null = null,
     coursesProvider: string | null = null,
-    certificationsProvider: string | null = null
+    coursesAbilities: string | null = null,
+    certificationsProvider: string | null = null,
+    certificationsAbilities: string | null = null
   ) => {
     try {
       setIsLoading(true);
@@ -29,6 +29,13 @@ export function fetchGetCoursesAndCertificationsRecommendations() {
         coursesProvider,
         certificationsProvider,
       };
+
+      if (filters.certificationsProvider) {
+        filters.certificationsProvider = filters.certificationsProvider.replace(
+          /[^a-zA-Z0-9\s]/g,
+          ""
+        );
+      }
 
       const queryParams = Object.entries(filters)
         .filter(([_, value]) => value !== null)

@@ -59,18 +59,25 @@ function RecommendationsModal({ closeModal }: { closeModal: () => void }) {
             <>
               <div>
                 <h1>Cursos recomendados</h1>
-                {recommendations?.recommendations.cursos_recomendados.map(
-                  (course) => (
-                    <RecommendationItem item={course} key={course.id} />
+                {recommendations?.recommendations?.cursos_recomendados ? (
+                  recommendations?.recommendations?.cursos_recomendados.map(
+                    (course) => (
+                      <RecommendationItem item={course} key={course.id} />
+                    )
                   )
+                ) : (
+                  <p>No hay cursos recomendados.</p>
                 )}
               </div>
               <div>
                 <h1>Certificaciones recomendadas</h1>
-                {recommendations?.recommendations.certificaciones_recomendadas.map(
-                  (cert) => (
-                    <RecommendationItem item={cert} key={cert.id} />
+                {recommendations?.recommendations
+                  ?.certificaciones_recomendadas ? (
+                  recommendations?.recommendations?.certificaciones_recomendadas?.map(
+                    (cert) => <RecommendationItem item={cert} key={cert.id} />
                   )
+                ) : (
+                  <p>No hay certificaciones recomendadas.</p>
                 )}
               </div>
             </>
