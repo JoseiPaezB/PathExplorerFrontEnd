@@ -38,6 +38,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useManagerDashboard } from "@/hooks/useDashboardData";
+import { ChevronDown, ChevronUp } from "lucide-react";
+
 
 interface ManagerDashboardProps {
   userName: string;
@@ -46,7 +48,8 @@ interface ManagerDashboardProps {
 export default function ManagerDashboard({ userName }: ManagerDashboardProps) {
   const [openDropdownIndex, setOpenDropdownIndex] = useState(0);
   const [activeTab, setActiveTab] = useState("activos");
-  
+  const [showAllRoles, setShowAllRoles] = useState(false);
+
   const { 
     rolesWithoutAssignments, 
     courses, 
@@ -619,38 +622,17 @@ export default function ManagerDashboard({ userName }: ManagerDashboardProps) {
             <CardContent className="px-6 pb-2">
               <div className="space-y-4">
                 {/* Recomendaciones de habilidades más solicitadas */}
-                <div className="p-4 rounded-lg bg-muted/40">
-                  <h4 className="text-sm font-medium mb-2">Habilidades más solicitadas</h4>
-                  <div className="flex flex-wrap gap-2">
-                    {[
-                      { name: "AWS", count: 8 },
-                      { name: "React", count: 6 },
-                      { name: "Angular", count: 5 },
-                      { name: "Spring Boot", count: 4 },
-                      { name: "Azure", count: 4 },
-                      { name: "Docker", count: 3 },
-                    ].map((skill, index) => (
-                      <Badge key={index} variant="outline" className="flex items-center gap-1">
-                        {skill.name}
-                        <span className="bg-primary/20 rounded-full text-xs px-1.5 py-0.5">
-                          {skill.count}
-                        </span>
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
+                
 
                 {/* Roles prioritarios */}
                 <div>
                   <h4 className="text-sm font-medium mb-2">Roles prioritarios para cubrir</h4>
                   <div className="space-y-2">
                     {rolesWithoutAssignments
-                      .filter(p => p.estado !== 'FINALIZADO' && p.prioridad >= 4)
-                      .slice(0, 2)
+                      .filter(p => p.estado !== 'FINALIZADO')
                       .flatMap(project => (
                         project.roles
                           .filter(r => r !== null)
-                          .slice(0, 2)
                           .map((role, roleIndex) => (
                             role && (
                               <div key={`${project.id_proyecto}-${roleIndex}`} className="p-3 rounded-lg bg-muted/40 text-sm border-l-4 border-amber-500">
@@ -683,8 +665,37 @@ export default function ManagerDashboard({ userName }: ManagerDashboardProps) {
                             )
                           ))
                       ))
+                      .slice(0, showAllRoles ? undefined : 2) // Show only 2 initially, all when expanded
                     }
                   </div>
+                  
+                  {/* Show More/Less Button */}
+                  {rolesWithoutAssignments
+                    .filter(p => p.estado !== 'FINALIZADO')
+                    .flatMap(project => project.roles.filter(r => r !== null)).length > 2 && (
+                    <div className="mt-3 text-center">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setShowAllRoles(!showAllRoles)}
+                        className="text-primary hover:text-primary/80 text-xs"
+                      >
+                        {showAllRoles ? (
+                          <>
+                            <ChevronUp className="h-3 w-3 mr-1" />
+                            Mostrar menos
+                          </>
+                        ) : (
+                          <>
+                            <ChevronDown className="h-3 w-3 mr-1" />
+                            Mostrar más ({rolesWithoutAssignments
+                              .filter(p => p.estado !== 'FINALIZADO')
+                              .flatMap(project => project.roles.filter(r => r !== null)).length - 2} más)
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </div>
             </CardContent>
@@ -701,94 +712,7 @@ export default function ManagerDashboard({ userName }: ManagerDashboardProps) {
           </Card>
 
           {/* Próximas certificaciones a vencer */}
-          <Card className="overflow-hidden border-none shadow-card hover:shadow-elevated transition-all duration-300">
-            <CardHeader className="p-6">
-              <div className="flex justify-between items-center">
-                <CardTitle>Próximas Renovaciones</CardTitle>
-                <AlertTriangle className="h-5 w-5 text-amber-500" />
-              </div>
-              <CardDescription>
-                Certificaciones del equipo cercanas a vencer
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="px-6 pb-2">
-              <div className="space-y-4">
-                {/* Lista de empleados con certificaciones a vencer */}
-                <div className="space-y-3">
-                  {[
-                    { 
-                      nombre: "Ana García",
-                      certificacion: "AWS Solutions Architect",
-                      diasRestantes: 15,
-                      avatar: "Ana"
-                    },
-                    { 
-                      nombre: "Carlos Ruiz",
-                      certificacion: "Scrum Master",
-                      diasRestantes: 22,
-                      avatar: "Carlos"
-                    },
-                    { 
-                      nombre: "Juan Pérez",
-                      certificacion: "Azure Administrator",
-                      diasRestantes: 30,
-                      avatar: "Juan"
-                    },
-                  ].map((empleado, index) => (
-                    <div key={index} className="flex items-center gap-3 p-3 rounded-lg bg-muted/40">
-                      <div className="flex-shrink-0">
-                        <div className="relative">
-                          <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-medium">
-                            {empleado.avatar.charAt(0)}
-                          </div>
-                          {empleado.diasRestantes < 20 && (
-                            <div className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-red-500 border-2 border-white flex items-center justify-center text-[8px] text-white font-bold">
-                              !
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{empleado.nombre}</p>
-                        <p className="text-xs text-muted-foreground truncate">{empleado.certificacion}</p>
-                      </div>
-                      <Badge className={
-                        empleado.diasRestantes < 15 
-                          ? "bg-red-500 text-white" 
-                          : empleado.diasRestantes < 30 
-                          ? "bg-amber-500 text-white"
-                          : "bg-emerald-500 text-white"
-                      }>
-                        {empleado.diasRestantes} días
-                      </Badge>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Botones de acción */}
-                <div className="flex flex-col gap-2">
-                  <Button variant="outline" size="sm" className="w-full">
-                    <Clock className="h-3.5 w-3.5 mr-2" />
-                    Programar recordatorios
-                  </Button>
-                  <Button variant="outline" size="sm" className="w-full">
-                    <Calendar className="h-3.5 w-3.5 mr-2" />
-                    Ver calendario de renovaciones
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-            <CardFooter className="border-t px-6 py-4">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="w-full gap-1 text-primary group"
-              >
-                <span>Gestionar certificaciones del equipo</span>
-                <ChevronRight className="h-3.5 w-3.5 opacity-0 -ml-2 group-hover:opacity-100 group-hover:ml-0 transition-all" />
-              </Button>
-            </CardFooter>
-          </Card>
+          
         </motion.div>
       </DropdownCard>
 

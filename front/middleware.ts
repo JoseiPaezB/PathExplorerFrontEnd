@@ -23,45 +23,11 @@ export function middleware(request: NextRequest) {
   if (path === "/login" || path === "/recuperar-password") {
     if (user) {
       console.log(
-        "Usuario autenticado intentando acceder a /login, redirigiendo según rol"
+        "Usuario autenticado intentando acceder a /login, redirigiendo a /dashboard"
       );
-      try {
-        const userData = user ? JSON.parse(user) : null;
-        const role = userData?.role;
-        
-        if (role === "administrador") {
-          return NextResponse.redirect(new URL("/usuarios", request.url));
-        } else {
-          return NextResponse.redirect(new URL("/dashboard", request.url));
-        }
-      } catch (error) {
-        console.error("Error al analizar datos de usuario:", error);
-        // Si hay error, redirigir a dashboard por defecto
-        return NextResponse.redirect(new URL("/dashboard", request.url));
-      }
+      return NextResponse.redirect(new URL("/dashboard", request.url));
     }
     return NextResponse.next();
-  }
-
-  // Handle root path (/) based on user role
-  if (path === "/") {
-    if (!user) {
-      return NextResponse.redirect(new URL("/login", request.url));
-    }
-    
-    try {
-      const userData = user ? JSON.parse(user) : null;
-      const role = userData?.role;
-      
-      if (role === "administrador") {
-        return NextResponse.redirect(new URL("/usuarios", request.url));
-      } else {
-        return NextResponse.redirect(new URL("/dashboard", request.url));
-      }
-    } catch (error) {
-      console.error("Error al analizar datos de usuario:", error);
-      return NextResponse.redirect(new URL("/login", request.url));
-    }
   }
 
   if (!user) {
@@ -76,6 +42,7 @@ export function middleware(request: NextRequest) {
     const role = userData?.role;
 
     const commonRoutes = [
+      "/dashboard",
       "/perfil",
       "/configuracion",
       "/notificaciones",
@@ -92,49 +59,18 @@ export function middleware(request: NextRequest) {
       return NextResponse.next();
     }
 
-    // IMPORTANT: Changed this section to send admins to restricted-access for dashboard
-   if (role === "administrador" && (path === "/dashboard" || path.startsWith("/dashboard/"))) {
-      console.log("Administrador intentando acceder al dashboard, redirigiendo a restricted-access");
-      return NextResponse.redirect(new URL("/restricted-access", request.url));
-    }
-
     if (role === "administrador") {
       const adminRoutes = [
-         "/usuarios",
+        "/usuarios",
         "/autorizaciones",
         "/departamentos",
         "/informes",
-        "/perfil", // Added perfil explicitly to admin routes
-        "/configuracion",
-        "/notificaciones"
       ];
       if (adminRoutes.some((route) => path === route)) {
         return NextResponse.next();
       }
-        // Check for dynamic admin routes with patterns
-      const adminPatterns = [
-        /^\/usuarios\/\d+\/ver-perfil$/,
-        /^\/usuarios\/\d+\/ver-estado$/,
-        /^\/usuarios\/.+/,
-        /^\/informes\/.+/,
-        /^\/autorizaciones\/.+/,
-        /^\/departamentos\/.+/
-      ];
-      
-      if (adminPatterns.some(pattern => pattern.test(path))) {
-        console.log("Admin accessing allowed dynamic route:", path);
-        return NextResponse.next();
-      }
-      
-      // If we reach here, the admin is trying to access an unauthorized route
-      console.log("Admin trying to access unauthorized route:", path);
-      return NextResponse.redirect(new URL("/restricted-access", request.url));
-
-
-
     } else if (role === "manager") {
       const managerRoutes = [
-        "/dashboard",
         "/proyectos",
         "/analitica",
         "/cursos-y-certificaciones",
@@ -150,7 +86,6 @@ export function middleware(request: NextRequest) {
       }
     } else if (role === "empleado") {
       const empleadoStaticRoutes = [
-        "/dashboard",
         "/proyecto-actual",
         "/cursos-y-certificaciones",
         "/cursos-y-certificaciones/agregar-certificacion",
