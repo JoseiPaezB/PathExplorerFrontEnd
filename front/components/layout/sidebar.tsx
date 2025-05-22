@@ -14,6 +14,7 @@ import {
   Bell,
   Settings,
   TrendingUp,
+  Lightbulb, 
 } from "lucide-react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 
@@ -64,6 +65,12 @@ export function Sidebar({
         title: "Trayectoria profesional",
         href: "/trayectoria",
         icon: TrendingUp,
+      },
+      // Nuevo elemento para recomendaciones
+      {
+        title: "Recomendaciones",
+        href: "/recomendaciones",
+        icon: Lightbulb,
       },
     ],
     manager: [
