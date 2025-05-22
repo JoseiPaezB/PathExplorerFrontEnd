@@ -20,22 +20,16 @@ function RecommendationsModal({ closeModal }: { closeModal: () => void }) {
   function handleSubmit(
     selectedCourseCategory: string | null,
     selectedCourseInstitution: string | null,
-    selectedCourseSkill: string[] | null,
+    selectedCourseSkill: string | null,
     selectedCertificationInstitution: string | null,
-    selectedCertificationSkill: string[] | null
+    selectedCertificationSkill: string | null
   ) {
-    const selectedCourseSkillAsString = selectedCourseSkill
-      ? selectedCourseSkill.join(",")
-      : null;
-    const selectedCertificationSkillAsString = selectedCertificationSkill
-      ? selectedCertificationSkill.join(",")
-      : null;
     getCoursesAndCertificationsRecommendations(
       selectedCourseCategory,
       selectedCourseInstitution,
-      selectedCourseSkillAsString,
+      selectedCourseSkill,
       selectedCertificationInstitution,
-      selectedCertificationSkillAsString
+      selectedCertificationSkill
     );
   }
   return (
@@ -61,8 +55,12 @@ function RecommendationsModal({ closeModal }: { closeModal: () => void }) {
                 <h1>Cursos recomendados</h1>
                 {recommendations?.recommendations?.cursos_recomendados ? (
                   recommendations?.recommendations?.cursos_recomendados.map(
-                    (course) => (
-                      <RecommendationItem item={course} key={course.id} />
+                    (course, index) => (
+                      <RecommendationItem
+                        item={course}
+                        delay={index * 100}
+                        key={course.id}
+                      />
                     )
                   )
                 ) : (
@@ -74,7 +72,13 @@ function RecommendationsModal({ closeModal }: { closeModal: () => void }) {
                 {recommendations?.recommendations
                   ?.certificaciones_recomendadas ? (
                   recommendations?.recommendations?.certificaciones_recomendadas?.map(
-                    (cert) => <RecommendationItem item={cert} key={cert.id} />
+                    (cert, index) => (
+                      <RecommendationItem
+                        item={cert}
+                        delay={index * 100}
+                        key={cert.id}
+                      />
+                    )
                   )
                 ) : (
                   <p>No hay certificaciones recomendadas.</p>

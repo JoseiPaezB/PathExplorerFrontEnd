@@ -21,9 +21,9 @@ function FilterComponents({
   handleSubmit: (
     selectedCourseCategory: string | null,
     selectedCourseInstitution: string | null,
-    selectedCourseSkill: string[] | null,
+    selectedCourseSkill: string | null,
     selectedCertificationInstitution: string | null,
-    selectedCertificationSkill: string[] | null
+    selectedCertificationSkill: string | null
   ) => void;
   closeModal: () => void;
   isLoading: boolean;
@@ -39,11 +39,11 @@ function FilterComponents({
     selectedCertificationInstitution,
     setSelectedCertificationInstitution,
   ] = useState<string | null>(null);
-  const [selectedCourseSkill, setSelectedCourseSkill] = useState<
-    string[] | null
-  >(null);
+  const [selectedCourseSkill, setSelectedCourseSkill] = useState<string | null>(
+    null
+  );
   const [selectedCertificationSkill, setSelectedCertificationSkill] = useState<
-    string[] | null
+    string | null
   >(null);
   return (
     <div className="flex flex-col w-full h-full">
