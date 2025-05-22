@@ -43,8 +43,7 @@ function FilterComponents({
     null
   );
   const [selectedCertificationSkill, setSelectedCertificationSkill] = useState<
-    string | null
-  >(null);
+    string | null>(null);
   return (
     <div className="flex flex-col w-full h-full">
       <div className="flex gap-4 justify-center items-start">

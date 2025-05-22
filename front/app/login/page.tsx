@@ -33,12 +33,22 @@ export default function LoginPage() {
   const { toast } = useToast();
   const { login, isAuthenticated, user, isLoggingOut } = useAuth();
 
+  // Helper function to get redirect path based on user role
+  const getRedirectPath = (userRole: string) => {
+    if (userRole === "administrador") {
+      return "/usuarios";
+    } else {
+      return "/dashboard";
+    }
+  };
+
   // Verificar si el usuario ya está autenticado
   useEffect(() => {
     if (isAuthenticated && user && !isLoggingOut && !isRedirecting) {
       setIsRedirecting(true);
+      const redirectPath = getRedirectPath(user.role);
       setTimeout(() => {
-        router.push("/dashboard");
+        router.push(redirectPath);
       }, 100);
     }
   }, [isAuthenticated, user, router, isLoggingOut, isRedirecting]);
@@ -70,8 +80,13 @@ export default function LoginPage() {
     setError("");
 
     try {
-      await login(email, password);
+      const loggedInUser = await login(email, password);
       setSuccess(true);
+
+      // Determine redirect path based on user role
+      const redirectPath = loggedInUser ? getRedirectPath(loggedInUser.role) : "/dashboard";
+      
+      console.log(`User role: ${loggedInUser?.role}, redirecting to: ${redirectPath}`);
 
       toast({
         title: "Inicio de sesión exitoso",
@@ -81,7 +96,7 @@ export default function LoginPage() {
       setIsRedirecting(true);
 
       setTimeout(() => {
-        router.push("/dashboard");
+        router.push(redirectPath);
       }, 1200);
     } catch (error) {
       setError("Por favor, verifica tus credenciales e intenta nuevamente");
@@ -210,7 +225,7 @@ export default function LoginPage() {
                     ¡Inicio de sesión exitoso!
                   </h3>
                   <p className="text-muted-foreground text-center">
-                    Redirigiendo al dashboard...
+                    Redirigiendo...
                   </p>
                 </motion.div>
               ) : (

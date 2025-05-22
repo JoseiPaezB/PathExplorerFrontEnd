@@ -29,8 +29,7 @@ function RecommendationsModal({ closeModal }: { closeModal: () => void }) {
       selectedCourseInstitution,
       selectedCourseSkill,
       selectedCertificationInstitution,
-      selectedCertificationSkill
-    );
+      selectedCertificationSkill);
   }
   return (
     <Dialog open={true} onOpenChange={closeModal}>
