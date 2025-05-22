@@ -717,64 +717,6 @@ export default function ManagerDashboard({ userName }: ManagerDashboardProps) {
       </DropdownCard>
 
       {/* Sección de reportes */}
-      <DropdownCard
-        title="Reportes y Analíticas"
-        isOpen={openDropdownIndex === 3}
-        onToggle={() => handleDropdownToggle(3)}
-      >
-        <motion.div variants={item} className="grid gap-6 md:grid-cols-3">
-          {/* Tarjetas de informes disponibles */}
-          {[
-            {
-              title: "Asignación de Recursos",
-              description: "Análisis de asignación de personal por proyecto",
-              icon: Users,
-              color: "text-blue-500"
-            },
-            {
-              title: "Desarrollo del Equipo",
-              description: "Progreso en cursos y certificaciones",
-              icon: Award,
-              color: "text-emerald-500"
-            },
-            {
-              title: "Rendimiento de Proyectos",
-              description: "Métricas de tiempos y cumplimiento",
-              icon: BarChart3,
-              color: "text-purple-500"
-            },
-          ].map((report, index) => (
-            <Card key={index} className="overflow-hidden border-none shadow-card hover:shadow-elevated transition-all duration-300">
-              <CardHeader className="p-6">
-                <div className="flex justify-between items-center">
-                  <CardTitle>{report.title}</CardTitle>
-                  <report.icon className={`h-6 w-6 ${report.color}`} />
-                </div>
-                <CardDescription>
-                  {report.description}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="px-6 pb-2">
-                <div className="h-32 rounded-lg bg-muted/30 flex items-center justify-center">
-                  <p className="text-sm text-muted-foreground">
-                    Vista previa del informe
-                  </p>
-                </div>
-              </CardContent>
-              <CardFooter className="border-t px-6 py-4">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="w-full gap-1 text-primary group"
-                >
-                  <span>Ver informe completo</span>
-                  <ChevronRight className="h-3.5 w-3.5 opacity-0 -ml-2 group-hover:opacity-100 group-hover:ml-0 transition-all" />
-                </Button>
-              </CardFooter>
-            </Card>
-          ))}
-        </motion.div>
-      </DropdownCard>
     </div>
   );
 }
