@@ -15,6 +15,7 @@ export function useCreateSolicitud() {
     try {
       setIsLoading(true);
       setError(null);
+      console.log(solicitudData);
 
       const token = localStorage.getItem("token");
       if (!token) {

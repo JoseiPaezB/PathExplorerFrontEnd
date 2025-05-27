@@ -32,12 +32,10 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
 import { Search, UserCog, AlertCircle } from "lucide-react";
 
-// Importar hooks
 import { useFetchRecommendedRoles } from "@/hooks/useFetchRecommendedRoles";
 import { fetchGetAllAdministradores } from "@/hooks/fetchGetAllAdministradores";
 import { useCreateSolicitud } from "@/hooks/useCreateSolicitud";
 
-// Definir tipos locales
 interface Skill {
   id_habilidad: number;
   nombre: string;
@@ -92,6 +90,7 @@ interface Administrator {
 
 interface SolicitudData {
   id_administrador: number;
+  id_manager: number;
   id_empleado: number;
   id_rol: number;
   fecha_solicitud: string;
@@ -113,28 +112,31 @@ function Page() {
     "PLANIFICACION",
     "EN_PROGRESO",
     "FINALIZADO",
-    "PAUSADO"
+    "PAUSADO",
   ]);
-  
+
   const [skillCategories] = useState<string[]>([
     "TECNICA",
     "BLANDA",
     "LIDERAZGO",
     "GESTION",
-    "DOMINIO"
+    "DOMINIO",
   ]);
 
   // Estados para los diálogos y solicitudes
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [showAdminDialog, setShowAdminDialog] = useState(false);
-  const [selectedRole, setSelectedRole] = useState<RecommendedRole | null>(null);
-  const [selectedAdmin, setSelectedAdmin] = useState<Administrator | null>(null);
+  const [selectedRole, setSelectedRole] = useState<RecommendedRole | null>(
+    null
+  );
+  const [selectedAdmin, setSelectedAdmin] = useState<Administrator | null>(
+    null
+  );
   const [searchTerm, setSearchTerm] = useState("");
   const [justificacion, setJustificacion] = useState("");
   const [urgencia, setUrgencia] = useState(1);
   const [hasPendingRequest, setHasPendingRequest] = useState(false);
 
-  // Hooks
   const {
     recommendedRoles,
     isLoading: isLoadingRoles,
@@ -143,51 +145,39 @@ function Page() {
     filters: rolesFilters,
   } = useFetchRecommendedRoles();
 
- // ← AGREGAR: Logs para ver la estructura de datos
-  console.log("🔍 DEBUG: recommendedRoles data:", recommendedRoles);
-  if (recommendedRoles && recommendedRoles.length > 0) {
-    console.log("🔍 DEBUG: First role structure:", recommendedRoles[0]);
-    console.log("🔍 DEBUG: First role's roleWithProject:", recommendedRoles[0].roleWithProject);
-    console.log("🔍 DEBUG: First role's manager data:", recommendedRoles[0].roleWithProject?.manager);
-    console.log("🔍 DEBUG: First role's id_manager:", recommendedRoles[0].roleWithProject?.id_manager);
-  }
+  const { administrador: administrators, isLoading: isLoadingAdmins } =
+    fetchGetAllAdministradores();
+  const {
+    createSolicitud,
+    isLoading: isSubmitting,
+    error: solicitudError,
+  } = useCreateSolicitud();
 
-  const { administrador: administrators, isLoading: isLoadingAdmins } = fetchGetAllAdministradores();
-  const { createSolicitud, isLoading: isSubmitting, error: solicitudError } = useCreateSolicitud();
-
-  // Función para aplicar filtros en roles recomendados
   const applyRolesFilters = (key: string, value: string) => {
     const newFilters = { ...rolesFilters, [key]: value };
     fetchRecommendedRoles(newFilters);
   };
 
-  // Función para iniciar el proceso de asignación
   const handleAssignRole = (role: RecommendedRole) => {
-    // ← AGREGAR: Log para ver el rol seleccionado
-    console.log("🎯 DEBUG: Role selected for assignment:", role);
-    console.log("🎯 DEBUG: Role's id_manager:", role.roleWithProject.id_manager);
-    console.log("🎯 DEBUG: Role's manager data:", role.roleWithProject.manager);
-    
     if (hasPendingRequest) {
       toast({
         title: "Solicitud pendiente",
-        description: "Ya tienes una solicitud pendiente. Debes esperar a que sea procesada antes de enviar otra.",
+        description:
+          "Ya tienes una solicitud pendiente. Debes esperar a que sea procesada antes de enviar otra.",
         variant: "destructive",
       });
       return;
     }
-    
+
     setSelectedRole(role);
     setShowConfirmDialog(true);
   };
 
-  // Función para confirmar y proceder con la selección de administrador
   const handleConfirmAssignment = () => {
     setShowConfirmDialog(false);
     setShowAdminDialog(true);
   };
 
-  // Función para cerrar todos los diálogos
   const closeAllDialogs = () => {
     setShowConfirmDialog(false);
     setShowAdminDialog(false);
@@ -198,14 +188,12 @@ function Page() {
     setUrgencia(1);
   };
 
-  // Filtrar administradores según búsqueda
   const filteredAdministrators = administrators.filter(
     (admin) =>
       admin.nombre_completo.toLowerCase().includes(searchTerm.toLowerCase()) ||
       admin.departamento.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Función para enviar la solicitud
   const handleSubmitRequest = async () => {
     if (!selectedRole || !selectedAdmin) {
       toast({
@@ -225,7 +213,6 @@ function Page() {
       return;
     }
 
-    // Obtener ID del empleado actual desde el contexto de auth
     const currentUserId = user?.id_persona;
 
     if (!currentUserId) {
@@ -239,6 +226,7 @@ function Page() {
 
     const solicitudData: SolicitudData = {
       id_administrador: selectedAdmin.id_administrador,
+      id_manager: selectedRole.roleWithProject?.manager?.[0]?.id_persona || 0,
       id_empleado: currentUserId,
       id_rol: selectedRole.id_rol,
       fecha_solicitud: new Date().toISOString(),
@@ -252,7 +240,7 @@ function Page() {
     };
 
     const success = await createSolicitud(solicitudData);
-    
+
     if (success) {
       toast({
         title: "Solicitud enviada",
@@ -273,7 +261,9 @@ function Page() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Roles Recomendados</h1>
+        <h1 className="text-3xl font-bold tracking-tight">
+          Roles Recomendados
+        </h1>
         <p className="text-muted-foreground">
           Descubre posiciones que se alinean con tus habilidades y experiencia
         </p>
@@ -285,7 +275,8 @@ function Page() {
             <div className="flex items-center gap-2">
               <AlertCircle className="h-5 w-5 text-orange-600" />
               <p className="text-orange-800 font-medium">
-                Tienes una solicitud pendiente. No puedes enviar otra hasta que sea procesada.
+                Tienes una solicitud pendiente. No puedes enviar otra hasta que
+                sea procesada.
               </p>
             </div>
           </CardContent>
@@ -302,8 +293,8 @@ function Page() {
               </CardDescription>
             </div>
             <div className="flex flex-col sm:flex-row gap-2">
-              <Select 
-                value={rolesFilters.roleState || "todos"} 
+              <Select
+                value={rolesFilters.roleState || "todos"}
                 onValueChange={(value: string) => {
                   const filterValue = value === "todos" ? "" : value;
                   applyRolesFilters("roleState", filterValue);
@@ -321,9 +312,9 @@ function Page() {
                   ))}
                 </SelectContent>
               </Select>
-              
-              <Select 
-                value={rolesFilters.roleSkills || "todas"} 
+
+              <Select
+                value={rolesFilters.roleSkills || "todas"}
                 onValueChange={(value: string) => {
                   const filterValue = value === "todas" ? "" : value;
                   applyRolesFilters("roleSkills", filterValue);
@@ -363,9 +354,9 @@ function Page() {
           ) : rolesError ? (
             <div className="text-red-500">
               <p>Error al cargar roles recomendados: {rolesError}</p>
-              <Button 
-                onClick={() => fetchRecommendedRoles()} 
-                variant="outline" 
+              <Button
+                onClick={() => fetchRecommendedRoles()}
+                variant="outline"
                 className="mt-2"
               >
                 Reintentar
@@ -374,71 +365,110 @@ function Page() {
           ) : recommendedRoles && recommendedRoles.length > 0 ? (
             <div className="space-y-6">
               {recommendedRoles.map((role: RecommendedRole, index: number) => (
-                <div key={index} className="border rounded-lg p-4 hover:bg-slate-50 transition-colors">
+                <div
+                  key={index}
+                  className="border rounded-lg p-4 hover:bg-slate-50 transition-colors"
+                >
                   <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-2">
                     <div>
                       <div className="flex items-center gap-2">
-                        <h3 className="text-lg font-medium">{role.roleWithProject?.titulo || "Rol sin título"}</h3>
-                        <Badge variant={role.roleWithProject?.project?.[0]?.estado === "EN_PROGRESO" ? "default" : "outline"}>
-                          {role.roleWithProject?.project?.[0]?.estado?.replace("_", " ") || "Estado desconocido"}
+                        <h3 className="text-lg font-medium">
+                          {role.roleWithProject?.titulo || "Rol sin título"}
+                        </h3>
+                        <Badge
+                          variant={
+                            role.roleWithProject?.project?.[0]?.estado ===
+                            "EN_PROGRESO"
+                              ? "default"
+                              : "outline"
+                          }
+                        >
+                          {role.roleWithProject?.project?.[0]?.estado?.replace(
+                            "_",
+                            " "
+                          ) || "Estado desconocido"}
                         </Badge>
                       </div>
-                      <p className="text-sm text-gray-500 mt-1">{role.roleWithProject?.descripcion}</p>
+                      <p className="text-sm text-gray-500 mt-1">
+                        {role.roleWithProject?.descripcion}
+                      </p>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Badge variant="secondary">Compatibilidad: {role.compatibilidad || 85}%</Badge>
+                      <Badge variant="secondary">
+                        Compatibilidad: {role.compatibilidad || 85}%
+                      </Badge>
                     </div>
                   </div>
-                  
+
                   <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <p className="text-sm font-medium">Proyecto:</p>
-                      <p className="text-sm">{role.roleWithProject?.project?.[0]?.nombre || "Sin proyecto asignado"}</p>
+                      <p className="text-sm">
+                        {role.roleWithProject?.project?.[0]?.nombre ||
+                          "Sin proyecto asignado"}
+                      </p>
                     </div>
                     <div>
                       <p className="text-sm font-medium">Manager:</p>
                       <p className="text-sm">
-                        {role.roleWithProject?.manager?.[0]?.nombre 
-                          ? `${role.roleWithProject.manager[0].nombre} ${role.roleWithProject.manager[0].apellido}` 
+                        {role.roleWithProject?.manager?.[0]?.nombre
+                          ? `${role.roleWithProject.manager[0].nombre} ${role.roleWithProject.manager[0].apellido}`
                           : "Sin manager asignado"}
                       </p>
                     </div>
                   </div>
-                  
+
                   <Separator className="my-4" />
-                  
+
                   <div>
-                    <p className="text-sm font-medium mb-2">Habilidades requeridas:</p>
+                    <p className="text-sm font-medium mb-2">
+                      Habilidades requeridas:
+                    </p>
                     <div className="flex flex-wrap gap-2">
-                      {role.roleWithProject?.skills?.slice(0, 5).map((skill: Skill, idx: number) => (
-                        <Badge key={idx} variant="outline" className="bg-slate-50">
-                          {skill.nombre} {skill.nivel_minimo_requerido ? `(Nivel ${skill.nivel_minimo_requerido})` : ""}
-                        </Badge>
-                      ))}
+                      {role.roleWithProject?.skills
+                        ?.slice(0, 5)
+                        .map((skill: Skill, idx: number) => (
+                          <Badge
+                            key={idx}
+                            variant="outline"
+                            className="bg-slate-50"
+                          >
+                            {skill.nombre}{" "}
+                            {skill.nivel_minimo_requerido
+                              ? `(Nivel ${skill.nivel_minimo_requerido})`
+                              : ""}
+                          </Badge>
+                        ))}
                       {(role.roleWithProject?.skills?.length || 0) > 5 && (
-                        <Badge variant="outline">+{(role.roleWithProject?.skills?.length || 0) - 5} más</Badge>
+                        <Badge variant="outline">
+                          +{(role.roleWithProject?.skills?.length || 0) - 5} más
+                        </Badge>
                       )}
-                      {(!role.roleWithProject?.skills || role.roleWithProject.skills.length === 0) && (
-                        <span className="text-sm text-gray-400">No hay habilidades especificadas</span>
+                      {(!role.roleWithProject?.skills ||
+                        role.roleWithProject.skills.length === 0) && (
+                        <span className="text-sm text-gray-400">
+                          No hay habilidades especificadas
+                        </span>
                       )}
                     </div>
                   </div>
-                  
+
                   <div className="mt-4 flex justify-end gap-2">
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       size="sm"
                       onClick={() => {
                         toast({
                           title: "Función en desarrollo",
-                          description: "La función para ver detalles estará disponible próximamente.",
+                          description:
+                            "La función para ver detalles estará disponible próximamente.",
                           variant: "default",
                         });
                       }}
                     >
                       Ver detalles
                     </Button>
-                    <Button 
+                    <Button
                       size="sm"
                       onClick={() => handleAssignRole(role)}
                       disabled={hasPendingRequest}
@@ -451,13 +481,16 @@ function Page() {
             </div>
           ) : (
             <div className="text-center py-8">
-              <p className="text-gray-500">No hay roles recomendados disponibles.</p>
-              <p className="text-sm text-gray-400 mt-1">
-                Esto puede deberse a los filtros aplicados o a que no hay roles abiertos que coincidan con tu perfil.
+              <p className="text-gray-500">
+                No hay roles recomendados disponibles.
               </p>
-              <Button 
-                onClick={() => fetchRecommendedRoles({})} 
-                variant="outline" 
+              <p className="text-sm text-gray-400 mt-1">
+                Esto puede deberse a los filtros aplicados o a que no hay roles
+                abiertos que coincidan con tu perfil.
+              </p>
+              <Button
+                onClick={() => fetchRecommendedRoles({})}
+                variant="outline"
                 className="mt-4"
               >
                 Quitar filtros
@@ -467,29 +500,34 @@ function Page() {
         </CardContent>
       </Card>
 
-      {/* Diálogo de confirmación */}
       <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Confirmar solicitud de asignación</DialogTitle>
             <DialogDescription>
               ¿Deseas solicitar el puesto de{" "}
-              <strong>{selectedRole?.roleWithProject?.titulo}</strong> para el proyecto{" "}
-              <strong>{selectedRole?.roleWithProject?.project?.[0]?.nombre}</strong> con el manager{" "}
+              <strong>{selectedRole?.roleWithProject?.titulo}</strong> para el
+              proyecto{" "}
               <strong>
-                {selectedRole?.roleWithProject?.manager?.[0]?.nombre 
-                  ? `${selectedRole.roleWithProject.manager[0].nombre} ${selectedRole.roleWithProject.manager[0].apellido}` 
+                {selectedRole?.roleWithProject?.project?.[0]?.nombre}
+              </strong>{" "}
+              con el manager{" "}
+              <strong>
+                {selectedRole?.roleWithProject?.manager?.[0]?.nombre
+                  ? `${selectedRole.roleWithProject.manager[0].nombre} ${selectedRole.roleWithProject.manager[0].apellido}`
                   : "Sin manager asignado"}
-              </strong>?
+              </strong>
+              ?
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="sm:justify-end">
-            <Button variant="outline" onClick={() => setShowConfirmDialog(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setShowConfirmDialog(false)}
+            >
               No
             </Button>
-            <Button onClick={handleConfirmAssignment}>
-              Sí, continuar
-            </Button>
+            <Button onClick={handleConfirmAssignment}>Sí, continuar</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -500,9 +538,12 @@ function Page() {
           <DialogHeader>
             <DialogTitle>Seleccionar administrador para aprobación</DialogTitle>
             <DialogDescription>
-              Elige un administrador para que apruebe tu solicitud de asignación al rol{" "}
-              <strong>{selectedRole?.roleWithProject?.titulo}</strong> en el proyecto{" "}
-              <strong>{selectedRole?.roleWithProject?.project?.[0]?.nombre}</strong>
+              Elige un administrador para que apruebe tu solicitud de asignación
+              al rol <strong>{selectedRole?.roleWithProject?.titulo}</strong> en
+              el proyecto{" "}
+              <strong>
+                {selectedRole?.roleWithProject?.project?.[0]?.nombre}
+              </strong>
             </DialogDescription>
           </DialogHeader>
 
@@ -521,7 +562,9 @@ function Page() {
             <div className="max-h-[200px] overflow-y-auto">
               {isLoadingAdmins ? (
                 <div className="flex justify-center py-4">
-                  <div className="animate-pulse">Cargando administradores...</div>
+                  <div className="animate-pulse">
+                    Cargando administradores...
+                  </div>
                 </div>
               ) : filteredAdministrators.length > 0 ? (
                 filteredAdministrators.map((admin) => {
@@ -536,7 +579,8 @@ function Page() {
                     <div
                       key={admin.id_administrador}
                       className={`mb-2 rounded-md border p-3 hover:bg-muted cursor-pointer ${
-                        selectedAdmin?.id_administrador === admin.id_administrador
+                        selectedAdmin?.id_administrador ===
+                        admin.id_administrador
                           ? "bg-muted border-primary"
                           : ""
                       }`}
@@ -575,7 +619,8 @@ function Page() {
                     No hay administradores disponibles
                   </h3>
                   <p className="mt-2 text-sm text-muted-foreground">
-                    No se encontraron administradores que coincidan con la búsqueda.
+                    No se encontraron administradores que coincidan con la
+                    búsqueda.
                   </p>
                 </div>
               )}
