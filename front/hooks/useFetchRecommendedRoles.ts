@@ -71,10 +71,12 @@ export const useFetchRecommendedRoles = () => {
       if (currentFilters.roleSkills) queryParams.append("roleSkills", currentFilters.roleSkills);
       if (currentFilters.roleState) queryParams.append("roleState", currentFilters.roleState);
 
-      const response = await fetch(`/api/roles-recomendados?${queryParams.toString()}`, {
+      const token = localStorage.getItem("token") || "";
+      const response = await fetch(`/api/recommendations/roles-recomendados?${queryParams.toString()}`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
         },
       });
 
@@ -91,7 +93,7 @@ export const useFetchRecommendedRoles = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [filters]);
+  }, []);
 
   useEffect(() => {
     fetchRecommendedRoles();

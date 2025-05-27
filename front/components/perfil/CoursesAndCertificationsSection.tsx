@@ -21,8 +21,8 @@ function CoursesAndCertificationsSection({
         <CardContent className="space-y-4">
           <div className="space-y-3">
             {courses && courses.courses.length > 0 ? (
-              courses.courses.map((course) => (
-                <div key={course.id_curso} className="space-y-1">
+              courses.courses.map((course, index) => (
+                <div key={`course-${course.id_curso}-${index}`} className="space-y-1">
                   <div className="flex items-center justify-between">
                     <h4 className="text-sm font-medium">{course.nombre}</h4>
                     <span className="text-xs text-muted-foreground">
@@ -55,8 +55,8 @@ function CoursesAndCertificationsSection({
         <CardContent className="space-y-4">
           <div className="space-y-3">
             {certifications && certifications.certifications.length > 0 ? (
-              certifications.certifications.map((cert) => (
-                <div key={cert.ID_Certificacion} className="space-y-1">
+              certifications.certifications.map((cert, index) => (
+                <div key={`cert-${cert.ID_Certificacion}-${index}`} className="space-y-1">
                   <div className="flex items-center justify-between">
                     <h4 className="text-sm font-medium">{cert.Nombre}</h4>
                     <span className="text-xs text-muted-foreground">
