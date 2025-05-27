@@ -2,19 +2,24 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { TransformedProject } from "@/types/projectsAdministration";
-function ProjectsList({
-  projects,
-  filteredProjects,
-  setSelectedProject,
-  setIsDetailsModalOpen,
-}: {
+
+interface ProjectsListProps {
   projects: TransformedProject[];
   filteredProjects: TransformedProject[];
   setSelectedProject: React.Dispatch<
     React.SetStateAction<TransformedProject | null>
   >;
   setIsDetailsModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
-}) {
+  onAddRole: (project: TransformedProject) => void;
+}
+
+function ProjectsList({
+  projects,
+  filteredProjects,
+  setSelectedProject,
+  setIsDetailsModalOpen,
+  onAddRole,
+}: ProjectsListProps) {
   return (
     <div className="rounded-lg border">
       <div className="grid grid-cols-8 gap-4 p-4 font-medium">
@@ -59,7 +64,7 @@ function ProjectsList({
               </div>
               <Progress value={item.progress} className="h-2" />
             </div>
-            <div>
+            <div className="flex gap-2">
               <Button
                 variant="ghost"
                 size="sm"
@@ -70,6 +75,21 @@ function ProjectsList({
                 }}
               >
                 Ver detalles
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8"
+                onClick={() => {
+                  if (onAddRole) {
+                    onAddRole(item);
+                  } else {
+                    setSelectedProject(item);
+                    setIsDetailsModalOpen(true);
+                  }
+                }}
+              >
+                Agregar rol
               </Button>
             </div>
           </div>

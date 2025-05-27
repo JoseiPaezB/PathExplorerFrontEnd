@@ -31,9 +31,9 @@ function ExportDataModal({
 
   // Handle toggling individual dataset selection
   const handleDatasetToggle = (datasetId: string) => {
-    setSelectedDataSets(prev => 
-      prev.includes(datasetId) 
-        ? prev.filter(id => id !== datasetId) 
+    setSelectedDataSets((prev) =>
+      prev.includes(datasetId)
+        ? prev.filter((id) => id !== datasetId)
         : [...prev, datasetId]
     );
   };
@@ -45,7 +45,7 @@ function ExportDataModal({
       setSelectedDataSets([]);
     } else {
       // Otherwise, select all
-      setSelectedDataSets(availableDataSets.map(dataset => dataset.id));
+      setSelectedDataSets(availableDataSets.map((dataset) => dataset.id));
     }
   };
 
@@ -86,13 +86,15 @@ function ExportDataModal({
           <div>
             <div className="flex justify-between items-center">
               <Label className="font-medium">Datos a incluir</Label>
-              <Button 
-                variant="outline" 
-                size="sm" 
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={handleSelectAllDatasets}
                 className="text-xs py-1"
               >
-                {selectedDataSets.length === availableDataSets.length ? "Deseleccionar todos" : "Seleccionar todos"}
+                {selectedDataSets.length === availableDataSets.length
+                  ? "Deseleccionar todos"
+                  : "Seleccionar todos"}
               </Button>
             </div>
             <div className="grid grid-cols-1 gap-2 mt-1">
@@ -118,12 +120,7 @@ function ExportDataModal({
           </Button>
           <Button
             onClick={() =>
-              handleExport(
-                title,
-                selectedFormat,
-                [], // Siempre pasamos un array vacío para selectedCharts
-                selectedDataSets
-              )
+              handleExport(title, selectedFormat, [], selectedDataSets)
             }
           >
             Exportar

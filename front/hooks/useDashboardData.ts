@@ -1,26 +1,27 @@
-import { useState, useEffect } from 'react';
-import axios from 'axios';
+import { useState, useEffect } from "react";
+import axios from "axios";
+import { apiUrl } from "@/constants";
 
-// Create an axios instance with default config
 const api = axios.create({
-  baseURL: 'http://localhost:4000',
+  baseURL: apiUrl,
   headers: {
-    'Content-Type': 'application/json',
-  }
+    "Content-Type": "application/json",
+  },
 });
 
-// Add interceptor to inject the token in each request
-api.interceptors.request.use(config => {
-  const token = localStorage.getItem('token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
   }
-  return config;
-}, error => {
-  return Promise.reject(error);
-});
+);
 
-// Define types based on the API response structure
 interface Skill {
   id_persona?: number;
   id_habilidad: number;
@@ -30,7 +31,7 @@ interface Skill {
   fecha_creacion: string;
   fecha_actualizacion: string;
   nombre: string;
-  categoria: 'TECNICA' | 'BLANDA';
+  categoria: "TECNICA" | "BLANDA";
   descripcion: string;
   nivel_maximo: number;
 }
@@ -41,7 +42,7 @@ interface Course {
   institucion: string;
   descripcion: string;
   duracion: number;
-  modalidad: 'VIRTUAL' | 'PRESENCIAL';
+  modalidad: "VIRTUAL" | "PRESENCIAL";
   categoria: string;
   fecha_inicio: string;
   fecha_finalizacion: string | null;
@@ -64,7 +65,6 @@ interface Certification {
 }
 
 interface EmployeeProject {
-  // Define based on your API response
   id_proyecto?: number;
   nombre?: string;
   descripcion?: string;
@@ -73,22 +73,19 @@ interface EmployeeProject {
   fecha_fin_real?: string | null;
   estado?: string;
   prioridad?: number;
-  // Add other fields as needed
 }
 
 interface TeamMember {
-  // Define based on your API response
   id_persona?: number;
   nombre?: string;
   apellido?: string;
-  // Add other fields as needed
 }
 
 interface RoleSkill {
   nivel_minimo_requerido: number;
   importancia: number;
   nombre: string;
-  categoria: 'TECNICA' | 'BLANDA';
+  categoria: "TECNICA" | "BLANDA";
   descripcion: string;
 }
 
@@ -107,7 +104,7 @@ interface Project {
   fecha_inicio: string;
   fecha_fin_estimada: string;
   fecha_fin_real: string | null;
-  estado: 'ACTIVO' | 'FINALIZADO' | 'PLANEACION';
+  estado: "ACTIVO" | "FINALIZADO" | "PLANEACION";
   prioridad: number;
   id_manager: number;
   fecha_creacion: string;
@@ -115,7 +112,6 @@ interface Project {
   roles: (ProjectRole | null)[];
 }
 
-// Employee dashboard data structure
 interface EmployeeDashboardData {
   teamMembers: TeamMember[];
   courses: Course[];
@@ -124,7 +120,6 @@ interface EmployeeDashboardData {
   employeeProyect: EmployeeProject[];
 }
 
-// Manager dashboard data structure
 interface ManagerDashboardData {
   rolesWithoutAssignments: Project[];
   courses: Course[];
@@ -132,16 +127,14 @@ interface ManagerDashboardData {
   skills: Skill[];
 }
 
-// Union type for dashboard data
 type DashboardData = EmployeeDashboardData | ManagerDashboardData;
 
-// Type guard functions to check which type of dashboard data we have
 function isManagerData(data: DashboardData): data is ManagerDashboardData {
-  return 'rolesWithoutAssignments' in data;
+  return "rolesWithoutAssignments" in data;
 }
 
 function isEmployeeData(data: DashboardData): data is EmployeeDashboardData {
-  return 'teamMembers' in data;
+  return "teamMembers" in data;
 }
 
 interface UseDashboardDataReturn {
@@ -163,41 +156,40 @@ export function useDashboardData(): UseDashboardDataReturn {
     setError(null);
 
     try {
-      console.log('Fetching dashboard data...');
-      const token = localStorage.getItem('token');
-      
-      // Use Next.js App Router API route
-      const response = await axios.get('/api/dashboard', {
+      const token = localStorage.getItem("token");
+
+      const response = await axios.get("/api/dashboard", {
         headers: {
-          Authorization: `Bearer ${token}`
-        }
+          Authorization: `Bearer ${token}`,
+        },
       });
 
       const responseData = response.data;
-      console.log('Dashboard data received:', responseData);
       setData(responseData);
-      
-      // Determine user role based on the response structure
-      // If 'rolesWithoutAssignments' exists in the response, user is a manager
-      const userIsManager = 'rolesWithoutAssignments' in responseData;
-      console.log('User determined to be a manager:', userIsManager);
+
+      const userIsManager = "rolesWithoutAssignments" in responseData;
       setIsManager(userIsManager);
 
       setIsLoading(false);
     } catch (err) {
-      console.error('Error fetching dashboard data:', err);
+      console.error("Error fetching dashboard data:", err);
       setIsLoading(false);
       if (axios.isAxiosError(err)) {
-        const errorMessage = err.response?.data?.message || `Error al obtener los datos del dashboard: ${err.message}`;
-        console.error('Axios error details:', {
+        const errorMessage =
+          err.response?.data?.message ||
+          `Error al obtener los datos del dashboard: ${err.message}`;
+        console.error("Axios error details:", {
           status: err.response?.status,
           statusText: err.response?.statusText,
           data: err.response?.data,
-          message: err.message
+          message: err.message,
         });
         setError(errorMessage);
       } else {
-        const errorMessage = err instanceof Error ? err.message : 'Error desconocido al obtener los datos';
+        const errorMessage =
+          err instanceof Error
+            ? err.message
+            : "Error desconocido al obtener los datos";
         setError(errorMessage);
       }
     }
@@ -207,24 +199,8 @@ export function useDashboardData(): UseDashboardDataReturn {
     fetchDashboardData();
   }, []);
 
-  // Function to manually refresh the data when needed
   const refreshData = () => {
     fetchDashboardData();
-  };
-
-  // Helper functions to safely access data based on user role
-  const getManagerData = (): ManagerDashboardData | null => {
-    if (data && isManagerData(data)) {
-      return data;
-    }
-    return null;
-  };
-
-  const getEmployeeData = (): EmployeeDashboardData | null => {
-    if (data && isEmployeeData(data)) {
-      return data;
-    }
-    return null;
   };
 
   return {
@@ -236,7 +212,6 @@ export function useDashboardData(): UseDashboardDataReturn {
   };
 }
 
-// Additional utility functions to safely access specific data
 export const useManagerDashboard = (): {
   rolesWithoutAssignments: Project[];
   courses: Course[];
@@ -247,19 +222,17 @@ export const useManagerDashboard = (): {
   refreshData: () => void;
 } => {
   const { data, isLoading, error, refreshData } = useDashboardData();
-  
-  const emptyManagerData = { 
-    rolesWithoutAssignments: [], 
-    courses: [], 
-    certifications: [], 
-    skills: [] 
+
+  const emptyManagerData = {
+    rolesWithoutAssignments: [],
+    courses: [],
+    certifications: [],
+    skills: [],
   };
-  
-  // Only return actual data if we have data AND it's the manager structure
-  const managerData = data && 'rolesWithoutAssignments' in data 
-    ? data 
-    : emptyManagerData;
-  
+
+  const managerData =
+    data && "rolesWithoutAssignments" in data ? data : emptyManagerData;
+
   return {
     ...managerData,
     isLoading,
@@ -279,20 +252,17 @@ export const useEmployeeDashboard = (): {
   refreshData: () => void;
 } => {
   const { data, isLoading, error, refreshData } = useDashboardData();
-  
-  const emptyEmployeeData = { 
-    teamMembers: [], 
-    courses: [], 
-    certifications: [], 
-    skills: [], 
-    employeeProyect: [] 
+
+  const emptyEmployeeData = {
+    teamMembers: [],
+    courses: [],
+    certifications: [],
+    skills: [],
+    employeeProyect: [],
   };
-  
-  // Only return actual data if we have data AND it's the employee structure
-  const employeeData = data && 'teamMembers' in data 
-    ? data 
-    : emptyEmployeeData;
-  
+
+  const employeeData = data && "teamMembers" in data ? data : emptyEmployeeData;
+
   return {
     ...employeeData,
     isLoading,

@@ -258,7 +258,7 @@ function MostRequiredSkillsForRoleGraph({
             },
             padding: {
               top: 10,
-              bottom: 15, // Reducimos el padding inferior del título
+              bottom: 15,
             },
           },
           tooltip: {

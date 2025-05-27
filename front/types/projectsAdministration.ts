@@ -1,17 +1,10 @@
 export interface Role {
   id_rol: number;
   titulo: string;
+  nivel_experiencia_requerido: number;
   descripcion: string;
   assignments: Assignment[];
-  habilidades?: {
-    id_habilidad: number;
-    nombre: string;
-    nivel_minimo_requerido: number;
-    importancia: number;
-  }[];
-  project?: any;
-  skills?: any[];
-  nivel_experiencia_requerido?: number;
+  skills: RoleSkill[];
 }
 
 export interface Assignment {
@@ -26,6 +19,7 @@ export interface TransformedProject {
   role: string;
   status: string;
   assignedTo: string | null;
+  prioridad: number;
   startDate: string;
   endDate: string;
   progress: number;
@@ -38,24 +32,26 @@ export interface Skill {
   id_habilidad: number;
   nombre: string;
   categoria: string;
-  descripcion?: string;
+  descripcion: string;
 }
 
 export interface RoleSkill {
   id_habilidad: number;
+  nombre: string;
   nivel_minimo_requerido: number;
   importancia: number;
 }
 
 export interface ProjectRole {
+  id_rol: number;
   titulo: string;
   descripcion: string;
-  importancia: number;
   nivel_experiencia_requerido: number;
   habilidades: RoleSkill[];
 }
 
 export interface ProjectFormData {
+  id_proyecto: number;
   nombre: string;
   descripcion: string;
   fecha_inicio: string;
@@ -80,51 +76,9 @@ export interface RolesByStatus {
   completados: Role[];
 }
 
-export interface EditableProject {
-  id: number;
-  id_proyecto: number;
-  project: string;
-  description: string;
-  startDate: string;
-  endDate: string;
-  priority: number;
-  prioridad?: number;
-  status: string;
-  allRoles?: {
-    titulo: string;
-    descripcion: string;
-    assignments?: { nombre: string; apellido: string }[];
-    skills?: {
-      id_habilidad: number;
-      nombre: string;
-      nivel_minimo_requerido: number;
-      importancia: number;
-    }[];
-  }[];
-}
-
 export interface ProjectDetailsProps {
   isOpen: boolean;
   onClose: () => void;
-  project: {
-    id: number;
-    project: string;
-    startDate: string;
-    endDate: string;
-    status: string;
-    description: string;
-    allRoles: {
-      titulo: string;
-      descripcion: string;
-      assignments?: { nombre: string; apellido: string }[];
-      skills?: {
-        id_habilidad: number;
-        nombre: string;
-        nivel_minimo_requerido: number;
-        importancia: number;
-      }[];
-    }[];
-  } | null;
-  manager: { name: string } | null;
-  onProjectUpdated?: (updatedProject: EditableProject) => void;
+  project: TransformedProject | null;
+  onProjectUpdated?: (updatedProject: TransformedProject) => void;
 }

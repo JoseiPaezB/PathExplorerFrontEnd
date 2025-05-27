@@ -83,10 +83,11 @@ export default function LoginPage() {
       const loggedInUser = await login(email, password);
       setSuccess(true);
 
-      // Determine redirect path based on user role
+
       const redirectPath = loggedInUser ? getRedirectPath(loggedInUser.role) : "/dashboard";
-      
-      console.log(`User role: ${loggedInUser?.role}, redirecting to: ${redirectPath}`);
+      const redirectPath = loggedInUser
+        ? getRedirectPath(loggedInUser.role)
+        : "/dashboard";
 
       toast({
         title: "Inicio de sesión exitoso",

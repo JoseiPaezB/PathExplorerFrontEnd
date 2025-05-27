@@ -8,7 +8,7 @@ import ManagerDashboard from "@/components/dashboard/ManagerDashboard";
 import { AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-// Loading shimmer card component
+
 const ShimmerCard = () => (
   <div className="rounded-xl border border-border/50 bg-card/50 shadow-sm overflow-hidden">
     <div className="p-6 space-y-4">
@@ -26,12 +26,6 @@ export default function DashboardPage() {
   const { data, isLoading, error, isManager } = useDashboardData();
   const { user } = useAuth();
 
-  useEffect(() => {
-    // This could be used for analytics or other side effects when dashboard loads
-    console.log("Dashboard loaded with isManager:", isManager);
-  }, [isManager]);
-
-  // Loading state
   if (isLoading) {
     return (
       <div className="space-y-8">
@@ -56,7 +50,6 @@ export default function DashboardPage() {
     );
   }
 
-  // Error state
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center h-96 gap-4">
@@ -68,7 +61,6 @@ export default function DashboardPage() {
     );
   }
 
-  // No data state or role not determined yet
   if (!data || isManager === null) {
     return (
       <div className="flex flex-col items-center justify-center h-96 gap-4">
@@ -82,13 +74,12 @@ export default function DashboardPage() {
     );
   }
 
-  // Render the appropriate dashboard based on user role
+
   return isManager === true ? (
     <ManagerDashboard userName={user?.nombre || "Usuario"} />
   ) : isManager === false ? (
     <EmployeeDashboard userName={user?.nombre || "Usuario"} />
   ) : (
-    // This should not happen if our earlier checks are working, but just in case
     <div className="flex flex-col items-center justify-center h-96 gap-4">
       <AlertTriangle className="h-16 w-16 text-amber-500" />
       <h2 className="text-2xl font-bold">Error al determinar rol</h2>

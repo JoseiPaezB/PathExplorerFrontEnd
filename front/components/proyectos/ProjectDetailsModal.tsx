@@ -4,12 +4,12 @@ import { useState, useEffect } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useEditProject } from "@/hooks/useEditProject";
-import { useProjectUtils } from "@/hooks/useProjectUtils";
 import {
-  EditableProject,
   ProjectDetailsProps,
+  ProjectFormData,
+  TransformedProject,
 } from "@/types/projectsAdministration";
-
+import { formatDateForApi, parsePriority } from "@/lib/functions";
 import ProjectDetailsHeader from "@/components/proyectos/projectDetails/ProjectDetailsHeader";
 import ProjectMetaInfo from "@/components/proyectos/projectDetails/ProjectMetaInfo";
 import ProjectEditForm from "@/components/proyectos/projectDetails/ProjectEditForm";
@@ -17,34 +17,22 @@ import ProjectInfoCard from "@/components/proyectos/projectDetails/ProjectInfoCa
 import ProjectRolesCard from "@/components/proyectos/projectDetails/ProjectRolesCard";
 import ProjectActionFooter from "@/components/proyectos/projectDetails/ProjectActionFooter";
 
-interface EditProjectData {
-  id_proyecto: number;
-  nombre: string;
-  descripcion: string;
-  fecha_inicio: string | null;
-  fecha_fin_estimada: string | null;
-  prioridad: number;
-  estado: string;
-}
-
 const ProjectDetailsModal: React.FC<ProjectDetailsProps> = ({
   isOpen,
   onClose,
   project,
-  manager,
   onProjectUpdated,
 }: ProjectDetailsProps) => {
-  const [editedProject, setEditedProject] = useState<EditableProject | null>(
+  const [editedProject, setEditedProject] = useState<TransformedProject | null>(
     null
   );
   const [isEditMode, setIsEditMode] = useState(false);
 
   const { editProject } = useEditProject();
-  const { formatDateForApi, parsePriority } = useProjectUtils();
 
   useEffect(() => {
     if (project) {
-      setEditedProject({ ...project } as EditableProject);
+      setEditedProject({ ...project });
       setIsEditMode(false);
     }
   }, [project]);
@@ -58,7 +46,7 @@ const ProjectDetailsModal: React.FC<ProjectDetailsProps> = ({
   ) => {
     const { name, value } = e.target;
 
-    setEditedProject((prev: EditableProject | null) => {
+    setEditedProject((prev: TransformedProject | null) => {
       if (!prev) return null;
       return {
         ...prev,
@@ -67,18 +55,81 @@ const ProjectDetailsModal: React.FC<ProjectDetailsProps> = ({
     });
   };
 
+  const handleRoleChange = (
+    roleIndex: number,
+    field: string,
+    value: string | number
+  ) => {
+    setEditedProject((prev: TransformedProject | null) => {
+      if (!prev || !prev.allRoles) return prev;
+
+      const updatedRoles = [...prev.allRoles];
+      updatedRoles[roleIndex] = {
+        ...updatedRoles[roleIndex],
+        [field]: value,
+      };
+
+      return {
+        ...prev,
+        allRoles: updatedRoles,
+      };
+    });
+  };
+
+  const handleSkillChange = (
+    roleIndex: number,
+    skillIndex: number,
+    field: string,
+    value: string | number
+  ) => {
+    setEditedProject((prev: TransformedProject | null) => {
+      if (!prev || !prev.allRoles) return prev;
+
+      const updatedRoles = [...prev.allRoles];
+      const updatedSkills = [...updatedRoles[roleIndex].skills];
+
+      updatedSkills[skillIndex] = {
+        ...updatedSkills[skillIndex],
+        [field]: value,
+      };
+
+      updatedRoles[roleIndex] = {
+        ...updatedRoles[roleIndex],
+        skills: updatedSkills,
+      };
+
+      return {
+        ...prev,
+        allRoles: updatedRoles,
+      };
+    });
+  };
+
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (!editedProject) return;
+
     try {
-      const formattedData: EditProjectData = {
-        id_proyecto: editedProject?.id ?? 0,
-        nombre: editedProject?.project || "",
-        descripcion: editedProject?.description || "",
-        fecha_inicio: formatDateForApi(editedProject?.startDate ?? ""),
-        fecha_fin_estimada: formatDateForApi(editedProject?.endDate ?? ""),
-        prioridad: parsePriority(editedProject?.priority),
-        estado: editedProject?.status || "ACTIVO",
+      const formattedData: ProjectFormData = {
+        id_proyecto: editedProject.id,
+        nombre: editedProject.project,
+        descripcion: editedProject.description,
+        fecha_inicio: formatDateForApi(editedProject.startDate),
+        fecha_fin_estimada: formatDateForApi(editedProject.endDate),
+        prioridad: parsePriority(editedProject.prioridad),
+        roles: editedProject.allRoles.map((role) => ({
+          id_rol: role.id_rol,
+          titulo: role.titulo,
+          descripcion: role.descripcion,
+          nivel_experiencia_requerido: role.nivel_experiencia_requerido,
+          habilidades: role.skills.map((skill) => ({
+            id_habilidad: skill.id_habilidad,
+            nombre: skill.nombre,
+            nivel_minimo_requerido: skill.nivel_minimo_requerido,
+            importancia: skill.importancia,
+          })),
+        })),
       };
 
       const result = await editProject(formattedData);
@@ -114,7 +165,7 @@ const ProjectDetailsModal: React.FC<ProjectDetailsProps> = ({
         <ScrollArea className="h-[60vh] pr-4">
           <div className="space-y-4">
             <ProjectMetaInfo
-              managerName={manager?.name}
+              managerName={project.managerName}
               status={project.status}
             />
 
@@ -122,6 +173,8 @@ const ProjectDetailsModal: React.FC<ProjectDetailsProps> = ({
               <ProjectEditForm
                 editedProject={editedProject}
                 handleChange={handleChange}
+                handleRoleChange={handleRoleChange}
+                handleSkillChange={handleSkillChange}
               />
             ) : (
               <div className="space-y-4 pt-4">

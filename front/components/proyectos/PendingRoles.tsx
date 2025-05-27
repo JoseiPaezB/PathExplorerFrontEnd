@@ -10,17 +10,21 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { formatDate } from "@/lib/functions";
-import { RolesByStatus, Role } from "@/types/projectsAdministration";
+import { Role } from "@/types/projectsAdministration";
+
+interface PendingRolesProps {
+  rolesByStatus: any;
+  determineUrgency: (role: Role) => string;
+  handleAssignClick: (project: string, role: string, roleId?: number) => void;
+  handleDeleteClick?: (role: Role) => void;
+}
 
 function PendingRoles({
   rolesByStatus,
   determineUrgency,
   handleAssignClick,
-}: {
-  rolesByStatus: RolesByStatus;
-  determineUrgency: (role: Role) => string;
-  handleAssignClick: (project: string, role: string, roleId?: number) => void;
-}) {
+  handleDeleteClick,
+}: PendingRolesProps) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -31,7 +35,7 @@ function PendingRoles({
       </div>
 
       {rolesByStatus.pendientes.length > 0 ? (
-        rolesByStatus.pendientes.map((role) => (
+        rolesByStatus.pendientes.map((role: any) => (
           <Card
             key={role.id_rol}
             className={`border-l-4 ${
@@ -93,6 +97,15 @@ function PendingRoles({
               >
                 Asignar
               </Button>
+              {handleDeleteClick && (
+                <Button
+                  size="sm"
+                  className="h-8 bg-primary hover:bg-primary/90"
+                  onClick={() => handleDeleteClick(role)}
+                >
+                  Borrar
+                </Button>
+              )}
             </CardFooter>
           </Card>
         ))
