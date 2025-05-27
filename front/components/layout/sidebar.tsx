@@ -86,6 +86,7 @@ export function Sidebar({
   const navItems = [
     ...baseItems,
     ...(roleItems[userRole as keyof typeof roleItems] || []),
+    {title: "Feedback" , href:"/feedback" , icon: TrendingUp},
     { title: "Notificaciones", href: "/notificaciones", icon: Bell },
     { title: "Configuración", href: "/configuracion", icon: Settings },
   ];
