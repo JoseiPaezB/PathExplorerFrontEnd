@@ -49,12 +49,12 @@ export function Sidebar({
   const { user } = useAuth() as { user: AuthUser | null };
 
   const baseItems = [
-    { title: "Dashboard", href: "/dashboard", icon: Home },
     { title: "Mi Perfil", href: "/perfil", icon: User },
   ];
 
   const roleItems = {
     empleado: [
+          { title: "Dashboard", href: "/dashboard", icon: Home },
       { title: "Mi Proyecto", href: "/proyecto-actual", icon: Briefcase },
       {
         title: "Mis Cursos y Certificaciones",
@@ -74,6 +74,8 @@ export function Sidebar({
       },
     ],
     manager: [
+      { title: "Dashboard", href: "/dashboard", icon: Home },
+
       {
         title: "Mis Cursos y Certificaciones",
         href: "/cursos-y-certificaciones",
@@ -91,6 +93,7 @@ export function Sidebar({
   const navItems = [
     ...baseItems,
     ...(roleItems[userRole as keyof typeof roleItems] || []),
+    {title: "Feedback" , href:"/feedback" , icon: TrendingUp},
     { title: "Notificaciones", href: "/notificaciones", icon: Bell },
     { title: "Configuración", href: "/configuracion", icon: Settings },
   ];

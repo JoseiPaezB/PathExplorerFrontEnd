@@ -3,18 +3,14 @@
 import { useState } from "react";
 import axios from "axios";
 import { apiUrl } from "@/constants";
-import { ProjectFormData } from "@/types/projectsAdministration";
 
-export function useEditProject() {
-  const [isLoading, setIsLoading] = useState(false);
+export function useDeleteRole() {
+  const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [updatedProject, setUpdatedProject] = useState<ProjectFormData | null>(
-    null
-  );
 
-  const editProject = async (projectData: ProjectFormData): Promise<any> => {
+  const deleteRole = async (id_rol: number, mensaje: string): Promise<any> => {
     try {
-      setIsLoading(true);
+      setIsDeleting(true);
       setError(null);
 
       const token = localStorage.getItem("token");
@@ -22,18 +18,16 @@ export function useEditProject() {
         throw new Error("No authentication token found");
       }
 
-      const response = await axios.patch(
-        `${apiUrl}/projects/edit-project`,
-        projectData,
+      const response = await axios.delete(
+        `${apiUrl}/projects/remove-role-from-project`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
+          data: { id_rol, mensaje },
         }
       );
-
-      setUpdatedProject(response.data);
       return response.data;
     } catch (err) {
       const errorMessage =
@@ -41,23 +35,22 @@ export function useEditProject() {
           ? err.response.data.message
           : err instanceof Error
           ? err.message
-          : "Error editing project";
+          : "Error deleting role";
 
       setError(errorMessage);
-      console.error("Error editing project:", err);
+      console.error("Error deleting role:", err);
       return {
         success: false,
         message: errorMessage,
       };
     } finally {
-      setIsLoading(false);
+      setIsDeleting(false);
     }
   };
 
   return {
-    isLoading,
+    isDeleting,
     error,
-    updatedProject,
-    editProject,
+    deleteRole,
   };
 }

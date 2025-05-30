@@ -15,6 +15,7 @@ import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { ProjectsAndRoles } from "@/types/projectsAndRoles";
 import { UserInfoBanca } from "@/types/users";
+import { apiUrl } from "@/constants";
 
 interface TeamMember {
   id_empleado?: number;
@@ -55,11 +56,8 @@ export default function ProyectoActualPage() {
         const token =
           localStorage.getItem("token") || sessionStorage.getItem("token");
 
-        const backendUrl =
-          process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
-
         const response = await fetch(
-          `${backendUrl}/projects/user-project-and-role`,
+          `${apiUrl}/projects/user-project-and-role`,
           {
             method: "POST",
             headers: {

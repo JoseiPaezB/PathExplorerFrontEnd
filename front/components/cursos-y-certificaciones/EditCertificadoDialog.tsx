@@ -27,16 +27,16 @@ export function EditCertificationDialog({
   onClose,
   onSuccessfulUpdate,
 }: EditCertificationDialogProps) {
-  console.log("Certification to edit:", certification);
-  
   const [formData, setFormData] = useState<CertificationFormData>({
     id_certificacion: certification.ID_Certificacion,
     fecha_obtencion: formatDateForInput(certification.fecha_obtencion),
-    fecha_vencimiento: formatDateForInput(certification.fecha_vencimiento || ""),
+    fecha_vencimiento: formatDateForInput(
+      certification.fecha_vencimiento || ""
+    ),
     estado_validacion: certification.estado_validacion,
-    fecha_creacion: certification.fecha_creacion || new Date().toISOString()
+    fecha_creacion: certification.fecha_creacion || new Date().toISOString(),
   });
-  
+
   const { editCertification, isLoading, error } = useEditUserCertification();
   const { toast } = useToast();
 
@@ -50,19 +50,16 @@ export function EditCertificationDialog({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Format the data to match the format that worked in Postman
+
     const formattedData = {
       ...formData,
-      id_certificacion: Number(formData.id_certificacion), // Ensure this is a number, not a string
-      estado_validacion: Boolean(formData.estado_validacion) // Ensure this is a boolean
+      id_certificacion: Number(formData.id_certificacion),
+      estado_validacion: Boolean(formData.estado_validacion),
     };
-    
-    console.log("Submitting formatted data:", formattedData);
-    
+
     try {
       const result = await editCertification(formattedData);
-      
+
       if (result.success) {
         toast({
           title: "Certificación actualizada",
@@ -135,9 +132,8 @@ export function EditCertificationDialog({
   );
 }
 
-// Helper function to format dates for input fields
 function formatDateForInput(dateString: string): string {
   if (!dateString) return "";
   const date = new Date(dateString);
-  return date.toISOString().split("T")[0]; // Returns YYYY-MM-DD format
+  return date.toISOString().split("T")[0];
 }

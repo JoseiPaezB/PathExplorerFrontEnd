@@ -46,6 +46,8 @@ export function middleware(request: NextRequest) {
       "/perfil",
       "/configuracion",
       "/notificaciones",
+      "/feedback"
+      
     ];
     if (commonRoutes.some((route) => path === route)) {
       return NextResponse.next();

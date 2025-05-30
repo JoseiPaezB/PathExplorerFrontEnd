@@ -22,6 +22,8 @@ import PendingRoles from "@/components/proyectos/PendingRoles";
 import AssignedRoles from "@/components/proyectos/AssignedRoles";
 import AssignEmployeeDialog from "@/components/proyectos/AssignEmployeeDialog";
 import ConfirmationDialog from "@/components/proyectos/ConfirmationDialog";
+import AddNewRoleDialog from "@/components/proyectos/AddNewRoleDialog";
+import DeleteRoleDialog from "@/components/proyectos/DeleteRoleDialog";
 
 import {
   UserInfoBanca,
@@ -48,6 +50,11 @@ export default function ProyectosPage() {
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [selectedEmployee, setSelectedEmployee] =
     useState<UserInfoBanca | null>(null);
+  const [showAddRoleDialog, setShowAddRoleDialog] = useState(false);
+  const [projectForNewRole, setProjectForNewRole] =
+    useState<TransformedProject | null>(null);
+  const [showDeleteRoleDialog, setShowDeleteRoleDialog] = useState(false);
+  const [roleToDelete, setRoleToDelete] = useState<Role | null>(null);
 
   const { projects, rolesByStatus, loading, error, refreshProjects } =
     useGetManagerProjects();
@@ -55,14 +62,18 @@ export default function ProyectosPage() {
   const {
     candidates: empleadosBanca,
     isLoading: loadingCandidates,
-    error: candidatesError,
     fetchCandidatesForRole,
   } = useGetBestCandidates();
   const { createSolicitud } = useCreateSolicitud();
   const { administrador } = fetchGetAllAdministradores();
 
+  const handleDeleteClick = (role: Role) => {
+    setRoleToDelete(role);
+    setShowDeleteRoleDialog(true);
+  };
+
   const determineUrgency = (role: Role) => {
-    const hasHighImportanceSkill = role.habilidades?.some(
+    const hasHighImportanceSkill = role.skills?.some(
       (skill) => skill.importancia > 3
     );
 
@@ -76,6 +87,11 @@ export default function ProyectosPage() {
     } else {
       return "Baja";
     }
+  };
+
+  const handleAddRole = (project: TransformedProject) => {
+    setProjectForNewRole(project);
+    setShowAddRoleDialog(true);
   };
 
   const handleAssignClick = async (
@@ -140,6 +156,7 @@ export default function ProyectosPage() {
               rolesByStatus={rolesByStatus}
               determineUrgency={determineUrgency}
               handleAssignClick={handleAssignClick}
+              handleDeleteClick={handleDeleteClick}
             />
             <AssignedRoles rolesByStatus={rolesByStatus} />
           </div>
@@ -151,6 +168,7 @@ export default function ProyectosPage() {
             filteredProjects={filteredProjects}
             setSelectedProject={setSelectedProject}
             setIsDetailsModalOpen={setIsDetailsModalOpen}
+            onAddRole={handleAddRole}
           />
         </TabsContent>
       </Tabs>
@@ -159,21 +177,7 @@ export default function ProyectosPage() {
         <ProjectDetailsModal
           isOpen={isDetailsModalOpen}
           onClose={() => setIsDetailsModalOpen(false)}
-          project={{
-            id: selectedProject.id,
-            project: selectedProject.project,
-            startDate: selectedProject.startDate,
-            endDate: selectedProject.endDate,
-            status: selectedProject.status,
-            description: selectedProject.description,
-            allRoles: selectedProject.allRoles,
-          }}
-          manager={{
-            name: selectedProject.managerName || "Gerente del Proyecto",
-          }}
-          onProjectUpdated={() => {
-            refreshProjects();
-          }}
+          project={selectedProject}
         />
       )}
 
@@ -222,6 +226,33 @@ export default function ProyectosPage() {
         onSuccess={() => refreshProjects()}
         createSolicitud={createSolicitud}
         administrators={administrador}
+      />
+
+      <AddNewRoleDialog
+        isOpen={showAddRoleDialog}
+        onClose={() => {
+          setShowAddRoleDialog(false);
+          setProjectForNewRole(null);
+        }}
+        project={projectForNewRole}
+        onSuccess={() => {
+          setShowAddRoleDialog(false);
+          setProjectForNewRole(null);
+          refreshProjects();
+        }}
+      />
+      <DeleteRoleDialog
+        isOpen={showDeleteRoleDialog}
+        onClose={() => {
+          setShowDeleteRoleDialog(false);
+          setRoleToDelete(null);
+        }}
+        role={roleToDelete}
+        onSuccess={() => {
+          setShowDeleteRoleDialog(false);
+          setRoleToDelete(null);
+          refreshProjects();
+        }}
       />
     </div>
   );

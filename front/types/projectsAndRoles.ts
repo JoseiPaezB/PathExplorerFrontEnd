@@ -31,3 +31,18 @@ export interface ProjectsAndRoles {
   userRole: Role[];
   userSkills: Skill[];
 }
+
+export interface RoleFormData {
+  id_proyecto: number;
+  titulo: string;
+  descripcion: string;
+  nivel_experiencia_requerido: number;
+  skills: SkillFormData[];
+}
+
+export interface SkillFormData {
+  nombre: string;
+  id_habilidad: number;
+  nivel_minimo_requerido: number;
+  importancia: number;
+}

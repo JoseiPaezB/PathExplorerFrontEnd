@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/auth-context";
 import { useEffect } from "react";
 import { CoursesUserResponse, CertificationsUserResponse } from "@/types/users";
@@ -10,6 +11,7 @@ import SearchBar from "@/components/cursos-y-certificaciones/SearchBar";
 import CoursesInProgress from "@/components/cursos-y-certificaciones/CoursesInProgress";
 import CoursesCompleted from "@/components/cursos-y-certificaciones/CoursesCompleted";
 import CertificationsSection from "@/components/cursos-y-certificaciones/CertificationsSection";
+import RecommendationsModal from "@/components/cursos-y-certificaciones/recomendaciones-modal/RecommendationsModal";
 
 export default function CursosPage() {
   const [activeTab, setActiveTab] = useState("en-curso");
@@ -17,6 +19,8 @@ export default function CursosPage() {
   const [error, setError] = useState<string | null>(null);
   const [userCertifications, setUserCertifications] =
     useState<CertificationsUserResponse>();
+  const [showRecommendationsModal, setShowRecommendationsModal] =
+    useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const { courses, certifications } = useAuth();
 
@@ -90,12 +94,20 @@ export default function CursosPage() {
   return (
     <div className="space-y-6">
       <CursosYCertificacionesHeader />
+      {showRecommendationsModal && (
+        <RecommendationsModal
+          closeModal={() => setShowRecommendationsModal(false)}
+        />
+      )}
 
       <SearchBar
         activeTab={activeTab}
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
       />
+      <Button onClick={() => setShowRecommendationsModal(true)}>
+        Ver Recomendaciones
+      </Button>
 
       <Tabs
         value={activeTab}

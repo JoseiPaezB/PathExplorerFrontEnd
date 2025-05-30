@@ -124,16 +124,42 @@ function NewProjectForm({ onSuccess }: { onSuccess: () => void }) {
     fetchSkills();
   }, []);
 
-  const addSkillToRole = (roleIndex: number) => {
-    const updatedRoles = [...formData.roles];
-    if (skills.length > 0) {
-      updatedRoles[roleIndex].habilidades.push({
-        id_habilidad: skills[0].id_habilidad,
-        nivel_minimo_requerido: 3,
-        importancia: 3,
-      });
-      setFormData((prev) => ({ ...prev, roles: updatedRoles }));
+  const addSkillToRole = (
+    roleIndex: number,
+    skillData?: {
+      id_habilidad: number;
+      nombre: string;
+      nivel_minimo_requerido: number;
+      importancia: number;
     }
+  ) => {
+    const updatedRoles = [...formData.roles];
+
+    if (skillData) {
+      const exists = updatedRoles[roleIndex].habilidades.some(
+        (h) => h.id_habilidad === skillData.id_habilidad
+      );
+      if (exists) return;
+
+      updatedRoles[roleIndex].habilidades.push(skillData);
+    } else {
+      if (skills.length > 0) {
+        const firstSkill = skills[0];
+        const exists = updatedRoles[roleIndex].habilidades.some(
+          (h) => h.id_habilidad === firstSkill.id_habilidad
+        );
+        if (exists) return;
+
+        updatedRoles[roleIndex].habilidades.push({
+          id_habilidad: firstSkill.id_habilidad,
+          nombre: firstSkill.nombre,
+          nivel_minimo_requerido: 3,
+          importancia: 3,
+        });
+      }
+    }
+
+    setFormData((prev) => ({ ...prev, roles: updatedRoles }));
   };
 
   const updateSkill = (
@@ -159,13 +185,15 @@ function NewProjectForm({ onSuccess }: { onSuccess: () => void }) {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (formData.roles.length === 0) {
-      setFormError('Debes añadir al menos un rol antes de crear el proyecto.');
+      setFormError("Debes añadir al menos un rol antes de crear el proyecto.");
       return;
     }
     const start = new Date(formData.fecha_inicio);
     const end = new Date(formData.fecha_fin_estimada);
     if (end < start) {
-      setFormError("La fecha estimada de finalización debe ser igual o posterior a la fecha de inicio.");
+      setFormError(
+        "La fecha estimada de finalización debe ser igual o posterior a la fecha de inicio."
+      );
       return;
     }
     setFormLoading(true);
@@ -270,16 +298,20 @@ function NewProjectForm({ onSuccess }: { onSuccess: () => void }) {
           disabled={
             formLoading ||
             formData.roles.length === 0 ||
-            (startDate !== undefined && endDate !== undefined && endDate < startDate)
+            (startDate !== undefined &&
+              endDate !== undefined &&
+              endDate < startDate)
           }
           title={
             formLoading
               ? ""
               : formData.roles.length === 0
-                ? "Añade al menos un rol para habilitar"
-                : startDate !== undefined && endDate !== undefined && endDate < startDate
-                  ? "La fecha de fin no puede ser anterior a la fecha de inicio"
-                  : ""
+              ? "Añade al menos un rol para habilitar"
+              : startDate !== undefined &&
+                endDate !== undefined &&
+                endDate < startDate
+              ? "La fecha de fin no puede ser anterior a la fecha de inicio"
+              : ""
           }
         >
           {formLoading ? "Creando..." : "Crear Proyecto"}

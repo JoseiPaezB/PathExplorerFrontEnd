@@ -3,7 +3,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { InfoIcon, UserIcon } from "lucide-react";
-import { useProjectUtils } from "@/hooks/useProjectUtils";
+import { getBadgeColor } from "@/lib/functions";
 
 interface ProjectMetaInfoProps {
   managerName: string | undefined;
@@ -14,8 +14,6 @@ export default function ProjectMetaInfo({
   managerName,
   status,
 }: ProjectMetaInfoProps) {
-  const { getBadgeColor } = useProjectUtils();
-
   return (
     <div className="grid grid-cols-2 gap-3 text-sm">
       <div className="space-y-1">

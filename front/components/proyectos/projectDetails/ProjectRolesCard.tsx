@@ -3,27 +3,10 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { useProjectUtils } from "@/hooks/useProjectUtils";
+import { getBadgeImportance } from "@/lib/functions";
+import { Role } from "@/types/projectsAdministration";
 
-interface ProjectRole {
-  titulo: string;
-  descripcion: string;
-  assignments?: { nombre: string; apellido: string }[];
-  skills?: {
-    id_habilidad: number;
-    nombre: string;
-    nivel_minimo_requerido: number;
-    importancia: number;
-  }[];
-}
-
-interface ProjectRolesCardProps {
-  roles: ProjectRole[];
-}
-
-export default function ProjectRolesCard({ roles }: ProjectRolesCardProps) {
-  const { getBadgeImportance } = useProjectUtils();
-
+export default function ProjectRolesCard({ roles }: { roles: Role[] }) {
   const getInitials = (name: string) => {
     if (!name) return "?";
     return name
