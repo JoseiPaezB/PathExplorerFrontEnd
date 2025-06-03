@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/auth-context";
 import {
   Card,
@@ -15,42 +15,63 @@ import { AlertCircle } from "lucide-react";
 import { useFetchRecommendedRoles } from "@/hooks/useFetchRecommendedRoles";
 import { fetchGetAllAdministradores } from "@/hooks/fetchGetAllAdministradores";
 import { useCreateSolicitud } from "@/hooks/useCreateSolicitud";
+import { useHasPendingRequest } from "@/hooks/useHasPendingRequest";
 
-import { FiltersSection } from "@/components/recomendaciones-empleado/FiltersSection";
-import { RoleCard } from "@/components/recomendaciones-empleado/RoleCard";
-import { ConfirmAssignmentDialog } from "@/components/recomendaciones-empleado/ConfirmAssignmentDialog";
-import { AdminSelectionDialog } from "@/components/recomendaciones-empleado/AdminSelectionDialog";
+import { RoleCard } from "@/components/proyectos/recomendaciones-empleado/RoleCard";
+import { ConfirmAssignmentDialog } from "@/components/proyectos/recomendaciones-empleado/ConfirmAssignmentDialog";
+import { AdminSelectionDialog } from "@/components/proyectos/recomendaciones-empleado/AdminSelectionDialog";
+import { ProjectDetailsDialog } from "@/components/proyectos/recomendaciones-empleado/ProjectDetailsDialog";
+import { SkillsFilter } from "@/components/proyectos/recomendaciones-empleado/SkillsFilter";
 
 import { RecommendedRole, SolicitudData } from "@/types/recommendations";
 
-function Page() {
+interface RecommendationsComponentProps {
+  onRequestCreated?: () => void; // Callback para actualizar estado del padre
+}
+
+export function RecommendationsComponent({ onRequestCreated }: RecommendationsComponentProps) {
   const { toast } = useToast();
   const { user } = useAuth();
 
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [showAdminDialog, setShowAdminDialog] = useState(false);
+  const [showProjectDialog, setShowProjectDialog] = useState(false);
   const [selectedRole, setSelectedRole] = useState<RecommendedRole | null>(null);
-  const [hasPendingRequest, setHasPendingRequest] = useState(false);
+  const [selectedSkill, setSelectedSkill] = useState<string>("");
+
+  const {
+    hasPendingRequest,
+    isLoading: isLoadingPending,
+    refreshPendingStatus,
+  } = useHasPendingRequest();
 
   const {
     recommendedRoles,
     isLoading: isLoadingRoles,
     error: rolesError,
     fetchRecommendedRoles,
-    filters: rolesFilters,
   } = useFetchRecommendedRoles();
 
   const { administrador: administrators, isLoading: isLoadingAdmins } =
     fetchGetAllAdministradores();
+  
   const {
     createSolicitud,
     isLoading: isSubmitting,
     error: solicitudError,
   } = useCreateSolicitud();
 
-  const applyRolesFilters = (key: string, value: string) => {
-    const newFilters = { ...rolesFilters, [key]: value };
-    fetchRecommendedRoles(newFilters);
+  // Cargar recomendaciones al montar el componente
+  useEffect(() => {
+    if (!isLoadingPending) {
+      fetchRecommendedRoles({});
+    }
+  }, [isLoadingPending, fetchRecommendedRoles]);
+
+  const handleSkillFilter = (skill: string) => {
+    setSelectedSkill(skill);
+    const filters = skill ? { roleSkills: skill } : {};
+    fetchRecommendedRoles(filters);
   };
 
   const handleAssignRole = (role: RecommendedRole) => {
@@ -68,6 +89,11 @@ function Page() {
     setShowConfirmDialog(true);
   };
 
+  const handleViewDetails = (role: RecommendedRole) => {
+    setSelectedRole(role);
+    setShowProjectDialog(true);
+  };
+
   const handleConfirmAssignment = () => {
     setShowConfirmDialog(false);
     setShowAdminDialog(true);
@@ -76,6 +102,7 @@ function Page() {
   const closeAllDialogs = () => {
     setShowConfirmDialog(false);
     setShowAdminDialog(false);
+    setShowProjectDialog(false);
     setSelectedRole(null);
   };
 
@@ -127,7 +154,15 @@ function Page() {
         description: `Tu solicitud para el rol "${selectedRole.roleWithProject?.titulo}" ha sido enviada exitosamente.`,
         variant: "default",
       });
-      setHasPendingRequest(true);
+      
+      // Actualizar estado de solicitud pendiente
+      refreshPendingStatus();
+      
+      // Notificar al componente padre si existe callback
+      if (onRequestCreated) {
+        onRequestCreated();
+      }
+      
       closeAllDialogs();
     } else {
       toast({
@@ -138,17 +173,22 @@ function Page() {
     }
   };
 
+  if (isLoadingPending) {
+    return (
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex justify-center py-8">
+            <div className="animate-pulse">
+              Verificando estado de solicitudes...
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">
-          Roles Recomendados
-        </h1>
-        <p className="text-muted-foreground">
-          Descubre posiciones que se alinean con tus habilidades y experiencia
-        </p>
-      </div>
-
       {hasPendingRequest && (
         <Card className="border-orange-200 bg-orange-50">
           <CardContent className="pt-6">
@@ -172,9 +212,9 @@ function Page() {
                 Posiciones que se alinean con tus habilidades y experiencia
               </CardDescription>
             </div>
-            <FiltersSection
-              rolesFilters={rolesFilters}
-              applyRolesFilters={applyRolesFilters}
+            <SkillsFilter
+              selectedSkill={selectedSkill}
+              onSkillChange={handleSkillFilter}
             />
           </div>
         </CardHeader>
@@ -198,7 +238,7 @@ function Page() {
             <div className="text-red-500">
               <p>Error al cargar roles recomendados: {rolesError}</p>
               <Button
-                onClick={() => fetchRecommendedRoles()}
+                onClick={() => fetchRecommendedRoles({})}
                 variant="outline"
                 className="mt-2"
               >
@@ -212,6 +252,7 @@ function Page() {
                   key={index}
                   role={role}
                   onAssignRole={handleAssignRole}
+                  onViewDetails={handleViewDetails}
                   hasPendingRequest={hasPendingRequest}
                 />
               ))}
@@ -222,15 +263,20 @@ function Page() {
                 No hay roles recomendados disponibles.
               </p>
               <p className="text-sm text-gray-400 mt-1">
-                Esto puede deberse a los filtros aplicados o a que no hay roles
-                abiertos que coincidan con tu perfil.
+                {selectedSkill 
+                  ? `No se encontraron roles para la habilidad "${selectedSkill}".`
+                  : "No hay roles abiertos que coincidan con tu perfil."
+                }
               </p>
               <Button
-                onClick={() => fetchRecommendedRoles({})}
+                onClick={() => {
+                  setSelectedSkill("");
+                  fetchRecommendedRoles({});
+                }}
                 variant="outline"
                 className="mt-4"
               >
-                Quitar filtros
+                {selectedSkill ? "Quitar filtro" : "Recargar"}
               </Button>
             </div>
           )}
@@ -255,8 +301,13 @@ function Page() {
         isSubmitting={isSubmitting}
         solicitudError={solicitudError}
       />
+
+      <ProjectDetailsDialog
+        open={showProjectDialog}
+        onOpenChange={setShowProjectDialog}
+        selectedRole={selectedRole}
+        onClose={closeAllDialogs}
+      />
     </div>
   );
 }
-
-export default Page;
