@@ -20,15 +20,16 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  if (path === "/login" || path === "/recuperar-password") {
-    if (user) {
-      console.log(
-        "Usuario autenticado intentando acceder a /login, redirigiendo a /dashboard"
-      );
-      return NextResponse.redirect(new URL("/dashboard", request.url));
-    }
-    return NextResponse.next();
+// Update this section:
+if (path === "/login" || path === "/recuperar-password" || path === "/signup") {
+  if (user) {
+    console.log(
+      "Usuario autenticado intentando acceder a página pública, redirigiendo a /dashboard"
+    );
+    return NextResponse.redirect(new URL("/dashboard", request.url));
   }
+  return NextResponse.next();
+}
 
   if (!user) {
     console.log(

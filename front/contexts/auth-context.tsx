@@ -22,9 +22,11 @@ import type {
 } from "@/types/users";
 import type { NotificationResponse } from "@/types/notificaciones";
 import { apiUrl } from "@/constants";
+import type { SignupFormData } from "../hooks/useSignUp";
 
 interface AuthContextType extends AuthState {
   login: (email: string, password: string) => Promise<User | void>;
+  signup: (formData: SignupFormData) => Promise<User | void>; // ← Add this
   logout: () => void;
   updateUserProfile: (profileData: UpdateProfileData) => Promise<User | void>;
   courses: () => Promise<CoursesUserResponse | void>;
@@ -49,6 +51,7 @@ const setCookie = (name: string, value: string, days: number = 7) => {
 const deleteCookie = (name: string) => {
   document.cookie = name + "=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
 };
+
 
 const isTokenExpired = (token: string): boolean => {
   try {
@@ -119,6 +122,54 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     return () => clearInterval(intervalId);
   }, [clearAuthData, router]);
+
+
+  const signup = useCallback(
+  async (formData: SignupFormData): Promise<User | void> => {
+    try {
+      const response = await axios.post<LoginResponse>(
+        `${apiUrl}/auth/signup`,
+        formData
+      );
+
+      if (
+        response.data.success &&
+        response.data.token &&
+        response.data.user
+      ) {
+        const { token, user } = response.data;
+
+        if (isTokenExpired(token)) {
+          throw new Error("Received expired token from server");
+        }
+
+        const userString = JSON.stringify(user);
+
+        localStorage.setItem("token", token);
+        localStorage.setItem("user", userString);
+        setCookie("user", userString);
+
+        setState({
+          user,
+          isAuthenticated: true,
+        });
+
+        return user;
+      } else {
+        throw new Error(response.data.message || "Error en el registro");
+      }
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const errorMessage = error.response?.data?.message || "Error en el registro";
+        throw new Error(errorMessage);
+      }
+      throw error;
+    }
+  },
+  []
+);
+
+
 
   const login = useCallback(
     async (email: string, password: string): Promise<User | void> => {
@@ -477,6 +528,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     <AuthContext.Provider
       value={{
         ...state,
+        signup, 
         login,
         logout,
         updateUserProfile,
