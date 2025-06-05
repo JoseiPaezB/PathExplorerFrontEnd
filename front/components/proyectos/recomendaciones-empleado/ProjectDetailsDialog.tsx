@@ -72,41 +72,57 @@ export function ProjectDetailsDialog({
           {/* Información del Proyecto */}
           <div className="space-y-4">
             <div className="flex items-center gap-2">
-              <h3 className="text-lg font-semibold">Información del Proyecto</h3>
+              <h3 className="text-lg font-semibold">
+                Información del Proyecto
+              </h3>
               <Badge className={getStatusColor(project?.estado || "")}>
                 {project?.estado?.replace("_", " ") || "Estado desconocido"}
               </Badge>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-3">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Nombre del Proyecto</p>
-                  <p className="text-sm">{project?.nombre || "No especificado"}</p>
+                  <p className="text-sm font-medium text-gray-600">
+                    Nombre del Proyecto
+                  </p>
+                  <p className="text-sm">
+                    {project?.nombre || "No especificado"}
+                  </p>
                 </div>
-                
+
                 <div className="flex items-center gap-2">
                   <Calendar className="h-4 w-4 text-gray-500" />
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Fecha de Inicio</p>
-                    <p className="text-sm">{formatDate(project?.fecha_inicio || "")}</p>
+                    <p className="text-sm font-medium text-gray-600">
+                      Fecha de Inicio
+                    </p>
+                    <p className="text-sm">
+                      {formatDate(project?.fecha_inicio || "")}
+                    </p>
                   </div>
                 </div>
               </div>
-              
+
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
                   <Clock className="h-4 w-4 text-gray-500" />
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Fecha Estimada de Finalización</p>
-                    <p className="text-sm">{formatDate(project?.fecha_fin_estimada || "")}</p>
+                    <p className="text-sm font-medium text-gray-600">
+                      Fecha Estimada de Finalización
+                    </p>
+                    <p className="text-sm">
+                      {formatDate(project?.fecha_fin_estimada || "")}
+                    </p>
                   </div>
                 </div>
               </div>
             </div>
-            
+
             <div>
-              <p className="text-sm font-medium text-gray-600 mb-2">Descripción del Proyecto</p>
+              <p className="text-sm font-medium text-gray-600 mb-2">
+                Descripción del Proyecto
+              </p>
               <p className="text-sm bg-gray-50 p-3 rounded-md">
                 {project?.descripcion || "No hay descripción disponible"}
               </p>
@@ -118,26 +134,31 @@ export function ProjectDetailsDialog({
           {/* Información del Rol */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">Información del Rol</h3>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <p className="text-sm font-medium text-gray-600">Título del Rol</p>
+                <p className="text-sm font-medium text-gray-600">
+                  Título del Rol
+                </p>
                 <p className="text-sm">{role?.titulo || "No especificado"}</p>
               </div>
-              
+
               <div>
-                <p className="text-sm font-medium text-gray-600">Nivel de Experiencia Requerido</p>
+                <p className="text-sm font-medium text-gray-600">
+                  Nivel de Experiencia Requerido
+                </p>
                 <p className="text-sm">
-                  {role?.nivel_experiencia_requerido 
+                  {role?.nivel_experiencia_requerido
                     ? `Nivel ${role.nivel_experiencia_requerido}`
-                    : "No especificado"
-                  }
+                    : "No especificado"}
                 </p>
               </div>
             </div>
-            
+
             <div>
-              <p className="text-sm font-medium text-gray-600 mb-2">Descripción del Rol</p>
+              <p className="text-sm font-medium text-gray-600 mb-2">
+                Descripción del Rol
+              </p>
               <p className="text-sm bg-gray-50 p-3 rounded-md">
                 {role?.descripcion || "No hay descripción disponible"}
               </p>
@@ -146,28 +167,31 @@ export function ProjectDetailsDialog({
 
           <Separator />
 
-          {/* Información del Manager */}
           {manager && (
             <>
               <div className="space-y-4">
                 <div className="flex items-center gap-2">
                   <User className="h-5 w-5" />
-                  <h3 className="text-lg font-semibold">Manager del Proyecto</h3>
+                  <h3 className="text-lg font-semibold">
+                    Manager del Proyecto
+                  </h3>
                 </div>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Nombre Completo</p>
+                    <p className="text-sm font-medium text-gray-600">
+                      Nombre Completo
+                    </p>
                     <p className="text-sm">{`${manager.nombre} ${manager.apellido}`}</p>
                   </div>
-                  
+
                   <div>
                     <p className="text-sm font-medium text-gray-600">Email</p>
                     <p className="text-sm">{manager.email}</p>
                   </div>
                 </div>
               </div>
-              
+
               <Separator />
             </>
           )}
@@ -175,11 +199,14 @@ export function ProjectDetailsDialog({
           {/* Habilidades Requeridas */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">Habilidades Requeridas</h3>
-            
+
             {role?.skills && role.skills.length > 0 ? (
               <div className="space-y-3">
                 {role.skills.map((skill: Skill, index: number) => (
-                  <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
+                  <div
+                    key={index}
+                    className="flex items-center justify-between p-3 bg-gray-50 rounded-md"
+                  >
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
                         <p className="font-medium text-sm">{skill.nombre}</p>
@@ -188,14 +215,22 @@ export function ProjectDetailsDialog({
                         </Badge>
                       </div>
                       {skill.descripcion && (
-                        <p className="text-xs text-gray-600 mt-1">{skill.descripcion}</p>
+                        <p className="text-xs text-gray-600 mt-1">
+                          {skill.descripcion}
+                        </p>
                       )}
                     </div>
                     <div className="text-right">
                       <p className="text-xs text-gray-600">Nivel mínimo</p>
-                      <p className="font-medium text-sm">{skill.nivel_minimo_requerido}</p>
-                      <Badge 
-                        variant={skill.importancia && parseInt(skill.importancia) > 3 ? "default" : "secondary"}
+                      <p className="font-medium text-sm">
+                        {skill.nivel_minimo_requerido}
+                      </p>
+                      <Badge
+                        variant={
+                          skill.importancia && parseInt(skill.importancia) > 3
+                            ? "default"
+                            : "secondary"
+                        }
                         className="text-xs mt-1"
                       >
                         Importancia: {skill.importancia}

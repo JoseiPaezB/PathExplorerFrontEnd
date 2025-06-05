@@ -1,11 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-// Try different import paths - use the one that matches your file structure
 import useFeedback from '../../../hooks/useFeedback'; 
-// Alternative paths if the above doesn't work:
-// import useFeedback from '@/hooks/useFeedback';
-// import useFeedback from '../../hooks/useFeedback';
 
 interface CreateEvaluacionData {
   id_empleado: number;
@@ -18,12 +14,9 @@ interface CreateEvaluacionData {
 }
 
 export default function FeedbackPage() {
-  // Test if the hook is imported correctly
-  console.log('useFeedback hook:', useFeedback); // This should log a function, not undefined
-  
   const {
     evaluaciones,
-    teamData, // This contains the project-member relationships
+    teamData, 
     loading,
     error,
     getEvaluacionesManager,
@@ -47,10 +40,8 @@ export default function FeedbackPage() {
     fortalezas: ''
   });
 
-  // Function to get user role from cookies (Next.js way)
   const getUserRole = () => {
     if (typeof window !== 'undefined') {
-      // Get user data from cookies (same way your middleware does)
       const cookies = document.cookie.split(';');
       const userCookie = cookies.find(cookie => cookie.trim().startsWith('user='));
       
@@ -66,7 +57,6 @@ export default function FeedbackPage() {
     return '';
   };
 
-  // Function to load evaluaciones based on user role
   const loadEvaluaciones = async () => {
     const role = getUserRole();
     setUserRole(role);
@@ -90,18 +80,14 @@ export default function FeedbackPage() {
     }
   };
 
-  // Load data on component mount
   useEffect(() => {
     const loadData = async () => {
       try {
         const role = getUserRole();
         setUserRole(role);
         
-        // Load evaluaciones based on role
         await loadEvaluaciones();
         
-        // Only load team data for managers (empleados don't need this)
-        // Managers need team data to create evaluations for their team
         if (role === 'manager') {
           await getTeamAndMembers();
         }
@@ -112,7 +98,6 @@ export default function FeedbackPage() {
     loadData();
   }, []);
 
-  // Handle form input changes
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     
@@ -124,18 +109,15 @@ export default function FeedbackPage() {
           : value
       };
 
-      // If the project changes, reset the employee selection
       if (name === 'id_proyecto') {
-        newFormData.id_empleado = 0; // Reset selected employee when project changes
+        newFormData.id_empleado = 0; 
       }
       return newFormData;
     });
   };
 
-  // Handle form submission
   const handleSubmit = async () => {
     try {
-      // Basic validation: ensure a project and employee are selected
       if (formData.id_proyecto === 0) {
         alert('Por favor, selecciona un proyecto.');
         return;
@@ -156,7 +138,6 @@ export default function FeedbackPage() {
         comentarios: '',
         fortalezas: ''
       });
-      // Refresh evaluations based on role
       await loadEvaluaciones();
       alert('Evaluación creada exitosamente');
     } catch (err) {
@@ -164,13 +145,11 @@ export default function FeedbackPage() {
     }
   };
 
-  // --- MODIFIED: getProjectOptions to robustly handle id_proyecto ---
 const getProjectOptions = () => {
     const projects: Array<{ id: number; name: string }> = [];
     const addedProjectIds = new Set<number>();
 
     teamData.forEach(team => {
-        // This check will now reliably find id_proyecto
         if (team.id_proyecto !== undefined && team.id_proyecto !== null && !isNaN(Number(team.id_proyecto)) && !addedProjectIds.has(Number(team.id_proyecto))) {
             projects.push({
                 id: Number(team.id_proyecto), // Now guaranteed to be a number (or safely converted)
@@ -182,7 +161,6 @@ const getProjectOptions = () => {
     return projects;
   };
 
-  // --- MODIFIED: getEmployeeOptions to correctly filter by selected project id ---
   const getEmployeeOptions = () => {
     const selectedProjectId = formData.id_proyecto;
     const employees: Array<{id: number, name: string}> = [];
@@ -191,14 +169,12 @@ const getProjectOptions = () => {
       return [];
     }
 
-    // This filter will now correctly find teams by id_proyecto
     const relevantTeams = teamData.filter(team => team.id_proyecto === selectedProjectId);
 
     relevantTeams.forEach(team => {
-        // This part now correctly assumes 'integrantes' is always an array
         const integrantes = Array.isArray(team.integrantes) 
             ? team.integrantes 
-            : (team.integrantes ? [team.integrantes] : []); // Keep fallback just in case, but ideally backend sends array
+            : (team.integrantes ? [team.integrantes] : []); 
 
         integrantes.forEach(member => {
             if (member.id_empleado && member.nombre && !employees.some(emp => emp.id === member.id_empleado)) {
@@ -209,21 +185,6 @@ const getProjectOptions = () => {
     return employees;
   };
 
-  // Get projects with members for display (unchanged logic for display)
-  const getProjectsWithMembers = () => {
-    return teamData.filter(team => 
-      (team.integrantes && !Array.isArray(team.integrantes) && team.integrantes.id_empleado) ||
-      (Array.isArray(team.integrantes) && team.integrantes.length > 0)
-    );
-  };
-
-  // Get projects without members (unchanged logic for display)
-  const getProjectsWithoutMembers = () => {
-    return teamData.filter(team => 
-      !team.integrantes || 
-      (Array.isArray(team.integrantes) && team.integrantes.length === 0)
-    );
-  };
 
   if (loading && evaluaciones.length === 0 && userRole !== 'empleado') {
     return (
@@ -262,7 +223,6 @@ const getProjectOptions = () => {
             </div>
           )}
 
-          {/* Action Buttons */}
           <div className="mb-6 flex gap-4">
             <button
               onClick={() => setShowCreateForm(!showCreateForm)}
@@ -271,7 +231,7 @@ const getProjectOptions = () => {
               {showCreateForm ? 'Cancelar' : 'Nueva Evaluación'}
             </button>
             <button
-              onClick={getEvaluacionesManager} // This button reloads manager evaluations
+              onClick={getEvaluacionesManager} 
               disabled={loading}
               className="bg-gray-600 hover:bg-gray-700 text-white px-6 py-2 rounded-lg transition-colors disabled:opacity-50"
             >
@@ -279,7 +239,6 @@ const getProjectOptions = () => {
             </button>
           </div>
 
-          {/* Create Form */}
           {showCreateForm && (
             <div className="mb-8 p-6 bg-gray-50 rounded-lg border">
               <h2 className="text-xl font-semibold mb-4">Crear Nueva Evaluación</h2>
@@ -445,7 +404,6 @@ const getProjectOptions = () => {
         ) : (
           <div className="grid gap-4">
             {evaluaciones.map((evaluacion) => (
-              // Use a stable key like evaluacion.id_evaluacion
               <div key={evaluacion.id_evaluacion} className={`border rounded-lg p-6 shadow-sm ${
                 userRole === 'empleado' ? 'bg-blue-50 border-blue-200' : 'bg-white'
               }`}>
