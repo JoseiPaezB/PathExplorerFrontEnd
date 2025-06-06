@@ -14,7 +14,7 @@ import { AlertCircle } from "lucide-react";
 
 import { useFetchRecommendedRoles } from "@/hooks/useFetchRecommendedRoles";
 import { fetchGetAllAdministradores } from "@/hooks/fetchGetAllAdministradores";
-import { useCreateSolicitud } from "@/hooks/useCreateSolicitud";
+import { useCreateSolicitudEmployee } from "@/hooks/useCreateSolicitudEmployee";
 import { useHasPendingRequest } from "@/hooks/useHasPendingRequest";
 
 import { RoleCard } from "@/components/proyectos/recomendaciones-empleado/RoleCard";
@@ -29,14 +29,18 @@ interface RecommendationsComponentProps {
   onRequestCreated?: () => void; // Callback para actualizar estado del padre
 }
 
-export function RecommendationsComponent({ onRequestCreated }: RecommendationsComponentProps) {
+export function RecommendationsComponent({
+  onRequestCreated,
+}: RecommendationsComponentProps) {
   const { toast } = useToast();
   const { user } = useAuth();
 
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [showAdminDialog, setShowAdminDialog] = useState(false);
   const [showProjectDialog, setShowProjectDialog] = useState(false);
-  const [selectedRole, setSelectedRole] = useState<RecommendedRole | null>(null);
+  const [selectedRole, setSelectedRole] = useState<RecommendedRole | null>(
+    null
+  );
   const [selectedSkill, setSelectedSkill] = useState<string>("");
 
   const {
@@ -54,12 +58,12 @@ export function RecommendationsComponent({ onRequestCreated }: RecommendationsCo
 
   const { administrador: administrators, isLoading: isLoadingAdmins } =
     fetchGetAllAdministradores();
-  
+
   const {
-    createSolicitud,
+    createSolicitudEmployee,
     isLoading: isSubmitting,
     error: solicitudError,
-  } = useCreateSolicitud();
+  } = useCreateSolicitudEmployee();
 
   // Cargar recomendaciones al montar el componente
   useEffect(() => {
@@ -146,7 +150,7 @@ export function RecommendationsComponent({ onRequestCreated }: RecommendationsCo
       fecha_actualizacion: new Date().toISOString(),
     };
 
-    const success = await createSolicitud(solicitudData);
+    const success = await createSolicitudEmployee(solicitudData);
 
     if (success) {
       toast({
@@ -154,15 +158,15 @@ export function RecommendationsComponent({ onRequestCreated }: RecommendationsCo
         description: `Tu solicitud para el rol "${selectedRole.roleWithProject?.titulo}" ha sido enviada exitosamente.`,
         variant: "default",
       });
-      
+
       // Actualizar estado de solicitud pendiente
       refreshPendingStatus();
-      
+
       // Notificar al componente padre si existe callback
       if (onRequestCreated) {
         onRequestCreated();
       }
-      
+
       closeAllDialogs();
     } else {
       toast({
@@ -263,10 +267,9 @@ export function RecommendationsComponent({ onRequestCreated }: RecommendationsCo
                 No hay roles recomendados disponibles.
               </p>
               <p className="text-sm text-gray-400 mt-1">
-                {selectedSkill 
+                {selectedSkill
                   ? `No se encontraron roles para la habilidad "${selectedSkill}".`
-                  : "No hay roles abiertos que coincidan con tu perfil."
-                }
+                  : "No hay roles abiertos que coincidan con tu perfil."}
               </p>
               <Button
                 onClick={() => {

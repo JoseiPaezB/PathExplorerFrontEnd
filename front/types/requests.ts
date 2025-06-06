@@ -23,7 +23,7 @@ export interface Request {
 
 export interface SolicitudData {
   id_administrador: number;
-  id_manager: number;
+  id_manager?: number;
   id_empleado: number;
   id_rol: number;
   fecha_solicitud: string;

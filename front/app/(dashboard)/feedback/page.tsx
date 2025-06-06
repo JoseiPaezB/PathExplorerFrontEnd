@@ -154,7 +154,6 @@ export default function FeedbackPage() {
         fortalezas: "",
       });
       await loadEvaluaciones();
-      alert("Evaluación creada exitosamente");
     } catch (err) {
       console.error("Error creating evaluation:", err);
     }
