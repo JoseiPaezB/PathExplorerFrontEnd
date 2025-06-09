@@ -2,24 +2,25 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Briefcase, Calendar, MapPin, Building, Trophy, Users } from "lucide-react";
+import LoadingSpinner from "@/components/loading/LoadingSpinner";
 import type { ProfessionalHistory } from "@/types/users";
 
 interface ProfessionalHistorySectionProps {
     professionalHistory: ProfessionalHistory | null;
-    isLoading?: boolean;
-    error?: string | null;
+    isLoading: boolean;
+    error: string | null;
 }
 
 export default function ProfessionalHistorySection({
                                                        professionalHistory,
-                                                       isLoading = false,
-                                                       error = null,
+                                                       isLoading,
+                                                       error,
                                                    }: ProfessionalHistorySectionProps) {
 
     const renderHistorialProfesional = (historial: string) => {
         try {
+            // Intenta parsear como JSON (para casos de formato estructurado)
             const data = JSON.parse(historial);
 
             return (
@@ -108,88 +109,61 @@ export default function ProfessionalHistorySection({
                 </div>
             );
         } catch (e) {
-            // Si no es JSON válido, mostrar como texto plano
+            // Si no es JSON válido, mostrar como texto plano con formato
             return (
                 <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-          <pre className="text-sm text-gray-700 whitespace-pre-wrap font-sans">
-            {historial}
-          </pre>
+                    <pre className="text-sm text-gray-700 whitespace-pre-wrap font-sans">
+                        {historial}
+                    </pre>
                 </div>
             );
         }
     };
 
-    if (isLoading) {
-        return (
-            <Card className="border-purple-200">
-                <CardHeader className="bg-gradient-to-r from-purple-50 to-blue-50">
-                    <CardTitle className="flex items-center gap-2 text-purple-800">
-                        <Briefcase className="h-5 w-5 text-purple-600" />
-                        Historial Profesional
-                    </CardTitle>
-                </CardHeader>
-                <CardContent className="p-6">
-                    <div className="flex items-center justify-center h-32">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
-                    </div>
-                </CardContent>
-            </Card>
-        );
-    }
-
-    if (error) {
-        return (
-            <Card className="border-red-200">
-                <CardHeader className="bg-gradient-to-r from-red-50 to-orange-50">
-                    <CardTitle className="flex items-center gap-2 text-red-800">
-                        <Briefcase className="h-5 w-5 text-red-600" />
-                        Historial Profesional
-                    </CardTitle>
-                </CardHeader>
-                <CardContent className="p-6">
-                    <div className="text-center text-red-600">
-                        <p className="font-medium">Error al cargar el historial profesional</p>
-                        <p className="text-sm mt-1">{error}</p>
-                    </div>
-                </CardContent>
-            </Card>
-        );
-    }
-
     return (
-        <Card className="border-purple-200">
-            <CardHeader className="bg-gradient-to-r from-purple-50 to-blue-50">
-                <CardTitle className="flex items-center gap-2 text-purple-800">
-                    <Briefcase className="h-5 w-5 text-purple-600" />
+        <Card>
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                    <Briefcase className="h-5 w-5 text-primary" />
                     Historial Profesional
                 </CardTitle>
             </CardHeader>
-            <CardContent className="p-6">
-                {professionalHistory?.professionalHistory && professionalHistory.professionalHistory.length > 0 ? (
-                    <div className="space-y-6">
-                        {professionalHistory.professionalHistory.map((person, index) => (
-                            <div key={index} className="space-y-4">
-                                <div className="flex items-center gap-2 text-sm text-purple-700 font-medium">
-                                    <Users className="h-4 w-4" />
-                                    <span>{person.nombre} {person.apellido}</span>
-                                    <Badge variant="outline" className="text-xs bg-purple-50 text-purple-700 border-purple-200">
-                                        {person.role}
-                                    </Badge>
-                                </div>
+            <CardContent>
+                <div className="space-y-16">
+                    {isLoading ? (
+                        <div className="flex justify-center py-8">
+                            <LoadingSpinner size="md" color="primary" text="Cargando historial profesional..." />
+                        </div>
+                    ) : error ? (
+                        <p className="text-red-500">{error}</p>
+                    ) : professionalHistory &&
+                    professionalHistory.professionalHistory.length > 0 ? (
+                        professionalHistory.professionalHistory.map((entry, index) => (
+                            <div
+                                key={index}
+                                className="relative border-l border-muted pl-6 pb-8"
+                            >
+                                {/* Timeline dot - mantener el diseño original */}
+                                <div className="absolute -left-[7px] top-1 h-3.5 w-3.5 rounded-full bg-primary" />
+                                <div className="space-y-4">
+                                    <div className="flex flex-col justify-between gap-1 sm:flex-row sm:items-center">
+                                        <h4 className="font-medium">
+                                            {entry.role || "Posición no especificada"}
+                                        </h4>
+                                    </div>
+                                    <p className="text-sm font-medium text-primary">
+                                        {entry.nombre} {entry.apellido}
+                                    </p>
 
-                                {person.historial && renderHistorialProfesional(person.historial)}
+                                    {/* Renderizar el historial (JSON o texto plano) */}
+                                    {entry.historial && renderHistorialProfesional(entry.historial)}
+                                </div>
                             </div>
-                        ))}
-                    </div>
-                ) : (
-                    <div className="text-center py-8">
-                        <Briefcase className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                        <p className="text-gray-500 font-medium">No hay historial profesional registrado</p>
-                        <p className="text-xs text-gray-400 mt-1">
-                            El historial profesional aparecerá aquí cuando se agregue
-                        </p>
-                    </div>
-                )}
+                        ))
+                    ) : (
+                        <p>No hay historial profesional disponible</p>
+                    )}
+                </div>
             </CardContent>
         </Card>
     );

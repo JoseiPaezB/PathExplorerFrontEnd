@@ -5,8 +5,8 @@ const ENABLE_MIDDLEWARE = true;
 
 export function middleware(request: NextRequest) {
   console.log(
-    "Middleware ejecutándose para la ruta:",
-    request.nextUrl.pathname
+      "Middleware ejecutándose para la ruta:",
+      request.nextUrl.pathname
   );
 
   if (process.env.NODE_ENV === "development" && !ENABLE_MIDDLEWARE) {
@@ -20,26 +20,40 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-// Update this section:
-if (path === "/login" || path === "/recuperar-password" || path === "/signup") {
-  if (user) {
-    console.log(
-      "Usuario autenticado intentando acceder a página pública, redirigiendo a /dashboard"
-    );
-    return NextResponse.redirect(new URL("/dashboard", request.url));
+  // ✅ RUTAS PERMITIDAS SIN AUTENTICACIÓN
+  if (path === "/login" ||
+      path === "/recuperar-password" ||
+      path === "/signup" ||
+      path === "/placeholder.svg" ||
+      path.startsWith("/_next/") ||
+      path.startsWith("/favicon") ||
+      path.startsWith("/.well-known/")) {
+
+    // Si ya está autenticado y trata de ir a login/signup, redirigir al dashboard
+    if (user && (path === "/login" || path === "/signup")) {
+      try {
+        const userData = JSON.parse(decodeURIComponent(user));
+        if (userData && userData.role) {
+          console.log("Usuario autenticado intentando acceder a página de auth, redirigiendo a /dashboard");
+          return NextResponse.redirect(new URL("/dashboard", request.url));
+        }
+      } catch (error) {
+        // Si hay error parseando la cookie, continuar normalmente
+        console.error("Error parsing user cookie in middleware:", error);
+      }
+    }
+    return NextResponse.next();
   }
-  return NextResponse.next();
-}
 
   if (!user) {
     console.log(
-      "Usuario no autenticado intentando acceder a ruta protegida, redirigiendo a /login"
+        "Usuario no autenticado intentando acceder a ruta protegida, redirigiendo a /login"
     );
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
   try {
-    const userData = user ? JSON.parse(user) : null;
+    const userData = user ? JSON.parse(decodeURIComponent(user)) : null;
     const role = userData?.role;
 
     const commonRoutes = [
@@ -48,8 +62,8 @@ if (path === "/login" || path === "/recuperar-password" || path === "/signup") {
       "/configuracion",
       "/notificaciones",
       "/feedback"
-      
     ];
+
     if (commonRoutes.some((route) => path === route)) {
       return NextResponse.next();
     }
@@ -105,16 +119,19 @@ if (path === "/login" || path === "/recuperar-password" || path === "/signup") {
         return NextResponse.next();
       }
     }
+
     console.log(
-      `Usuario con rol ${role} no tiene permiso para acceder a ${path}`
+        `Usuario con rol ${role} no tiene permiso para acceder a ${path}`
     );
     return NextResponse.redirect(new URL("/restricted-access", request.url));
   } catch (error) {
     console.error("Error al analizar datos de usuario:", error);
-    return NextResponse.redirect(new URL("/login", request.url));
+    const response = NextResponse.redirect(new URL("/login", request.url));
+    response.cookies.set("user", "", { expires: new Date(0) });
+    return response;
   }
 }
 
 export const config = {
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
+  matcher: ["/((?!api|_next/static|_next/image|favicon.ico|\\.well-known).*)"],
 };

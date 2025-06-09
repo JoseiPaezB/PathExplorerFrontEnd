@@ -25,7 +25,7 @@ import type { SignupFormData } from "../hooks/useSignUp";
 
 interface AuthContextType extends AuthState {
   login: (email: string, password: string) => Promise<User | void>;
-  signup: (formData: SignupFormData) => Promise<User | void>; // ← Add this
+  signup: (formData: SignupFormData) => Promise<User | void>;
   logout: () => void;
   updateUserProfile: (profileData: UpdateProfileData) => Promise<User | void>;
   courses: () => Promise<CoursesUserResponse | void>;
@@ -42,17 +42,19 @@ interface AuthContextType extends AuthState {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const setCookie = (name: string, value: string, days: number = 7) => {
+  if (typeof window === 'undefined') return;
+
   const date = new Date();
   date.setTime(date.getTime() + days * 24 * 60 * 60 * 1000);
   const expires = "; expires=" + date.toUTCString();
-  document.cookie =
-      name + "=" + encodeURIComponent(value) + expires + "; path=/";
+  document.cookie = name + "=" + encodeURIComponent(value) + expires + "; path=/";
 };
 
 const deleteCookie = (name: string) => {
+  if (typeof window === 'undefined') return;
+
   document.cookie = name + "=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
 };
-
 
 const isTokenExpired = (token: string): boolean => {
   try {
@@ -74,14 +76,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
 
   const clearAuthData = useCallback(() => {
+    if (typeof window === 'undefined') return;
+
     localStorage.removeItem("user");
     localStorage.removeItem("token");
     deleteCookie("user");
     setState({ user: null, isAuthenticated: false });
   }, []);
 
+  // inicialización para evitar conflictos
   useEffect(() => {
     const init = async () => {
+      if (typeof window === 'undefined') return;
+
+      // Delay pequeño para asegurar que el DOM esté listo
+      await new Promise(resolve => setTimeout(resolve, 100));
+
       const storedUser = localStorage.getItem("user");
       const token = localStorage.getItem("token");
 
@@ -89,7 +99,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (isTokenExpired(token)) {
           console.log("Token expired, logging out");
           clearAuthData();
-          router.push("/login");
           return;
         }
 
@@ -109,9 +118,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     init();
-  }, [clearAuthData, router]);
+  }, [clearAuthData]);
 
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+
     const intervalId = setInterval(() => {
       const token = localStorage.getItem("token");
       if (token && isTokenExpired(token)) {
@@ -124,70 +135,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => clearInterval(intervalId);
   }, [clearAuthData, router]);
 
-
   const signup = useCallback(
-  async (formData: SignupFormData): Promise<User | void> => {
-    try {
-      const response = await axios.post<LoginResponse>(
-        `${apiUrl}/auth/signup`,
-        formData
-      );
-
-      if (
-        response.data.success &&
-        response.data.token &&
-        response.data.user
-      ) {
-        const { token, user } = response.data;
-
-        if (isTokenExpired(token)) {
-          throw new Error("Received expired token from server");
-        }
-
-        const userString = JSON.stringify(user);
-
-        localStorage.setItem("token", token);
-        localStorage.setItem("user", userString);
-        setCookie("user", userString);
-
-        setState({
-          user,
-          isAuthenticated: true,
-        });
-
-        return user;
-      } else {
-        throw new Error(response.data.message || "Error en el registro");
-      }
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-        const errorMessage = error.response?.data?.message || "Error en el registro";
-        throw new Error(errorMessage);
-      }
-      throw error;
-    }
-  },
-  []
-);
-
-
-
-  const login = useCallback(
-      async (email: string, password: string): Promise<User | void> => {
+      async (formData: SignupFormData): Promise<User | void> => {
         try {
           const response = await axios.post<LoginResponse>(
-              `${apiUrl}/auth/login`,
-              {
-                email,
-                password,
-              }
+              `${apiUrl}/auth/signup`,
+              formData
           );
 
-          if (
-              response.data.success &&
-              response.data.token &&
-              response.data.user
-          ) {
+          if (response.data.success && response.data.token && response.data.user) {
             const { token, user } = response.data;
 
             if (isTokenExpired(token)) {
@@ -204,6 +160,60 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               user,
               isAuthenticated: true,
             });
+
+            // REDIRIGIR DESPUÉS DEL SIGNUP EXITOSO
+            setTimeout(() => {
+              router.push("/dashboard");
+            }, 100);
+
+            return user;
+          } else {
+            throw new Error(response.data.message || "Error en el registro");
+          }
+        } catch (error) {
+          if (axios.isAxiosError(error)) {
+            const errorMessage = error.response?.data?.message || "Error en el registro";
+            throw new Error(errorMessage);
+          }
+          throw error;
+        }
+      },
+      [router]
+  );
+
+  const login = useCallback(
+      async (email: string, password: string): Promise<User | void> => {
+        try {
+          const response = await axios.post<LoginResponse>(
+              `${apiUrl}/auth/login`,
+              {
+                email,
+                password,
+              }
+          );
+
+          if (response.data.success && response.data.token && response.data.user) {
+            const { token, user } = response.data;
+
+            if (isTokenExpired(token)) {
+              throw new Error("Received expired token from server");
+            }
+
+            const userString = JSON.stringify(user);
+
+            localStorage.setItem("token", token);
+            localStorage.setItem("user", userString);
+            setCookie("user", userString);
+
+            setState({
+              user,
+              isAuthenticated: true,
+            });
+
+            // REDIRIGIR DESPUÉS DEL LOGIN EXITOSO
+            setTimeout(() => {
+              router.push("/dashboard");
+            }, 100);
 
             return user;
           } else {
@@ -444,6 +454,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       }, [clearAuthData, router]);
 
+  // FUNCIONES CV CON TIMEOUT LARGO
   const uploadCV = useCallback(async (file: File): Promise<any> => {
     try {
       const token = localStorage.getItem("token");
@@ -467,12 +478,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               Authorization: `Bearer ${token}`,
               'Content-Type': 'multipart/form-data',
             },
+            timeout: 120000, // 2 minutos
           }
       );
 
       return response.data;
     } catch (error) {
       console.error("Error uploading CV:", error);
+
+      if (axios.isAxiosError(error)) {
+        if (error.code === 'ECONNABORTED') {
+          throw new Error("El procesamiento del CV está tomando más tiempo del esperado. Por favor, intenta nuevamente.");
+        }
+        if (error.response?.status === 401) {
+          clearAuthData();
+          router.push("/login");
+        }
+      }
+
       throw error;
     }
   }, [clearAuthData, router]);
@@ -500,12 +523,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               Authorization: `Bearer ${token}`,
               'Content-Type': 'multipart/form-data',
             },
+            timeout: 120000, // 2 minutos
           }
       );
 
       return response.data;
     } catch (error) {
       console.error("Error extracting CV preview:", error);
+
+      if (axios.isAxiosError(error)) {
+        if (error.code === 'ECONNABORTED') {
+          throw new Error("El procesamiento del CV está tomando más tiempo del esperado. Por favor, intenta nuevamente.");
+        }
+        if (error.response?.status === 401) {
+          clearAuthData();
+          router.push("/login");
+        }
+      }
+
       throw error;
     }
   }, [clearAuthData, router]);
@@ -574,13 +609,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }, 500);
   }, [clearAuthData, router]);
 
+  // INTERCEPTOR QUE NO INTERFIERE CON CV
   useEffect(() => {
     const interceptor = axios.interceptors.response.use(
         (response) => response,
         (error) => {
-          if (error.response && error.response.status === 401) {
-            clearAuthData();
-            router.push("/login");
+          if (error.code === 'ECONNABORTED') {
+            return Promise.reject(error);
+          }
+
+          if (error.response?.status === 401) {
+            const isCVEndpoint = error.config?.url?.includes('/cv/');
+            if (!isCVEndpoint) {
+              clearAuthData();
+              router.push("/login");
+            }
           }
           return Promise.reject(error);
         }
@@ -595,7 +638,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       <AuthContext.Provider
           value={{
             ...state,
-             signup, 
+            signup,
             login,
             logout,
             updateUserProfile,
