@@ -16,6 +16,7 @@ import { es } from "date-fns/locale";
 import { ProjectsAndRoles } from "@/types/projectsAndRoles";
 import { UserInfoBanca } from "@/types/users";
 import { apiUrl } from "@/constants";
+import { RecommendationsComponent } from "@/components/proyectos/recomendaciones-empleado/RecommendationsComponent";
 
 interface TeamMember {
   id_empleado?: number;
@@ -42,65 +43,63 @@ export default function ProyectoActualPage() {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchProjectData = async () => {
-      try {
-        if (!user?.email) return;
+  const fetchProjectData = async () => {
+    try {
+      if (!user?.email) return;
 
-        if (!user.id_persona) {
-          setError("Información de usuario incompleta.");
-          setLoading(false);
-          return;
-        }
-
-        const token =
-          localStorage.getItem("token") || sessionStorage.getItem("token");
-
-        const response = await fetch(
-          `${apiUrl}/projects/user-project-and-role`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({ id_empleado: user.id_persona }),
-          }
-        );
-
-        if (response.status === 404) {
-          setError(
-            "La ruta de la API no está disponible. Verifica la configuración del servidor."
-          );
-          setLoading(false);
-          return;
-        }
-
-        if (!response.ok) {
-          throw new Error(`Error ${response.status}: ${response.statusText}`);
-        }
-
-        const data = (await response.json()) as ProjectData;
-
-        if (!data.hasProject) {
-          setError("No tienes ningún proyecto asignado actualmente.");
-          setLoading(false);
-          return;
-        }
-
-        setProjectData(data);
+      if (!user.id_persona) {
+        setError("Información de usuario incompleta.");
         setLoading(false);
-      } catch (err) {
-        console.error("Error fetching project data:", err);
-        setError(
-          "Error al cargar datos del proyecto. Por favor, intenta más tarde."
-        );
-        setLoading(false);
+        return;
       }
-    };
 
+      const token =
+        localStorage.getItem("token") || sessionStorage.getItem("token");
+
+      const response = await fetch(
+        `${apiUrl}/projects/user-project-and-role`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ id_empleado: user.id_persona }),
+        }
+      );
+
+      if (response.status === 404) {
+        setError(
+          "La ruta de la API no está disponible. Verifica la configuración del servidor."
+        );
+        setLoading(false);
+        return;
+      }
+
+      if (!response.ok) {
+        throw new Error(`Error ${response.status}: ${response.statusText}`);
+      }
+
+      const data = (await response.json()) as ProjectData;
+      setProjectData(data);
+      setLoading(false);
+    } catch (err) {
+      console.error("Error fetching project data:", err);
+      setError(
+        "Error al cargar datos del proyecto. Por favor, intenta más tarde."
+      );
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchProjectData();
   }, [user]);
+
+  const handleRecommendationRequestCreated = () => {
+    // Refrescar los datos del proyecto después de crear una solicitud
+    fetchProjectData();
+  };
 
   const formatDate = (dateString: string): string => {
     try {
@@ -196,6 +195,27 @@ export default function ProyectoActualPage() {
     );
   }
 
+  // Si no tiene proyecto, mostrar recomendaciones
+  if (!projectData?.hasProject) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">
+            Encuentra tu Próximo Proyecto
+          </h1>
+          <p className="text-muted-foreground">
+            Explora roles que se alinean con tus habilidades y objetivos profesionales
+          </p>
+        </div>
+        
+        <RecommendationsComponent 
+          onRequestCreated={handleRecommendationRequestCreated}
+        />
+      </div>
+    );
+  }
+
+  // Si tiene proyecto, mostrar la vista normal
   const projectInfo = projectData?.userProject?.[0];
   const projectStatus = getProjectStatus();
   const teamMembers = projectData?.getTeamMembers || [];

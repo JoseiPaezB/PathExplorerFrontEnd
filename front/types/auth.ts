@@ -1,3 +1,15 @@
+export interface UpdateProfileData {
+  nombre?: string;
+  apellido?: string;
+  email?: string;
+  telefono?: string;
+  direccion?: string;
+  fecha_nacimiento?: string;
+  genero?: string;
+  nacionalidad?: string;
+  puesto_actual?: string;
+}
+
 export type UserRole = "administrador" | "manager" | "empleado";
 
 export interface UserProfile {
@@ -27,6 +39,11 @@ export interface User {
   nombre: string;
   apellido: string;
   email: string;
+  telefono?: string;
+  direccion?: string;
+  fecha_nacimiento?: string;
+  genero?: string;
+  nacionalidad?: string;
   fecha_contratacion: string;
   role: UserRole;
   roleData: RoleData;
