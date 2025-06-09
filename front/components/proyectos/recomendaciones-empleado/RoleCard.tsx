@@ -1,18 +1,21 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { useToast } from "@/components/ui/use-toast";
 import { RecommendedRole, Skill } from "@/types/recommendations";
 
 interface RoleCardProps {
   role: RecommendedRole;
   onAssignRole: (role: RecommendedRole) => void;
+  onViewDetails: (role: RecommendedRole) => void;
   hasPendingRequest: boolean;
 }
 
-export function RoleCard({ role, onAssignRole, hasPendingRequest }: RoleCardProps) {
-  const { toast } = useToast();
-
+export function RoleCard({ 
+  role, 
+  onAssignRole, 
+  onViewDetails, 
+  hasPendingRequest 
+}: RoleCardProps) {
   return (
     <div className="border rounded-lg p-4 hover:bg-slate-50 transition-colors">
       <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-2">
@@ -94,14 +97,7 @@ export function RoleCard({ role, onAssignRole, hasPendingRequest }: RoleCardProp
         <Button
           variant="outline"
           size="sm"
-          onClick={() => {
-            toast({
-              title: "Función en desarrollo",
-              description:
-                "La función para ver detalles estará disponible próximamente.",
-              variant: "default",
-            });
-          }}
+          onClick={() => onViewDetails(role)}
         >
           Ver detalles
         </Button>

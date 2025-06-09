@@ -29,7 +29,8 @@ function RecommendationsModal({ closeModal }: { closeModal: () => void }) {
       selectedCourseInstitution,
       selectedCourseSkill,
       selectedCertificationInstitution,
-      selectedCertificationSkill);
+      selectedCertificationSkill
+    );
   }
   return (
     <Dialog open={true} onOpenChange={closeModal}>
@@ -50,9 +51,10 @@ function RecommendationsModal({ closeModal }: { closeModal: () => void }) {
             </div>
           ) : (
             <>
-              <div>
+              <div className="flex-1">
                 <h1>Cursos recomendados</h1>
-                {recommendations?.recommendations?.cursos_recomendados ? (
+                {recommendations?.recommendations?.cursos_recomendados.length >
+                0 ? (
                   recommendations?.recommendations?.cursos_recomendados.map(
                     (course, index) => (
                       <RecommendationItem
@@ -66,10 +68,10 @@ function RecommendationsModal({ closeModal }: { closeModal: () => void }) {
                   <p>No hay cursos recomendados.</p>
                 )}
               </div>
-              <div>
+              <div className="flex-1">
                 <h1>Certificaciones recomendadas</h1>
-                {recommendations?.recommendations
-                  ?.certificaciones_recomendadas ? (
+                {recommendations?.recommendations?.certificaciones_recomendadas
+                  .length > 0 ? (
                   recommendations?.recommendations?.certificaciones_recomendadas?.map(
                     (cert, index) => (
                       <RecommendationItem

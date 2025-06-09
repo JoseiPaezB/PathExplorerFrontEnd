@@ -11,7 +11,7 @@ import {
 import { useGetManagerProjects } from "@/hooks/useGetManagerProjects";
 import { useGetBestCandidates } from "@/hooks/fetchGetBestCandidatesForRole";
 import { fetchGetAllAdministradores } from "@/hooks/fetchGetAllAdministradores";
-import { useCreateSolicitud } from "@/hooks/useCreateSolicitud";
+import { useCreateSolicitudManager } from "@/hooks/useCreateSolicitudManager";
 import ProjectDetailsModal from "@/components/proyectos/ProjectDetailsModal";
 import PageHeader from "@/components/proyectos/PageHeader";
 import NewProjectForm from "@/components/proyectos/NewProjectForm";
@@ -64,7 +64,7 @@ export default function ProyectosPage() {
     isLoading: loadingCandidates,
     fetchCandidatesForRole,
   } = useGetBestCandidates();
-  const { createSolicitud } = useCreateSolicitud();
+  const { createSolicitudManager } = useCreateSolicitudManager();
   const { administrador } = fetchGetAllAdministradores();
 
   const handleDeleteClick = (role: Role) => {
@@ -224,7 +224,7 @@ export default function ProyectosPage() {
         closeAssignDialog={closeAssignDialog}
         setShowConfirmDialog={setShowConfirmDialog}
         onSuccess={() => refreshProjects()}
-        createSolicitud={createSolicitud}
+        createSolicitud={createSolicitudManager}
         administrators={administrador}
       />
 

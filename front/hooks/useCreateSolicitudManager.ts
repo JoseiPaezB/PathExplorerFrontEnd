@@ -5,17 +5,16 @@ import axios from "axios";
 import { apiUrl } from "@/constants";
 import { SolicitudData } from "@/types/requests";
 
-export function useCreateSolicitud() {
+export function useCreateSolicitudManager() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const createSolicitud = async (
+  const createSolicitudManager = async (
     solicitudData: SolicitudData
   ): Promise<boolean> => {
     try {
       setIsLoading(true);
       setError(null);
-      console.log(solicitudData);
 
       const token = localStorage.getItem("token");
       if (!token) {
@@ -23,7 +22,7 @@ export function useCreateSolicitud() {
       }
 
       const response = await axios.post(
-        `${apiUrl}/requests/create-assignment-request`,
+        `${apiUrl}/requests/create-assignment-request-manager`,
         solicitudData,
         {
           headers: {
@@ -52,6 +51,6 @@ export function useCreateSolicitud() {
   return {
     isLoading,
     error,
-    createSolicitud,
+    createSolicitudManager,
   };
 }

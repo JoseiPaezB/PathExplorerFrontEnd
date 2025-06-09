@@ -14,7 +14,6 @@ import {
   Bell,
   Settings,
   TrendingUp,
-  Lightbulb, 
 } from "lucide-react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 
@@ -54,7 +53,7 @@ export function Sidebar({
 
   const roleItems = {
     empleado: [
-          { title: "Dashboard", href: "/dashboard", icon: Home },
+      { title: "Dashboard", href: "/dashboard", icon: Home },
       { title: "Mi Proyecto", href: "/proyecto-actual", icon: Briefcase },
       {
         title: "Mis Cursos y Certificaciones",
@@ -66,16 +65,9 @@ export function Sidebar({
         href: "/trayectoria",
         icon: TrendingUp,
       },
-      // Nuevo elemento para recomendaciones
-      {
-        title: "Recomendaciones",
-        href: "/recomendaciones",
-        icon: Lightbulb,
-      },
     ],
     manager: [
       { title: "Dashboard", href: "/dashboard", icon: Home },
-
       {
         title: "Mis Cursos y Certificaciones",
         href: "/cursos-y-certificaciones",
@@ -137,9 +129,8 @@ export function Sidebar({
                 exit={{ opacity: 0, scale: 0.8 }}
                 transition={{ duration: 0.2 }}
                 className="flex items-center justify-center cursor-pointer"
-                onClick={toggleSidebar} // Make logo toggle the sidebar collapse
+                onClick={toggleSidebar}
               >
-                {/* Show the collapsed logo or expanded logo based on sidebar state */}
                 <img
                   src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/logo-Qymnx3GxRns8Bpvp2y0MtAqaHaQmEo.png"
                   alt="Logo"

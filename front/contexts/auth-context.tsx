@@ -8,13 +8,12 @@ import {
   useEffect,
   useCallback,
 } from "react";
-import type { AuthState, User, LoginResponse, JwtPayload } from "@/types/auth";
+import type { AuthState, User, LoginResponse, JwtPayload, UpdateProfileData } from "@/types/auth";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 import type {
   CoursesUserResponse,
-  UpdateProfileData,
   CertificationsUserResponse,
   SkillsResponse,
   ProfessionalHistory,
@@ -35,6 +34,8 @@ interface AuthContextType extends AuthState {
   skills: () => Promise<SkillsResponse | null>;
   goalsAndTrajectory: () => Promise<UserTrajectoryResponse | null>;
   notifications: () => Promise<NotificationResponse | null>;
+  uploadCV: (file: File) => Promise<any>;
+  extractCVPreview: (file: File) => Promise<any>;
   isLoggingOut: boolean;
 }
 
@@ -45,7 +46,7 @@ const setCookie = (name: string, value: string, days: number = 7) => {
   date.setTime(date.getTime() + days * 24 * 60 * 60 * 1000);
   const expires = "; expires=" + date.toUTCString();
   document.cookie =
-    name + "=" + encodeURIComponent(value) + expires + "; path=/";
+      name + "=" + encodeURIComponent(value) + expires + "; path=/";
 };
 
 const deleteCookie = (name: string) => {
@@ -172,50 +173,50 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 
   const login = useCallback(
-    async (email: string, password: string): Promise<User | void> => {
-      try {
-        const response = await axios.post<LoginResponse>(
-          `${apiUrl}/auth/login`,
-          {
-            email,
-            password,
+      async (email: string, password: string): Promise<User | void> => {
+        try {
+          const response = await axios.post<LoginResponse>(
+              `${apiUrl}/auth/login`,
+              {
+                email,
+                password,
+              }
+          );
+
+          if (
+              response.data.success &&
+              response.data.token &&
+              response.data.user
+          ) {
+            const { token, user } = response.data;
+
+            if (isTokenExpired(token)) {
+              throw new Error("Received expired token from server");
+            }
+
+            const userString = JSON.stringify(user);
+
+            localStorage.setItem("token", token);
+            localStorage.setItem("user", userString);
+            setCookie("user", userString);
+
+            setState({
+              user,
+              isAuthenticated: true,
+            });
+
+            return user;
+          } else {
+            throw new Error(response.data.message || "Credenciales inválidas");
           }
-        );
-
-        if (
-          response.data.success &&
-          response.data.token &&
-          response.data.user
-        ) {
-          const { token, user } = response.data;
-
-          if (isTokenExpired(token)) {
-            throw new Error("Received expired token from server");
+        } catch (error) {
+          if (axios.isAxiosError(error)) {
+            throw new Error("Autenticación fallida");
           }
-
-          const userString = JSON.stringify(user);
-
-          localStorage.setItem("token", token);
-          localStorage.setItem("user", userString);
-          setCookie("user", userString);
-
-          setState({
-            user,
-            isAuthenticated: true,
-          });
-
-          return user;
-        } else {
-          throw new Error(response.data.message || "Credenciales inválidas");
+          throw error;
         }
-      } catch (error) {
-        if (axios.isAxiosError(error)) {
-          throw new Error("Autenticación fallida");
-        }
-        throw error;
-      }
-    },
-    [router]
+      },
+      [router]
   );
 
   const courses = useCallback(async (): Promise<CoursesUserResponse | void> => {
@@ -233,12 +234,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       const response = await axios.get<CoursesUserResponse>(
-        `${apiUrl}/auth/courses`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+          `${apiUrl}/auth/courses`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
       );
 
       if (response.data) {
@@ -250,89 +251,89 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.error("Courses fetch error:", error);
       if (axios.isAxiosError(error)) {
         throw new Error(
-          error.response?.data?.message || "Failed to fetch courses"
+            error.response?.data?.message || "Failed to fetch courses"
         );
       }
       throw error;
     }
-  }, []);
+  }, [clearAuthData, router]);
 
   const certifications =
-    useCallback(async (): Promise<CertificationsUserResponse | void> => {
-      try {
-        const token = localStorage.getItem("token");
+      useCallback(async (): Promise<CertificationsUserResponse | void> => {
+        try {
+          const token = localStorage.getItem("token");
 
-        if (!token) {
-          throw new Error("No authentication token found");
-        }
-
-        if (isTokenExpired(token)) {
-          clearAuthData();
-          router.push("/login");
-          throw new Error("Session expired. Please login again.");
-        }
-
-        const response = await axios.get<CertificationsUserResponse>(
-          `${apiUrl}/auth/certifications`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
+          if (!token) {
+            throw new Error("No authentication token found");
           }
-        );
 
-        if (response.data) {
-          return response.data;
-        } else {
-          throw new Error("Error fetching certifications");
-        }
-      } catch (error) {
-        console.error("Certifications fetch error:", error);
-        if (axios.isAxiosError(error)) {
-          throw new Error(
-            error.response?.data?.message || "Failed to fetch certifications"
+          if (isTokenExpired(token)) {
+            clearAuthData();
+            router.push("/login");
+            throw new Error("Session expired. Please login again.");
+          }
+
+          const response = await axios.get<CertificationsUserResponse>(
+              `${apiUrl}/auth/certifications`,
+              {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+              }
           );
+
+          if (response.data) {
+            return response.data;
+          } else {
+            throw new Error("Error fetching certifications");
+          }
+        } catch (error) {
+          console.error("Certifications fetch error:", error);
+          if (axios.isAxiosError(error)) {
+            throw new Error(
+                error.response?.data?.message || "Failed to fetch certifications"
+            );
+          }
+          throw error;
         }
-        throw error;
-      }
-    }, []);
+      }, [clearAuthData, router]);
 
   const professionalHistory =
-    useCallback(async (): Promise<ProfessionalHistory | null> => {
-      try {
-        const token = localStorage.getItem("token");
-        if (!token) {
-          throw new Error("No authentication token found");
-        }
-        if (isTokenExpired(token)) {
-          clearAuthData();
-          router.push("/login");
-          throw new Error("Session expired. Please login again.");
-        }
-        const response = await axios.get<ProfessionalHistory>(
-          `${apiUrl}/auth/professional-history`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
+      useCallback(async (): Promise<ProfessionalHistory | null> => {
+        try {
+          const token = localStorage.getItem("token");
+          if (!token) {
+            throw new Error("No authentication token found");
           }
-        );
-        if (response.data) {
-          return response.data;
-        } else {
-          throw new Error("Error fetching professional history");
-        }
-      } catch (error) {
-        console.error("Professional history fetch error:", error);
-        if (axios.isAxiosError(error)) {
-          throw new Error(
-            error.response?.data?.message ||
-              "Failed to fetch professional history"
+          if (isTokenExpired(token)) {
+            clearAuthData();
+            router.push("/login");
+            throw new Error("Session expired. Please login again.");
+          }
+          const response = await axios.get<ProfessionalHistory>(
+              `${apiUrl}/auth/professional-history`,
+              {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+              }
           );
+          if (response.data) {
+            return response.data;
+          } else {
+            throw new Error("Error fetching professional history");
+          }
+        } catch (error) {
+          console.error("Professional history fetch error:", error);
+          if (axios.isAxiosError(error)) {
+            throw new Error(
+                error.response?.data?.message ||
+                "Failed to fetch professional history"
+            );
+          }
+          throw error;
         }
-        throw error;
-      }
-    }, []);
+      }, [clearAuthData, router]);
 
   const skills = useCallback(async (): Promise<SkillsResponse | null> => {
     try {
@@ -346,12 +347,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw new Error("Session expired. Please login again.");
       }
       const response = await axios.get<SkillsResponse>(
-        `${apiUrl}/auth/skills`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+          `${apiUrl}/auth/skills`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
       );
       if (response.data) {
         return response.data;
@@ -362,139 +363,205 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.error("Skills fetch error:", error);
       if (axios.isAxiosError(error)) {
         throw new Error(
-          error.response?.data?.message || "Failed to fetch skills"
+            error.response?.data?.message || "Failed to fetch skills"
         );
       }
       throw error;
     }
-  }, []);
+  }, [clearAuthData, router]);
 
   const goalsAndTrajectory =
-    useCallback(async (): Promise<UserTrajectoryResponse | null> => {
-      try {
-        const token = localStorage.getItem("token");
-        if (!token) {
-          throw new Error("No authentication token found");
-        }
-        if (isTokenExpired(token)) {
-          clearAuthData();
-          router.push("/login");
-          throw new Error("Session expired. Please login again.");
-        }
-        const response = await axios.get<UserTrajectoryResponse>(
-          `${apiUrl}/auth/trajectory-and-goals`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
+      useCallback(async (): Promise<UserTrajectoryResponse | null> => {
+        try {
+          const token = localStorage.getItem("token");
+          if (!token) {
+            throw new Error("No authentication token found");
           }
-        );
-        if (response.data) {
-          return response.data;
-        } else {
-          throw new Error("Error fetching goals and trajectory");
-        }
-      } catch (error) {
-        console.error("Goals and trajectory fetch error:", error);
-        if (axios.isAxiosError(error)) {
-          throw new Error(
-            error.response?.data?.message ||
-              "Failed to fetch goals and trajectory"
+          if (isTokenExpired(token)) {
+            clearAuthData();
+            router.push("/login");
+            throw new Error("Session expired. Please login again.");
+          }
+          const response = await axios.get<UserTrajectoryResponse>(
+              `${apiUrl}/auth/trajectory-and-goals`,
+              {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+              }
           );
+          if (response.data) {
+            return response.data;
+          } else {
+            throw new Error("Error fetching goals and trajectory");
+          }
+        } catch (error) {
+          console.error("Goals and trajectory fetch error:", error);
+          if (axios.isAxiosError(error)) {
+            throw new Error(
+                error.response?.data?.message ||
+                "Failed to fetch goals and trajectory"
+            );
+          }
+          throw error;
         }
-        throw error;
-      }
-    }, []);
+      }, [clearAuthData, router]);
 
   const notifications =
-    useCallback(async (): Promise<NotificationResponse | null> => {
-      try {
-        const token = localStorage.getItem("token");
-        if (!token) {
-          throw new Error("No authentication token found");
+      useCallback(async (): Promise<NotificationResponse | null> => {
+        try {
+          const token = localStorage.getItem("token");
+          if (!token) {
+            throw new Error("No authentication token found");
+          }
+          if (isTokenExpired(token)) {
+            clearAuthData();
+            router.push("/login");
+            throw new Error("Session expired. Please login again.");
+          }
+          const response = await axios.get<NotificationResponse>(
+              `${apiUrl}/notifications/user-notifications`,
+              {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+              }
+          );
+          if (response.data) {
+            return response.data;
+          } else {
+            throw new Error("Error fetching user notifications");
+          }
+        } catch (error) {
+          console.error("User notifications fetch error:", error);
+          if (axios.isAxiosError(error)) {
+            throw new Error(
+                error.response?.data?.message ||
+                "Failed to fetch user notifications"
+            );
+          }
+          throw error;
         }
-        if (isTokenExpired(token)) {
-          clearAuthData();
-          router.push("/login");
-          throw new Error("Session expired. Please login again.");
-        }
-        const response = await axios.get<NotificationResponse>(
-          `${apiUrl}/notifications/user-notifications`,
+      }, [clearAuthData, router]);
+
+  const uploadCV = useCallback(async (file: File): Promise<any> => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        throw new Error("No authentication token found");
+      }
+      if (isTokenExpired(token)) {
+        clearAuthData();
+        router.push("/login");
+        throw new Error("Session expired. Please login again.");
+      }
+
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await axios.post(
+          `${apiUrl}/cv/upload-and-save`,
+          formData,
           {
             headers: {
               Authorization: `Bearer ${token}`,
+              'Content-Type': 'multipart/form-data',
             },
           }
-        );
-        if (response.data) {
-          return response.data;
-        } else {
-          throw new Error("Error fetching user notifications");
-        }
-      } catch (error) {
-        console.error("User notifications fetch error:", error);
-        if (axios.isAxiosError(error)) {
-          throw new Error(
-            error.response?.data?.message ||
-              "Failed to fetch user notifications"
-          );
-        }
-        throw error;
+      );
+
+      return response.data;
+    } catch (error) {
+      console.error("Error uploading CV:", error);
+      throw error;
+    }
+  }, [clearAuthData, router]);
+
+  const extractCVPreview = useCallback(async (file: File): Promise<any> => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        throw new Error("No authentication token found");
       }
-    }, []);
+      if (isTokenExpired(token)) {
+        clearAuthData();
+        router.push("/login");
+        throw new Error("Session expired. Please login again.");
+      }
+
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await axios.post(
+          `${apiUrl}/cv/extract-preview`,
+          formData,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'multipart/form-data',
+            },
+          }
+      );
+
+      return response.data;
+    } catch (error) {
+      console.error("Error extracting CV preview:", error);
+      throw error;
+    }
+  }, [clearAuthData, router]);
 
   const updateUserProfile = useCallback(
-    async (profileData: UpdateProfileData): Promise<User | void> => {
-      try {
-        const token = localStorage.getItem("token");
+      async (profileData: UpdateProfileData): Promise<User | void> => {
+        try {
+          const token = localStorage.getItem("token");
 
-        if (!token) {
-          throw new Error("No authentication token found");
-        }
-
-        if (isTokenExpired(token)) {
-          clearAuthData();
-          router.push("/login");
-          throw new Error("Session expired. Please login again.");
-        }
-
-        const response = await axios.patch(
-          `${apiUrl}/auth/update`,
-          profileData,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
+          if (!token) {
+            throw new Error("No authentication token found");
           }
-        );
 
-        if (response.data.success && response.data.user) {
-          const { user } = response.data;
+          if (isTokenExpired(token)) {
+            clearAuthData();
+            router.push("/login");
+            throw new Error("Session expired. Please login again.");
+          }
 
-          const userString = JSON.stringify(user);
-          localStorage.setItem("user", userString);
-          setCookie("user", userString);
-
-          setState((prevState) => ({
-            ...prevState,
-            user,
-          }));
-
-          return user;
-        } else {
-          throw new Error(response.data.message || "Error updating profile");
-        }
-      } catch (error) {
-        console.error("Profile update error:", error);
-        if (axios.isAxiosError(error)) {
-          throw new Error(
-            error.response?.data?.message || "Failed to update profile"
+          const response = await axios.patch(
+              `${apiUrl}/auth/update`,
+              profileData,
+              {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+              }
           );
+
+          if (response.data.success && response.data.user) {
+            const { user } = response.data;
+
+            const userString = JSON.stringify(user);
+            localStorage.setItem("user", userString);
+            setCookie("user", userString);
+
+            setState((prevState) => ({
+              ...prevState,
+              user,
+            }));
+
+            return user;
+          } else {
+            throw new Error(response.data.message || "Error updating profile");
+          }
+        } catch (error) {
+          console.error("Profile update error:", error);
+          if (axios.isAxiosError(error)) {
+            throw new Error(
+                error.response?.data?.message || "Failed to update profile"
+            );
+          }
+          throw error;
         }
-        throw error;
-      }
-    },
-    [clearAuthData, router]
+      },
+      [clearAuthData, router]
   );
 
   const logout = useCallback(() => {
@@ -509,14 +576,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const interceptor = axios.interceptors.response.use(
-      (response) => response,
-      (error) => {
-        if (error.response && error.response.status === 401) {
-          clearAuthData();
-          router.push("/login");
+        (response) => response,
+        (error) => {
+          if (error.response && error.response.status === 401) {
+            clearAuthData();
+            router.push("/login");
+          }
+          return Promise.reject(error);
         }
-        return Promise.reject(error);
-      }
     );
 
     return () => {

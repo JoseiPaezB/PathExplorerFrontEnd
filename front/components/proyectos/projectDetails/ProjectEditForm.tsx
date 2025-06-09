@@ -180,7 +180,7 @@ export default function ProjectEditForm({
                       onChange={(e) =>
                         handleRoleChange(
                           roleIndex,
-                          "description",
+                          "descripcion",
                           e.target.value
                         )
                       }
