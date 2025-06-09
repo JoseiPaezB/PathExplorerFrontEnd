@@ -4,7 +4,7 @@ import React from "react";
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Lock, Mail, ArrowRight, CheckCircle, AlertCircle } from "lucide-react";
+import { Lock, Mail, ArrowRight, CheckCircle, AlertCircle, UserPlus } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -349,6 +349,33 @@ export default function LoginPage() {
             </AnimatePresence>
           </CardContent>
           <CardFooter className="relative z-10 flex flex-col space-y-4 border-t bg-muted/30 px-6 py-4">
+            <motion.div 
+              variants={itemVariants}
+              className="text-center w-full"
+            >
+              <p className="text-sm text-muted-foreground mb-3">
+                ¿No tienes una cuenta?
+              </p>
+              <Link href="/signup">
+                <Button 
+                  variant="outline" 
+                  className="w-full h-10 rounded-xl border-primary text-primary hover:bg-primary hover:text-white transition-all duration-300"
+                >
+                  <motion.div
+                    className="flex items-center justify-center"
+                    whileHover={{ x: 3 }}
+                    transition={{
+                      type: "spring",
+                      stiffness: 400,
+                      damping: 10,
+                    }}
+                  >
+                    <UserPlus className="mr-2 h-4 w-4" />
+                    Crear cuenta nueva
+                  </motion.div>
+                </Button>
+              </Link>
+            </motion.div>
             <div className="text-xs text-muted-foreground flex items-center justify-center">
               <Lock className="h-3 w-3 mr-1 text-primary" />
               Conexión segura SSL/TLS
