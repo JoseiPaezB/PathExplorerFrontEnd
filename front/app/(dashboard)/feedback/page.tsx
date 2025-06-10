@@ -4,7 +4,6 @@ import React, { useState, useEffect } from "react";
 import useFeedback from "../../../hooks/useFeedback";
 import { useDeleteFeedback } from "@/hooks/useDeleteFeedback";
 import DeleteFeedbackModal from "@/components/feedback/DeleteFeedbackModal";
-import { set } from "date-fns";
 
 interface CreateEvaluacionData {
   id_empleado: number;

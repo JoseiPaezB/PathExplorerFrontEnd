@@ -16,6 +16,8 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
+  // Configuración para Docker standalone
+  output: 'standalone',
   experimental: {
     webpackBuildWorker: true,
     parallelServerBuildTraces: true,
@@ -25,7 +27,9 @@ const nextConfig = {
     return [
       {
         source: '/api/:path*',
-        destination: 'http://localhost:4000/api/:path*',
+        destination: process.env.NODE_ENV === 'production' 
+          ? 'http://backend:4000/api/:path*'
+          : 'http://localhost:4000/api/:path*',
       },
     ]
   },
@@ -54,3 +58,4 @@ function mergeConfig(nextConfig, userConfig) {
 }
 
 export default nextConfig
+

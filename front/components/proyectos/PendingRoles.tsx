@@ -30,11 +30,11 @@ function PendingRoles({
       <div className="flex items-center justify-between">
         <h3 className="font-semibold">Roles por Llenar</h3>
         <Badge variant="outline" className="bg-muted">
-          {rolesByStatus.pendientes.length}
+          {rolesByStatus.pendientes?.length}
         </Badge>
       </div>
 
-      {rolesByStatus.pendientes.length > 0 ? (
+      {rolesByStatus.pendientes?.length > 0 ? (
         rolesByStatus.pendientes.map((role: any) => (
           <Card
             key={role.id_rol}

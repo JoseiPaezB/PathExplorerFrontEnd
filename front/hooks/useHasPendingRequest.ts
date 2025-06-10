@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 
-const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
 
 interface PendingRequestResponse {
   hasPendingRequest: boolean;
@@ -15,18 +15,22 @@ export const useHasPendingRequest = () => {
   const checkPendingRequest = async () => {
     setIsLoading(true);
     setError(null);
-    
+
     try {
-      const token = localStorage.getItem("token") || sessionStorage.getItem("token");
-      
-      const response = await fetch(`${apiUrl}/api/requests/has-pending-assignment-request`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
-        },
-        credentials: "include",
-      });
+      const token =
+        localStorage.getItem("token") || sessionStorage.getItem("token");
+
+      const response = await fetch(
+        `${apiUrl}/requests/has-pending-assignment-request`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          credentials: "include",
+        }
+      );
 
       if (!response.ok) {
         throw new Error(`Error ${response.status}: ${response.statusText}`);

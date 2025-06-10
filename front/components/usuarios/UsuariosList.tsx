@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Edit, Mail, User } from "lucide-react";
 import { UserInfoBanca } from "@/types/users";
-import LoadingSpinner  from "@/components/loading/LoadingSpinner";
+import LoadingSpinner from "@/components/loading/LoadingSpinner";
 
 function UsuariosList({
   isLoading,
@@ -22,7 +22,7 @@ function UsuariosList({
   };
 
   const navigateToUserState = (user: UserInfoBanca) => {
-    router.push(`/usuarios/${user.id_empleado}/ver-estado`);
+    router.push(`/usuarios/${user.id_persona}/ver-estado`);
   };
   return (
     <Card>
@@ -32,8 +32,12 @@ function UsuariosList({
       <CardContent>
         {isLoading ? (
           <div className="flex justify-center py-8">
-            <LoadingSpinner size="md" color="primary" text="Cargando usuarios..." />
-              </div>
+            <LoadingSpinner
+              size="md"
+              color="primary"
+              text="Cargando usuarios..."
+            />
+          </div>
         ) : error ? (
           <div className="text-center py-8 text-red-500">
             Error al cargar usuarios: {error}

@@ -31,13 +31,18 @@ export default function PerfilPage() {
   } = useAuth();
 
   const [activeTab, setActiveTab] = useState("informacion");
-  const [certifications, setCertifications] = useState<CertificationsUserResponse | null>(null);
+  const [certifications, setCertifications] =
+    useState<CertificationsUserResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [professionalHistoryData, setProfessionalHistoryData] = useState<ProfessionalHistory | null>(null);
-  const [coursesData, setCoursesData] = useState<CoursesUserResponse | null>(null);
+  const [professionalHistoryData, setProfessionalHistoryData] =
+    useState<ProfessionalHistory | null>(null);
+  const [coursesData, setCoursesData] = useState<CoursesUserResponse | null>(
+    null
+  );
   const [skills, setSkills] = useState<SkillsResponse | null>(null);
-  const [goalsAndTrajectory, setGoalsAndTrajectory] = useState<UserTrajectoryResponse | null>(null);
+  const [goalsAndTrajectory, setGoalsAndTrajectory] =
+    useState<UserTrajectoryResponse | null>(null);
 
   const loadProfessionalHistory = async () => {
     try {
@@ -48,9 +53,9 @@ export default function PerfilPage() {
     } catch (error) {
       console.error("Error fetching professional history:", error);
       setError(
-          error instanceof Error
-              ? error.message
-              : "An unknown error occurred while fetching professional history."
+        error instanceof Error
+          ? error.message
+          : "An unknown error occurred while fetching professional history."
       );
     }
   };
@@ -64,9 +69,9 @@ export default function PerfilPage() {
     } catch (error) {
       console.error("Error fetching courses:", error);
       setError(
-          error instanceof Error
-              ? error.message
-              : "An unknown error occurred while fetching courses."
+        error instanceof Error
+          ? error.message
+          : "An unknown error occurred while fetching courses."
       );
     }
   };
@@ -82,9 +87,9 @@ export default function PerfilPage() {
     } catch (error) {
       console.error("Error fetching certifications:", error);
       setError(
-          error instanceof Error
-              ? error.message
-              : "An unknown error occurred while fetching certifications."
+        error instanceof Error
+          ? error.message
+          : "An unknown error occurred while fetching certifications."
       );
     } finally {
       setIsLoading(false);
@@ -100,9 +105,9 @@ export default function PerfilPage() {
     } catch (error) {
       console.error("Error fetching skills:", error);
       setError(
-          error instanceof Error
-              ? error.message
-              : "An unknown error occurred while fetching skills."
+        error instanceof Error
+          ? error.message
+          : "An unknown error occurred while fetching skills."
       );
     }
   };
@@ -116,9 +121,9 @@ export default function PerfilPage() {
     } catch (error) {
       console.error("Error fetching goals and trajectory:", error);
       setError(
-          error instanceof Error
-              ? error.message
-              : "An unknown error occurred while fetching goals and trajectory."
+        error instanceof Error
+          ? error.message
+          : "An unknown error occurred while fetching goals and trajectory."
       );
     }
   };
@@ -153,88 +158,94 @@ export default function PerfilPage() {
   };
 
   return (
-      <div className="space-y-6">
-        <Card className="border-purple-200 bg-gradient-to-r from-purple-50 to-blue-50">
-          <CardContent className="p-6">
-            <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
-              <div className="flex flex-col gap-6 md:flex-row md:items-center">
-                <Avatar className="h-24 w-24 border-4 border-purple-200 shadow-lg">
-                  <AvatarImage
-                      src="/placeholder.svg?height=96&width=96"
-                      alt={user?.nombre || "Usuario"}
-                  />
-                  <AvatarFallback className="text-2xl bg-gradient-to-br from-purple-500 to-blue-500 text-white">
-                    {user?.nombre?.charAt(0) || "U"}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="space-y-1.5">
-                  <h1 className="text-2xl font-bold text-gray-900">
-                    {user?.nombre || "Usuario"}
-                  </h1>
-                  <p className="text-lg text-purple-700 font-medium">
-                    {user?.profile?.puesto_actual || "Cargo no especificado"}
-                  </p>
-                  <div className="flex flex-wrap gap-3 pt-1">
-                    <div className="flex items-center gap-1 text-sm text-gray-600">
-                      <Calendar className="h-4 w-4 text-purple-500" />
-                      <span>{formatDate(user?.fecha_contratacion || "")}</span>
-                    </div>
-                    <div className="flex items-center gap-1 text-sm text-gray-600">
-                      <Mail className="h-4 w-4 text-purple-500" />
-                      <span>{user?.email}</span>
-                    </div>
+    <div className="space-y-6">
+      <Card className="border-purple-200 bg-gradient-to-r from-purple-50 to-blue-50">
+        <CardContent className="p-6">
+          <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+            <div className="flex flex-col gap-6 md:flex-row md:items-center">
+              <Avatar className="h-24 w-24 border-4 border-purple-200 shadow-lg">
+                <AvatarImage
+                  src="/placeholder.svg?height=96&width=96"
+                  alt={user?.nombre || "Usuario"}
+                />
+                <AvatarFallback className="text-2xl bg-gradient-to-br from-purple-500 to-blue-500 text-white">
+                  {user?.nombre?.charAt(0) || "U"}
+                </AvatarFallback>
+              </Avatar>
+              <div className="space-y-1.5">
+                <h1 className="text-2xl font-bold text-gray-900">
+                  {user?.nombre || "Usuario"}
+                </h1>
+                <p className="text-lg text-purple-700 font-medium">
+                  {user?.profile?.puesto_actual || "Cargo no especificado"}
+                </p>
+                <div className="flex flex-wrap gap-3 pt-1">
+                  <div className="flex items-center gap-1 text-sm text-gray-600">
+                    <Calendar className="h-4 w-4 text-purple-500" />
+                    <span>{formatDate(user?.fecha_contratacion || "")}</span>
+                  </div>
+                  <div className="flex items-center gap-1 text-sm text-gray-600">
+                    <Mail className="h-4 w-4 text-purple-500" />
+                    <span>{user?.email}</span>
                   </div>
                 </div>
               </div>
-
-              {/* Solo botón de CV Upload */}
-              <div className="flex items-center">
-                <CVUploadButton
-                    onUploadSuccess={handleCVUploadSuccess}
-                />
-              </div>
             </div>
-          </CardContent>
-        </Card>
 
-        <Tabs
-            value={activeTab}
-            onValueChange={setActiveTab}
-            className="space-y-4"
-        >
-          <TabsList className="grid w-full grid-cols-3 lg:w-auto bg-purple-100">
-            <TabsTrigger value="informacion" className="data-[state=active]:bg-purple-600 data-[state=active]:text-white">
-              Información
-            </TabsTrigger>
-            <TabsTrigger value="habilidades" className="data-[state=active]:bg-purple-600 data-[state=active]:text-white">
-              Habilidades
-            </TabsTrigger>
-            <TabsTrigger value="metas" className="data-[state=active]:bg-purple-600 data-[state=active]:text-white">
-              Metas Profesionales
-            </TabsTrigger>
-          </TabsList>
+            {/* Solo botón de CV Upload */}
+            <div className="flex items-center">
+              <CVUploadButton onUploadSuccess={handleCVUploadSuccess} />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
-          <TabsContent value="informacion" className="space-y-4">
-            <CoursesAndCertificationsSection
-                courses={coursesData}
-                certifications={certifications}
-            />
+      <Tabs
+        value={activeTab}
+        onValueChange={setActiveTab}
+        className="space-y-4"
+      >
+        <TabsList className="grid w-full grid-cols-3 lg:w-auto bg-purple-100">
+          <TabsTrigger
+            value="informacion"
+            className="data-[state=active]:bg-purple-600 data-[state=active]:text-white"
+          >
+            Información
+          </TabsTrigger>
+          <TabsTrigger
+            value="habilidades"
+            className="data-[state=active]:bg-purple-600 data-[state=active]:text-white"
+          >
+            Habilidades
+          </TabsTrigger>
+          <TabsTrigger
+            value="metas"
+            className="data-[state=active]:bg-purple-600 data-[state=active]:text-white"
+          >
+            Metas Profesionales
+          </TabsTrigger>
+        </TabsList>
 
-            <ProfessionalHistorySection
-                isLoading={isLoading}
-                error={error}
-                professionalHistory={professionalHistoryData}
-            />
-          </TabsContent>
+        <TabsContent value="informacion" className="space-y-4">
+          <CoursesAndCertificationsSection
+            courses={coursesData}
+            certifications={certifications}
+          />
 
-          <TabsContent value="habilidades" className="space-y-4">
-            <SkillsSection skills={skills} />
-          </TabsContent>
+          <ProfessionalHistorySection
+            error={error}
+            professionalHistory={professionalHistoryData}
+          />
+        </TabsContent>
 
-          <TabsContent value="metas" className="space-y-4">
-            <ProfessionalTrajectorySection userTrajectory={goalsAndTrajectory} />
-          </TabsContent>
-        </Tabs>
-      </div>
+        <TabsContent value="habilidades" className="space-y-4">
+          <SkillsSection skills={skills} />
+        </TabsContent>
+
+        <TabsContent value="metas" className="space-y-4">
+          <ProfessionalTrajectorySection userTrajectory={goalsAndTrajectory} />
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 }

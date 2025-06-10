@@ -19,11 +19,11 @@ function AssignedRoles({ rolesByStatus }: { rolesByStatus: RolesByStatus }) {
       <div className="flex items-center justify-between">
         <h3 className="font-semibold">Roles Asignados</h3>
         <Badge variant="outline" className="bg-muted">
-          {rolesByStatus.asignados.length}
+          {rolesByStatus.asignados?.length}
         </Badge>
       </div>
 
-      {rolesByStatus.asignados.length > 0 ? (
+      {rolesByStatus.asignados?.length > 0 ? (
         rolesByStatus.asignados.map((role) => {
           const assignment =
             role.assignments && role.assignments.length > 0
