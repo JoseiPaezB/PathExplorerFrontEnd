@@ -107,7 +107,6 @@ export default function UserDetailsPage({ params }: { params: params }) {
           />
 
           <ProfessionalHistorySection
-            isLoading={isLoading}
             error={error}
             professionalHistory={professionalHistory}
           />
