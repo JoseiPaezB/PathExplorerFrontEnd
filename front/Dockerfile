@@ -1,47 +1,27 @@
-# Use the official Node.js image
+# 1) Stage común: instala deps y deja el código listo
 FROM node:18-alpine AS base
-
-# Install dependencies only when needed
-FROM base AS deps
-RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
-# Copy package files
-COPY front/package.json front/package-lock.json* ./
+# Dependencias nativas (canvas, etc) si las requieres aquí tambien:
+RUN apk add --no-cache \
+    python3 make g++ \
+    cairo-dev jpeg-dev pango-dev giflib-dev pkgconfig
+
+COPY package*.json ./
 RUN npm ci
 
-# Rebuild the source code only when needed
-FROM base AS builder
-WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
-COPY front/ .
+COPY . .
 
-# Build the application
+# 2) Stage de desarrollo: reutiliza base y arranca `npm run dev`
+FROM base AS dev
+EXPOSE 3000
+CMD ["npm", "run", "dev"]
+
+# 3) Stage de build/producción: compila y sirve con nginx
+FROM base AS build
 RUN npm run build
 
-# Production image, copy all the files and run next
-FROM base AS runner
-WORKDIR /app
-
-ENV NODE_ENV production
-
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
-
-COPY --from=builder /app/public ./public
-
-# Set the correct permission for prerender cache
-RUN mkdir .next
-RUN chown nextjs:nodejs .next
-
-# Automatically leverage output traces to reduce image size
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
-
-USER nextjs
-
-EXPOSE 3000
-
-ENV PORT 3000
-
-CMD ["node", "server.js"]
+FROM nginx:stable-alpine AS prod
+COPY --from=build /app/out /usr/share/nginx/html
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
