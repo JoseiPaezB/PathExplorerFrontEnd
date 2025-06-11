@@ -94,7 +94,18 @@ export default function NewProjectDialog({
               const value = e.target.value;
               handleEndDateChange(value ? new Date(value) : undefined);
             }}
-            min={startDate ? format(startDate, 'yyyy-MM-dd') : undefined}
+            min={
+              startDate
+          ? format(
+              new Date(
+                startDate.getFullYear(),
+                startDate.getMonth(),
+                startDate.getDate() + 2
+              ),
+              'yyyy-MM-dd'
+            )
+          : undefined
+            }
             className="w-full"
           />
         </div>
