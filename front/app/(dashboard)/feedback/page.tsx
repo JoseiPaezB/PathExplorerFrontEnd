@@ -141,6 +141,11 @@ export default function FeedbackPage() {
         return;
       }
 
+      if (formData.calificacion < 1 || formData.calificacion > 10) {
+        alert("La calificación debe estar entre 1 y 10.");
+        return;
+      }
+
       await createEvaluacion(formData);
       setShowCreateForm(false);
       setFormData({
@@ -354,6 +359,13 @@ export default function FeedbackPage() {
                       name="calificacion"
                       value={formData.calificacion}
                       onChange={handleInputChange}
+                      onBlur={(e) => {
+                        const value = Math.round(Number(e.target.value));
+                        setFormData((prev) => ({
+                          ...prev,
+                          calificacion: value < 1 ? 1 : value > 10 ? 10 : value,
+                        }));
+                      }}
                       min="1"
                       max="10"
                       step="1"
