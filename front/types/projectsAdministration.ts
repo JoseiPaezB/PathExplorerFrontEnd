@@ -51,6 +51,8 @@ export interface ProjectRole {
 }
 
 export interface ProjectFormData {
+  endDate: string | number | readonly string[] | undefined;
+  startDate: string | number | readonly string[] | undefined;
   id_proyecto: number;
   nombre: string;
   descripcion: string;

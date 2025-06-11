@@ -71,56 +71,32 @@ export default function NewProjectDialog({
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label>Fecha de inicio</Label>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className={cn(
-                  "w-full justify-start text-left font-normal",
-                  !startDate && "text-muted-foreground"
-                )}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {startDate ? format(startDate, "PPP") : "Seleccionar fecha"}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0">
-              <CalendarComponent
-                mode="single"
-                selected={startDate}
-                onSelect={handleStartDateChange}
-              />
-            </PopoverContent>
-          </Popover>
+          <Label htmlFor="startDate">Fecha de inicio</Label>
+          <Input
+            id="startDate"
+            type="date"
+            value={startDate ? format(startDate, 'yyyy-MM-dd') : ''}
+            onChange={(e) => {
+              const value = e.target.value;
+              handleStartDateChange(value ? new Date(value) : undefined);
+            }}
+            className="w-full"
+          />
         </div>
 
         <div className="space-y-2">
-          <Label>Fecha de finalización estimada</Label>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className={cn(
-                  "w-full justify-start text-left font-normal",
-                  !endDate && "text-muted-foreground"
-                )}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {endDate ? format(endDate, "PPP") : "Seleccionar fecha"}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0">
-              <CalendarComponent
-                mode="single"
-                selected={endDate}
-                onSelect={handleEndDateChange}
-                disabled={(date: Date) =>
-                  startDate ? date < startDate : false
-                }
-              />
-            </PopoverContent>
-          </Popover>
+          <Label htmlFor="endDate">Fecha de finalización estimada</Label>
+          <Input
+            id="endDate"
+            type="date"
+            value={endDate ? format(endDate, 'yyyy-MM-dd') : ''}
+            onChange={(e) => {
+              const value = e.target.value;
+              handleEndDateChange(value ? new Date(value) : undefined);
+            }}
+            min={startDate ? format(startDate, 'yyyy-MM-dd') : undefined}
+            className="w-full"
+          />
         </div>
       </div>
 
