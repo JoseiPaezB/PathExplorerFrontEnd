@@ -32,7 +32,9 @@ import { useRouter } from "next/navigation";
 import { formatDate } from "@/lib/functions";
 
 export default function EditCourseForm({ params }: EditCourseFormProps) {
-  const courseId = params?.id;
+  // const resolvedParams = use(params);
+  const courseId = params?.id; 
+  // const courseId = resolvedParams?.id;
   const router = useRouter();
 
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);

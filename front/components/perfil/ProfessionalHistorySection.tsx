@@ -10,33 +10,31 @@ import {
   Trophy,
   Users,
 } from "lucide-react";
+import LoadingSpinner from "@/components/loading/LoadingSpinner";
 import type { ProfessionalHistory } from "@/types/users";
 
 interface ProfessionalHistorySectionProps {
   professionalHistory: ProfessionalHistory | null;
   isLoading?: boolean;
-  error?: string | null;
+  error: string | null;
 }
 
 export default function ProfessionalHistorySection({
   professionalHistory,
-  isLoading = false,
-  error = null,
+  isLoading,
+  error,
 }: ProfessionalHistorySectionProps) {
   const renderHistorialProfesional = (historial: string) => {
     try {
       const data = JSON.parse(historial);
 
-      // Function to make the first sentence of each line/paragraph bold
       const makeFirstSentenceBold = (text: string) => {
         if (!text) return text;
-        
-        // Split by line breaks and process each line
+       
         return text.split(/\n/).map(line => {
           const trimmedLine = line.trim();
           if (!trimmedLine) return line;
-          
-          // Find the first sentence (ending with . ! ? or if no punctuation, take first part)
+         
           const firstSentenceMatch = trimmedLine.match(/^([^.!?]*[.!?])/);
           
           if (firstSentenceMatch) {
@@ -44,11 +42,9 @@ export default function ProfessionalHistorySection({
             const rest = trimmedLine.substring(firstSentence.length);
             return `<span class="font-bold text-primary">${firstSentence}</span>${rest}`;
           } else {
-            // If no punctuation, make the whole line bold if it's short, or first part if long
             if (trimmedLine.length <= 60) {
               return `<span class="font-bold text-primary">${trimmedLine}</span>`;
             } else {
-              // Take first 40-60 characters up to a word boundary
               const cutIndex = trimmedLine.lastIndexOf(' ', 60);
               const firstPart = trimmedLine.substring(0, cutIndex > 0 ? cutIndex : 60);
               const rest = trimmedLine.substring(firstPart.length);
@@ -60,7 +56,6 @@ export default function ProfessionalHistorySection({
 
       return (
         <div className="space-y-6">
-          {/* Resumen Profesional */}
           {data.resumen_profesional && (
             <div className="bg-primary/10 rounded-xl p-5 border border-primary/20">
               <h4 className="font-semibold text-primary mb-3 flex items-center gap-2">
@@ -73,8 +68,6 @@ export default function ProfessionalHistorySection({
               />
             </div>
           )}
-
-          {/* Experiencia Laboral */}
           {data.experiencia_laboral && data.experiencia_laboral.length > 0 && (
             <div>
               <h4 className="font-semibold text-primary mb-4 flex items-center gap-2">
@@ -89,7 +82,6 @@ export default function ProfessionalHistorySection({
                     className="border border-border rounded-xl p-5 bg-card hover:shadow-lg transition-all duration-200 hover:border-primary/30"
                   >
                     <div className="space-y-4">
-                      {/* Header del trabajo */}
                       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
                         <div>
                           <h5 className="font-semibold text-foreground text-lg">
@@ -120,8 +112,6 @@ export default function ProfessionalHistorySection({
                           )}
                         </div>
                       </div>
-
-                      {/* Descripción */}
                       {exp.descripcion && (
                         <div className="bg-muted/30 rounded-lg p-4 border border-muted">
                           <div 
@@ -130,8 +120,6 @@ export default function ProfessionalHistorySection({
                           />
                         </div>
                       )}
-
-                      {/* Logros */}
                       {exp.logros && exp.logros.length > 0 && (
                         <div className="bg-success/10 rounded-lg p-4 border border-success/20">
                           <h6 className="font-medium text-success text-sm mb-3 flex items-center gap-2">
@@ -165,7 +153,6 @@ export default function ProfessionalHistorySection({
         </div>
       );
     } catch (e) {
-      // Si no es JSON válido, mostrar como texto plano con primera oración en bold
       const makeFirstSentenceBoldPlainText = (text: string) => {
         return text.split(/\n/).map(line => {
           const trimmedLine = line.trim();
@@ -264,7 +251,6 @@ export default function ProfessionalHistorySection({
           <div className="space-y-8">
             {professionalHistory.professionalHistory.map((person, index) => (
               <div key={index} className="space-y-6">
-                {/* Header de la persona */}
                 <div className="bg-accent/20 rounded-xl p-4 border border-accent/30">
                   <div className="flex items-center gap-3">
                     <div className="p-2 bg-primary/20 rounded-lg">
@@ -286,7 +272,6 @@ export default function ProfessionalHistorySection({
                   </div>
                 </div>
 
-                {/* Contenido del historial */}
                 {person.historial && (
                   <div className="ml-4 border-l-2 border-primary/20 pl-6">
                     {renderHistorialProfesional(person.historial)}
