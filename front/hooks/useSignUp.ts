@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState } from "react";
 
 // Types
 export interface SignupFormData {
@@ -14,7 +14,7 @@ export interface SignupFormData {
   porcentaje_disponibilidad?: number;
   area_responsabilidad?: string;
   departamento?: string;
-  rolElegido: 'administrador' | 'empleado' | 'manager';
+  rolElegido: "administrador" | "empleado" | "manager";
 }
 
 interface UserProfile {
@@ -44,8 +44,7 @@ interface UseSignupReturn {
   clearSuccess: () => void;
 }
 
-// Custom hook
-export const useSignup = (apiBaseUrl: string = '/api'): UseSignupReturn => {
+export const useSignup = (apiBaseUrl: string = "/api"): UseSignupReturn => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<boolean>(false);
@@ -57,9 +56,9 @@ export const useSignup = (apiBaseUrl: string = '/api'): UseSignupReturn => {
 
     try {
       const response = await fetch(`${apiBaseUrl}/signup`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(formData),
       });
@@ -67,28 +66,19 @@ export const useSignup = (apiBaseUrl: string = '/api'): UseSignupReturn => {
       const data: SignupResponse = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || 'Error en el registro');
+        throw new Error(data.message || "Error en el registro");
       }
 
       if (data.success) {
         setSuccess(true);
-        
-        // Store token if provided
-        if (data.token) {
-          localStorage.setItem('authToken', data.token);
-        }
-        
-        // Store user data if provided
-        if (data.user) {
-          localStorage.setItem('userData', JSON.stringify(data.user));
-        }
       }
 
       return data;
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Error desconocido';
+      const errorMessage =
+        err instanceof Error ? err.message : "Error desconocido";
       setError(errorMessage);
-      
+
       return {
         success: false,
         message: errorMessage,
@@ -111,23 +101,24 @@ export const useSignup = (apiBaseUrl: string = '/api'): UseSignupReturn => {
   };
 };
 
-// Helper function to validate form data
 export const validateSignupData = (formData: SignupFormData): string[] => {
   const errors: string[] = [];
 
-  if (!formData.nombre.trim()) errors.push('El nombre es requerido');
-  if (!formData.apellido.trim()) errors.push('El apellido es requerido');
-  if (!formData.email.trim()) errors.push('El email es requerido');
-  if (!formData.password_hash.trim()) errors.push('La contraseña es requerida');
-  if (!formData.fecha_contratacion) errors.push('La fecha de contratación es requerida');
-  if (!formData.puesto_actual.trim()) errors.push('El puesto actual es requerido');
-  if (formData.antiguedad < 0) errors.push('La antigüedad debe ser mayor a 0');
-  if (!formData.historial_profesional.trim()) errors.push('El historial profesional es requerido');
+  if (!formData.nombre.trim()) errors.push("El nombre es requerido");
+  if (!formData.apellido.trim()) errors.push("El apellido es requerido");
+  if (!formData.email.trim()) errors.push("El email es requerido");
+  if (!formData.password_hash.trim()) errors.push("La contraseña es requerida");
+  if (!formData.fecha_contratacion)
+    errors.push("La fecha de contratación es requerida");
+  if (!formData.puesto_actual.trim())
+    errors.push("El puesto actual es requerido");
+  if (formData.antiguedad < 0) errors.push("La antigüedad debe ser mayor a 0");
+  if (!formData.historial_profesional.trim())
+    errors.push("El historial profesional es requerido");
 
-  // Email validation
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (formData.email && !emailRegex.test(formData.email)) {
-    errors.push('El formato del email no es válido');
+    errors.push("El formato del email no es válido");
   }
 
   return errors;
