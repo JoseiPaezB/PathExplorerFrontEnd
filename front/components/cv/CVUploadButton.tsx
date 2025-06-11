@@ -30,7 +30,7 @@ export default function CVUploadButton({
             >
                 <div className="flex items-center gap-2">
                     <Upload className="h-5 w-5" />
-                    <span className="font-semibold">Upload CV</span>
+                    <span className="font-semibold">Cargar CV</span>
                     <FileText className="h-4 w-4 opacity-70" />
                 </div>
             </Button>

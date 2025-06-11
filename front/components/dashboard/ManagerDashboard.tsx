@@ -39,6 +39,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useManagerDashboard } from "@/hooks/useDashboardData";
 import { ChevronDown, ChevronUp } from "lucide-react";
+import Link from "next/link";
 
 
 interface ManagerDashboardProps {
@@ -212,15 +213,17 @@ export default function ManagerDashboard({ userName }: ManagerDashboardProps) {
               <div className="text-xs text-muted-foreground">
                 {highPriorityRoles} roles de alta prioridad
               </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="gap-1 text-xs text-primary group"
-              >
-                <Users className="h-3.5 w-3.5" />
-                <span>Gestionar roles</span>
-                <ChevronRight className="h-3.5 w-3.5 opacity-0 -ml-2 group-hover:opacity-100 group-hover:ml-0 transition-all" />
-              </Button>
+              <Link href="/proyectos">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="gap-1 text-xs text-primary group"
+                >
+                  <Users className="h-3.5 w-3.5" />
+                  <span>Gestionar roles</span>
+                  <ChevronRight className="h-3.5 w-3.5 opacity-0 -ml-2 group-hover:opacity-100 group-hover:ml-0 transition-all" />
+                </Button>
+              </Link>
             </CardFooter>
           </Card>
 
@@ -282,15 +285,17 @@ export default function ManagerDashboard({ userName }: ManagerDashboardProps) {
               <div className="text-xs text-muted-foreground">
                 {rolesWithoutAssignments.length} proyectos en total
               </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="gap-1 text-xs text-primary group"
-              >
-                <BarChart3 className="h-3.5 w-3.5" />
-                <span>Ver análisis</span>
-                <ChevronRight className="h-3.5 w-3.5 opacity-0 -ml-2 group-hover:opacity-100 group-hover:ml-0 transition-all" />
-              </Button>
+              <Link href="/proyectos">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="gap-1 text-xs text-primary group"
+                >
+                  <BarChart3 className="h-3.5 w-3.5" />
+                  <span>Ver análisis</span>
+                  <ChevronRight className="h-3.5 w-3.5 opacity-0 -ml-2 group-hover:opacity-100 group-hover:ml-0 transition-all" />
+                </Button>
+              </Link>
             </CardFooter>
           </Card>
 
@@ -369,15 +374,17 @@ export default function ManagerDashboard({ userName }: ManagerDashboardProps) {
               <div className="text-xs text-muted-foreground">
                 {skills.length} habilidades registradas
               </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="gap-1 text-xs text-primary group"
-              >
-                <FileText className="h-3.5 w-3.5" />
-                <span>Ver mi perfil</span>
-                <ChevronRight className="h-3.5 w-3.5 opacity-0 -ml-2 group-hover:opacity-100 group-hover:ml-0 transition-all" />
-              </Button>
+              <Link href="/perfil">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="gap-1 text-xs text-primary group"
+                >
+                  <FileText className="h-3.5 w-3.5" />
+                  <span>Ver mi perfil</span>
+                  <ChevronRight className="h-3.5 w-3.5 opacity-0 -ml-2 group-hover:opacity-100 group-hover:ml-0 transition-all" />
+                </Button>
+              </Link>
             </CardFooter>
           </Card>
         </motion.div>
@@ -417,12 +424,14 @@ export default function ManagerDashboard({ userName }: ManagerDashboardProps) {
                 </TabsTrigger>
               </TabsList>
             </Tabs>
-            <Button
-              size="sm"
-              className="bg-primary hover:bg-primary/90 rounded-full shadow-button hover:shadow-button-hover transition-all"
-            >
-              Ver todos los proyectos
-            </Button>
+            <Link href="/proyectos">
+              <Button
+                size="sm"
+                className="bg-primary hover:bg-primary/90 rounded-full shadow-button hover:shadow-button-hover transition-all"
+              >
+                Ver todos los proyectos
+              </Button>
+            </Link>
           </div>
           <AnimatePresence mode="wait">
             <motion.div
@@ -566,15 +575,17 @@ export default function ManagerDashboard({ userName }: ManagerDashboardProps) {
                               <Briefcase className="h-3.5 w-3.5" />
                               <span>Prioridad: {project.prioridad}/5</span>
                             </div>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="gap-1 text-xs text-primary group"
-                            >
-                              <Users className="h-3.5 w-3.5" />
-                              <span>Asignar roles</span>
-                              <ChevronRight className="h-3.5 w-3.5 opacity-0 -ml-2 group-hover:opacity-100 group-hover:ml-0 transition-all" />
-                            </Button>
+                            <Link href="/proyectos">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="gap-1 text-xs text-primary group"
+                              >
+                                <Users className="h-3.5 w-3.5" />
+                                <span>Asignar roles</span>
+                                <ChevronRight className="h-3.5 w-3.5 opacity-0 -ml-2 group-hover:opacity-100 group-hover:ml-0 transition-all" />
+                              </Button>
+                            </Link>
                           </CardFooter>
                         </Card>
                       </motion.div>
@@ -590,9 +601,11 @@ export default function ManagerDashboard({ userName }: ManagerDashboardProps) {
                     <p className="text-sm text-muted-foreground max-w-md">
                       Los proyectos con roles sin asignar aparecerán aquí.
                     </p>
-                    <Button variant="outline" className="mt-2 rounded-full">
-                      Crear nuevo proyecto
-                    </Button>
+                    <Link href="/proyectos">
+                      <Button variant="outline" className="mt-2 rounded-full">
+                        Crear nuevo proyecto
+                      </Button>
+                    </Link>
                   </div>
                 </div>
               )}
@@ -644,22 +657,26 @@ export default function ManagerDashboard({ userName }: ManagerDashboardProps) {
                                 </div>
                                 <p className="text-xs text-muted-foreground mt-1">Proyecto: {project.nombre}</p>
                                 <div className="flex items-center gap-1 mt-2">
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="h-7 px-2 text-xs text-primary"
-                                  >
-                                    <Search className="h-3 w-3 mr-1" />
-                                    Buscar candidatos
-                                  </Button>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm" 
-                                    className="h-7 px-2 text-xs text-primary"
-                                  >
-                                    <Users className="h-3 w-3 mr-1" />
-                                    Ver recomendados
-                                  </Button>
+                                  <Link href="/proyectos">
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-7 px-2 text-xs text-primary"
+                                    >
+                                      <Search className="h-3 w-3 mr-1" />
+                                      Buscar candidatos
+                                    </Button>
+                                  </Link>
+                                  <Link href="/proyectos">
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-7 px-2 text-xs text-primary"
+                                    >
+                                      <Users className="h-3 w-3 mr-1" />
+                                      Ver recomendados
+                                    </Button>
+                                  </Link>
                                 </div>
                               </div>
                             )
@@ -700,14 +717,16 @@ export default function ManagerDashboard({ userName }: ManagerDashboardProps) {
               </div>
             </CardContent>
             <CardFooter className="border-t px-6 py-4">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="w-full gap-1 text-primary group"
-              >
-                <span>Abrir buscador de talentos</span>
-                <ChevronRight className="h-3.5 w-3.5 opacity-0 -ml-2 group-hover:opacity-100 group-hover:ml-0 transition-all" />
-              </Button>
+              <Link href="/proyectos">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-full gap-1 text-primary group"
+                >
+                  <span>Abrir buscador de talentos</span>
+                  <ChevronRight className="h-3.5 w-3.5 opacity-0 -ml-2 group-hover:opacity-100 group-hover:ml-0 transition-all" />
+                </Button>
+              </Link>
             </CardFooter>
           </Card>
 

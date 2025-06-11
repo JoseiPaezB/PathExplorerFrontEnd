@@ -111,7 +111,7 @@ npx playwright test --ui
 - Sistema de recomendaciones con IA
 
 ### 🚀 **Gestión de Proyectos**
-- Vista Kanban para roles y asignaciones
+- Vista Roles para roles y asignaciones
 - Matching automático empleado-proyecto
 - Sistema de solicitudes y autorizaciones
 

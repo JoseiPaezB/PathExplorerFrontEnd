@@ -1,5 +1,5 @@
 "use client";
-
+import Link from "next/link";
 import { useState } from "react";
 import { motion } from "framer-motion";
 import {
@@ -209,15 +209,18 @@ export default function EmployeeDashboard({
               <div className="text-xs text-muted-foreground">
                 {activeCertifications.length} certificaciones activas
               </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="gap-1 text-xs text-primary group"
-              >
-                <BookOpen className="h-3.5 w-3.5" />
-                <span>Ver todas</span>
-                <ChevronRight className="h-3.5 w-3.5 opacity-0 -ml-2 group-hover:opacity-100 group-hover:ml-0 transition-all" />
-              </Button>
+              <Link href="/cursos-y-certificaciones">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="gap-1 text-xs text-primary group"
+                  type="button"
+                >
+                  <BookOpen className="h-3.5 w-3.5" />
+                  <span>Ver todas</span>
+                  <ChevronRight className="h-3.5 w-3.5 opacity-0 -ml-2 group-hover:opacity-100 group-hover:ml-0 transition-all" />
+                </Button>
+              </Link>
             </CardFooter>
           </Card>
 
@@ -276,15 +279,17 @@ export default function EmployeeDashboard({
               <div className="text-xs text-muted-foreground">
                 {coursesInProgress.length} cursos en progreso
               </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="gap-1 text-xs text-primary group"
-              >
-                <BookOpen className="h-3.5 w-3.5" />
-                <span>Ver todos</span>
-                <ChevronRight className="h-3.5 w-3.5 opacity-0 -ml-2 group-hover:opacity-100 group-hover:ml-0 transition-all" />
-              </Button>
+              <Link href="/cursos-y-certificaciones">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="gap-1 text-xs text-primary group"
+                >
+                  <BookOpen className="h-3.5 w-3.5" />
+                  <span>Ver todos</span>
+                  <ChevronRight className="h-3.5 w-3.5 opacity-0 -ml-2 group-hover:opacity-100 group-hover:ml-0 transition-all" />
+                </Button>
+              </Link>
             </CardFooter>
           </Card>
 
@@ -354,15 +359,17 @@ export default function EmployeeDashboard({
               <div className="text-xs text-muted-foreground">
                 {skills.length} habilidades totales
               </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="gap-1 text-xs text-primary group"
-              >
-                <BarChart3 className="h-3.5 w-3.5" />
-                <span>Ver todas</span>
-                <ChevronRight className="h-3.5 w-3.5 opacity-0 -ml-2 group-hover:opacity-100 group-hover:ml-0 transition-all" />
-              </Button>
+              <Link href="/perfil">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="gap-1 text-xs text-primary group"
+                >
+                  <BarChart3 className="h-3.5 w-3.5" />
+                  <span>Ver todas</span>
+                  <ChevronRight className="h-3.5 w-3.5 opacity-0 -ml-2 group-hover:opacity-100 group-hover:ml-0 transition-all" />
+                </Button>
+              </Link>
             </CardFooter>
           </Card>
         </motion.div>
@@ -439,15 +446,17 @@ export default function EmployeeDashboard({
                     <Briefcase className="h-3.5 w-3.5" />
                     <span>Prioridad: {employeeProyect[0].prioridad}/5</span>
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="gap-1 text-xs text-primary group"
-                  >
-                    <FileText className="h-3.5 w-3.5" />
-                    <span>Ver detalles</span>
-                    <ChevronRight className="h-3.5 w-3.5 opacity-0 -ml-2 group-hover:opacity-100 group-hover:ml-0 transition-all" />
-                  </Button>
+                  <Link href="/cursos-y-certificaciones">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="gap-1 text-xs text-primary group"
+                    >
+                      <FileText className="h-3.5 w-3.5" />
+                      <span>Ver detalles</span>
+                      <ChevronRight className="h-3.5 w-3.5 opacity-0 -ml-2 group-hover:opacity-100 group-hover:ml-0 transition-all" />
+                    </Button>
+                  </Link>
                 </CardFooter>
               </Card>
 
@@ -480,9 +489,8 @@ export default function EmployeeDashboard({
                             <div className="relative">
                               <Avatar className="h-10 w-10 border-2 border-white shadow-sm">
                                 <AvatarImage
-                                  src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${
-                                    member.nombre || "User"
-                                  }`}
+                                  src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${member.nombre || "User"
+                                    }`}
                                   alt={member.nombre || "Usuario"}
                                 />
                                 <AvatarFallback>
@@ -518,14 +526,16 @@ export default function EmployeeDashboard({
                   )}
                 </CardContent>
                 <CardFooter className="border-t px-6 py-4">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="w-full gap-1 text-primary group"
-                  >
-                    <span>Ver todo el equipo</span>
-                    <ChevronRight className="h-3.5 w-3.5 opacity-0 -ml-2 group-hover:opacity-100 group-hover:ml-0 transition-all" />
-                  </Button>
+                  <Link href="/proyecto-actual">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-full gap-1 text-primary group"
+                    >
+                      <span>Ver todo el equipo</span>
+                      <ChevronRight className="h-3.5 w-3.5 opacity-0 -ml-2 group-hover:opacity-100 group-hover:ml-0 transition-all" />
+                    </Button>
+                  </Link>
                 </CardFooter>
               </Card>
             </div>
@@ -626,8 +636,8 @@ export default function EmployeeDashboard({
                               <p className="font-medium">
                                 {course.calificacion
                                   ? `${parseFloat(course.calificacion).toFixed(
-                                      2
-                                    )}%`
+                                    2
+                                  )}%`
                                   : "N/A"}
                               </p>
                             </div>
@@ -641,15 +651,17 @@ export default function EmployeeDashboard({
                             Completado: {formatDate(course.fecha_finalizacion)}
                           </span>
                         </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="gap-1 text-xs text-primary group"
-                        >
-                          <FileText className="h-3.5 w-3.5" />
-                          <span>Ver detalles</span>
-                          <ChevronRight className="h-3.5 w-3.5 opacity-0 -ml-2 group-hover:opacity-100 group-hover:ml-0 transition-all" />
-                        </Button>
+                        <Link href={`/cursos-y-certificaciones/${course.id_curso}`}>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="gap-1 text-xs text-primary group"
+                          >
+                            <FileText className="h-3.5 w-3.5" />
+                            <span>Ver detalles</span>
+                            <ChevronRight className="h-3.5 w-3.5 opacity-0 -ml-2 group-hover:opacity-100 group-hover:ml-0 transition-all" />
+                          </Button>
+                        </Link>
                       </CardFooter>
                     </Card>
                   </motion.div>
@@ -665,9 +677,12 @@ export default function EmployeeDashboard({
                 <p className="text-sm text-muted-foreground max-w-md">
                   Cuando completes cursos, aparecerán aquí.
                 </p>
-                <Button variant="outline" className="mt-2 rounded-full">
-                  Explorar cursos
-                </Button>
+
+                <Link href="/cursos-y-certificaciones">
+                  <Button variant="outline" className="mt-2 rounded-full">
+                    Explorar cursos
+                  </Button>
+                </Link>
               </div>
             </div>
           )}

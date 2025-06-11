@@ -122,7 +122,7 @@ export default function CVUploadModal({
                 <DialogHeader className="px-6 py-4 border-b shrink-0">
                     <DialogTitle className="flex items-center gap-2 text-purple-800">
                         <FileText className="h-6 w-6 text-purple-600" />
-                        Upload CV
+                        Cargar CV
                         {step === 'preview' && <span className="text-sm text-purple-600 ml-2">- Vista Previa y Edición</span>}
                         {step === 'success' && <span className="text-sm text-green-600 ml-2">- Completado</span>}
                     </DialogTitle>

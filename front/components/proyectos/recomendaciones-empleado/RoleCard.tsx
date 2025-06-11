@@ -106,7 +106,7 @@ export function RoleCard({
           onClick={() => onAssignRole(role)}
           disabled={hasPendingRequest}
         >
-          Asignar
+          Aplicar
         </Button>
       </div>
     </div>
