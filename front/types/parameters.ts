@@ -3,7 +3,7 @@ export interface params {
 }
 
 export interface EditCourseFormProps {
-  params: {
-    id?: string;
-  };
+  params: Promise<{
+    id: string;
+  }>;
 }
